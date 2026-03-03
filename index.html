@@ -1,0 +1,698 @@
+<!DOCTYPE html>
+<html lang="ko" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>XR디자인1 - 오리엔테이션</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
+        
+        body {
+            font-family: 'Pretendard', sans-serif;
+            background-color: #f8fafc; /* slate-50 */
+            color: #1e293b;
+        }
+
+        /* Tech Card Style */
+        .tech-card {
+            background: white;
+            border-radius: 1rem;
+            padding: 1.5rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            border: 1px solid #e5e7eb;
+            transition: transform 0.2s, border-color 0.2s;
+        }
+        .tech-card:hover {
+            transform: translateY(-5px);
+            border-color: #4f46e5; /* indigo-600 */
+        }
+    </style>
+</head>
+<body class="antialiased selection:bg-indigo-200 selection:text-indigo-900">
+
+    <!-- Sticky Navigation -->
+    <nav class="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-gray-200 shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16 items-center">
+                <div class="font-extrabold text-xl text-indigo-700 flex items-center gap-2">
+                    <i class="fas fa-vr-cardboard"></i> XR DESIGN 1
+                </div>
+                <div class="hidden md:flex space-x-8 text-sm font-bold text-gray-600">
+                    <a href="#intro" class="hover:text-indigo-600 transition">과목소개</a>
+                    <a href="#tools" class="hover:text-indigo-600 transition">사용도구</a>
+                    <a href="#philosophy" class="hover:text-indigo-600 transition">교육철학</a>
+                    <a href="#operation" class="hover:text-indigo-600 transition">운영/평가</a>
+                    <a href="#schedule" class="hover:text-indigo-600 transition">강의계획</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Section 1: Hero Intro -->
+    <section id="intro" class="py-20 md:py-32 px-4 flex justify-center items-center text-center relative overflow-hidden">
+        <div class="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[400px] bg-indigo-400 rounded-full mix-blend-multiply filter blur-[120px] opacity-20 pointer-events-none"></div>
+        <div class="bg-white p-12 rounded-3xl shadow-xl max-w-4xl w-full border-t-8 border-indigo-600 relative z-10">
+            <div class="text-7xl mb-6 animate-bounce">🥽</div>
+            <h1 class="text-5xl font-extrabold text-indigo-900 mb-4 tracking-tight">XR디자인 1</h1>
+            <h2 class="text-2xl text-gray-500 font-medium mb-8">2026학년도 1학기 오리엔테이션 (OT)</h2>
+            <div class="h-1 w-24 bg-indigo-400 mx-auto mb-8"></div>
+            <div class="text-lg text-gray-600 space-y-2 bg-gray-50 p-6 rounded-2xl inline-block text-left">
+                <p><i class="fas fa-chalkboard-teacher text-indigo-400 w-6"></i> <strong>담당 교수:</strong> 이다영 (첨단미디어디자인전공)</p>
+                <p><i class="far fa-clock text-indigo-400 w-6"></i> <strong>강의 시간:</strong> 수요일 1-2교시 / 수요일 3-4교시 (2개 분반)</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Section 2: 소통 방법 -->
+    <section class="py-16 px-4 bg-white border-y border-gray-100">
+        <div class="max-w-5xl mx-auto">
+            <h2 class="text-3xl font-bold text-gray-800 mb-8 flex items-center gap-3">
+                <span class="text-indigo-600"><i class="fas fa-comments"></i></span> 소통 방법 안내
+            </h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div class="space-y-6">
+                    <div class="flex items-start gap-4 p-6 bg-red-50 rounded-2xl border border-red-100">
+                        <div class="bg-red-100 p-3 rounded-full text-red-600"><i class="fas fa-envelope-open-text text-xl"></i></div>
+                        <div>
+                            <h3 class="font-bold text-lg text-gray-800">이메일 확인 지연</h3>
+                            <p class="text-gray-600 text-sm mt-1">이메일(dayoung@swu.ac.kr)은 자주 확인하지 않습니다.<br>단, <strong class="text-red-500">서류 제출</strong>이 필요한 경우에만 활용해 주세요.</p>
+                        </div>
+                    </div>
+                    <div class="flex items-start gap-4 p-6 bg-indigo-50 rounded-2xl border border-indigo-100">
+                        <div class="bg-indigo-100 p-3 rounded-full text-indigo-600"><i class="fas fa-paper-plane text-xl"></i></div>
+                        <div>
+                            <h3 class="font-bold text-lg text-gray-800">가장 빠른 문의: 쪽지</h3>
+                            <p class="text-gray-600 text-sm mt-1">모든 질문 및 문의는 <strong>e-Class 시스템 내 쪽지 기능</strong>을 활용하는 것이 가장 빠릅니다.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="p-8 rounded-2xl border border-gray-200 bg-gray-50 shadow-sm">
+                    <h3 class="font-bold text-indigo-800 mb-4 text-xl"><i class="fas fa-lightbulb"></i> 질문 꿀팁!</h3>
+                    <ul class="space-y-4 text-gray-700">
+                        <li class="flex items-start gap-3">
+                            <i class="fas fa-check-circle text-indigo-500 mt-1"></i>
+                            <span>작업 파일 확인이 필요하다면 <strong>구글 드라이브에 업로드 후 링크를 첨부</strong>해 주세요.</span>
+                        </li>
+                        <li class="flex items-start gap-3">
+                            <i class="fas fa-check-circle text-indigo-500 mt-1"></i>
+                            <span>형식적인 예의(인사말 등)보다 <strong>'문제 상황'</strong>과 <strong>'받고 싶은 도움(액션)'</strong>을 명확히 작성해 주세요.</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Section 3: 과목 개요 및 도구 -->
+    <section id="tools" class="py-20 px-4 bg-slate-50">
+        <div class="max-w-6xl mx-auto">
+            <div class="text-center mb-12">
+                <h2 class="text-4xl font-bold text-gray-800 mb-4 tracking-tight">안전한 실험실 🧪</h2>
+                <p class="text-gray-500 text-lg">정답을 찾는 곳이 아닌, 실패하며 탐구하는 안전한 실험실입니다.</p>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8 text-left">
+                <!-- Blender -->
+                <div class="tech-card text-center flex flex-col h-full bg-white">
+                    <div class="h-14 flex justify-center items-center mb-6">
+                        <img src="https://upload.wikimedia.org/wikipedia/commons/0/0c/Blender_logo_no_text.svg" alt="Blender Logo" class="h-full drop-shadow-sm hover:scale-110 transition-transform">
+                    </div>
+                    <h3 class="font-bold text-2xl mb-2 text-gray-800">Blender</h3>
+                    <p class="text-gray-500 text-sm mb-8">3D 모델링 / 오브젝트 제작</p>
+                    
+                    <div class="mt-auto space-y-3">
+                        <h4 class="text-xs font-bold text-gray-400 uppercase tracking-wider text-left border-b pb-2">Inspiration Videos</h4>
+                        <div class="grid grid-cols-2 gap-3">
+                            <a href="https://www.youtube.com/watch?v=TQElJP1AaS0" target="_blank" class="block group relative rounded-lg overflow-hidden shadow-sm hover:shadow-md transition bg-gray-100 border border-gray-200">
+                                <img src="https://img.youtube.com/vi/TQElJP1AaS0/hqdefault.jpg" alt="Blender 영상 1" class="w-full aspect-video object-cover group-hover:scale-105 transition duration-300">
+                                <div class="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition"><i class="fab fa-youtube text-white text-xl"></i></div>
+                            </a>
+                            <a href="https://www.youtube.com/watch?v=fNWW3aXFw_g" target="_blank" class="block group relative rounded-lg overflow-hidden shadow-sm hover:shadow-md transition bg-gray-100 border border-gray-200">
+                                <img src="https://img.youtube.com/vi/fNWW3aXFw_g/hqdefault.jpg" alt="Blender 영상 2" class="w-full aspect-video object-cover group-hover:scale-105 transition duration-300">
+                                <div class="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition"><i class="fab fa-youtube text-white text-xl"></i></div>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Lens Studio -->
+                <div class="tech-card text-center flex flex-col h-full bg-white">
+                    <div class="h-14 flex justify-center items-center mb-6">
+                        <img src="https://developers.snap.com/refresh/lens-studio/lens-studio-logo.png" alt="Lens Studio Logo" class="h-full drop-shadow-sm hover:scale-110 transition-transform">
+                    </div>
+                    <h3 class="font-bold text-2xl mb-2 text-gray-800">Lens Studio</h3>
+                    <p class="text-gray-500 text-sm mb-8">스냅챗 AR 렌즈 제작 / 인터랙션</p>
+                    
+                    <div class="mt-auto space-y-3">
+                        <h4 class="text-xs font-bold text-gray-400 uppercase tracking-wider text-left border-b pb-2">Inspiration Videos</h4>
+                        <div class="grid grid-cols-1 gap-3">
+                            <a href="https://www.youtube.com/watch?v=OBGeIARuRs8&list=PL0rDQ-c-_kxdYaIbKkzz62oTe9f2d7dGA" target="_blank" class="block group relative rounded-lg overflow-hidden shadow-sm hover:shadow-md transition bg-gray-100 border border-gray-200">
+                                <img src="https://img.youtube.com/vi/OBGeIARuRs8/hqdefault.jpg" alt="Lens Studio 영상" class="w-full h-28 object-cover group-hover:scale-105 transition duration-300">
+                                <div class="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition"><i class="fab fa-youtube text-white text-3xl"></i></div>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Unity -->
+                <div class="tech-card text-center flex flex-col h-full bg-white">
+                    <div class="h-14 flex justify-center items-center mb-6 text-6xl text-gray-800 hover:scale-110 transition-transform">
+                        <i class="fab fa-unity"></i>
+                    </div>
+                    <h3 class="font-bold text-2xl mb-2 text-gray-800">Unity</h3>
+                    <p class="text-gray-500 text-sm mb-8">실시간 렌더링 / 게임 엔진 통합</p>
+                    
+                    <div class="mt-auto space-y-3">
+                        <h4 class="text-xs font-bold text-gray-400 uppercase tracking-wider text-left border-b pb-2">Inspiration Videos</h4>
+                        <div class="grid grid-cols-1 gap-3">
+                            <a href="https://www.youtube.com/watch?v=LlgHCeLV92Y" target="_blank" class="block group relative rounded-lg overflow-hidden shadow-sm hover:shadow-md transition bg-gray-100 border border-gray-200">
+                                <img src="https://img.youtube.com/vi/LlgHCeLV92Y/hqdefault.jpg" alt="Unity 영상" class="w-full h-28 object-cover group-hover:scale-105 transition duration-300">
+                                <div class="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition"><i class="fab fa-youtube text-white text-3xl"></i></div>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="mt-12 text-center">
+                <span class="inline-block px-6 py-3 rounded-full bg-indigo-100 text-indigo-800 font-bold text-sm shadow-sm">
+                    💡 위 도구들을 완벽하게 마스터하는 것이 목표가 아닙니다. 창작의 수단으로 활용하는 경험에 집중합니다.
+                </span>
+            </div>
+        </div>
+    </section>
+
+    <!-- Section 4: 핵심 교육 철학 요약 -->
+    <section id="philosophy" class="py-20 px-4 bg-white border-y border-gray-100">
+        <div class="max-w-6xl mx-auto">
+            <h2 class="text-3xl font-bold text-gray-800 mb-10 text-center">
+                <span class="text-indigo-600"><i class="fas fa-brain"></i></span> 핵심 교육 철학 3가지
+            </h2>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <a href="#learning-by-doing" class="block bg-slate-50 p-8 rounded-2xl shadow-sm hover:shadow-md transition border-t-4 border-blue-500">
+                    <h3 class="text-xl font-bold text-blue-700 mb-3">1. Learning By Doing</h3>
+                    <p class="text-gray-600 text-sm leading-relaxed">이론 암기보다 직접 부딪혀 만들고 실패하며 방향을 찾아가는 적응형 학습 지향</p>
+                    <div class="mt-4 text-blue-500 text-sm font-bold">자세히 보기 &rarr;</div>
+                </a>
+                <a href="#post-mortem" class="block bg-slate-50 p-8 rounded-2xl shadow-sm hover:shadow-md transition border-t-4 border-purple-500">
+                    <h3 class="text-xl font-bold text-purple-700 mb-3">2. Post-Mortem</h3>
+                    <p class="text-gray-600 text-sm leading-relaxed">프로젝트 중 겪은 문제, 실패 경험, 해결 팁을 기록하고 솔직하게 공유하는 문화</p>
+                    <div class="mt-4 text-purple-500 text-sm font-bold">자세히 보기 &rarr;</div>
+                </a>
+                <a href="#archive-video" class="block bg-slate-50 p-8 rounded-2xl shadow-sm hover:shadow-md transition border-t-4 border-rose-500">
+                    <h3 class="text-xl font-bold text-rose-700 mb-3">3. Archive in Video</h3>
+                    <p class="text-gray-600 text-sm leading-relaxed">유실되기 쉬운 XR 작업물을 영상 형태로 기록하여 영구적인 포트폴리오로 활용</p>
+                    <div class="mt-4 text-rose-500 text-sm font-bold">자세히 보기 &rarr;</div>
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Section 5: Learning By Doing 상세 -->
+    <section id="learning-by-doing" class="py-20 px-4 bg-blue-50/50">
+        <div class="max-w-5xl mx-auto">
+            <div class="flex items-center gap-4 mb-10">
+                <span class="bg-blue-100 p-4 rounded-full text-blue-600 text-3xl"><i class="fas fa-bicycle"></i></span>
+                <h2 class="text-3xl font-bold text-gray-800 tracking-tight">Learning By Doing 이란?</h2>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <!-- 자전거 비유 -->
+                <div class="bg-white p-10 rounded-3xl shadow-sm border border-blue-100 relative overflow-hidden flex flex-col justify-center">
+                    <div class="absolute right-[-20px] bottom-[-30px] text-[10rem] text-blue-50 opacity-80 pointer-events-none">
+                        <i class="fas fa-book-open"></i>
+                    </div>
+                    <h3 class="text-2xl font-bold text-gray-800 mb-4 z-10 relative">자전거를 책으로 배울 수 있나요?</h3>
+                    <p class="text-gray-600 text-lg leading-relaxed z-10 relative">
+                        아무리 자전거의 구조와 타는 이론을 완벽하게 암기해도, <strong>실제로 안장에 앉아 넘어지고 페달을 밟아보기 전까지는</strong> 절대 자전거를 탈 수 없습니다. XR 디자인도 이와 똑같습니다.
+                    </p>
+                </div>
+                
+                <!-- 도구 마스터 지양 -->
+                <div class="bg-indigo-600 text-white p-10 rounded-3xl shadow-lg relative overflow-hidden flex flex-col justify-center">
+                    <div class="absolute right-[-10px] top-[-10px] text-[10rem] text-indigo-500 opacity-30 pointer-events-none">
+                        <i class="fas fa-tools"></i>
+                    </div>
+                    <h3 class="text-2xl font-bold mb-4 z-10 relative text-yellow-300">도구 마스터가 목표가 아닙니다</h3>
+                    <p class="text-indigo-50 text-lg leading-relaxed z-10 relative">
+                        블렌더, Lens Studio, 유니티와 같은 도구들을 <strong>완벽하게 마스터하는 것이 본 수업의 목표는 아닙니다.</strong><br><br>
+                        우리의 진짜 목표는 원하는 결과물을 만들기 위해 스스로 도구를 익히고, <strong>직접 부딪히며 창작해보는 경험과 문제 해결 능력</strong>을 기르는 것입니다.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Section 6: 포스트모템 및 BCon 사례 -->
+    <section id="post-mortem" class="py-20 px-4 bg-white border-y border-gray-100">
+        <div class="max-w-6xl mx-auto">
+            <div class="flex items-center gap-4 mb-8">
+                <span class="bg-purple-100 p-4 rounded-full text-purple-600 text-3xl"><i class="fas fa-search-plus"></i></span>
+                <h2 class="text-3xl font-bold text-gray-800 tracking-tight">Post-Mortem (포스트모템) 이란?</h2>
+            </div>
+            <p class="text-xl text-gray-600 mb-10 font-light leading-relaxed max-w-4xl">
+                단순히 완성된 멋진 결과물을 자랑하는 것이 아니라, <strong>"우리가 이 프로젝트를 하면서 어떤 문제를 겪었고, 어떻게 해결했는지"</strong> 그 치열한 시행착오 과정을 솔직하게 공유하는 아티스트와 개발자들의 문화입니다.
+            </p>
+            
+            <div class="bg-purple-50 p-10 rounded-3xl shadow-sm border border-purple-100">
+                <h3 class="text-2xl font-bold text-gray-800 mb-4 flex items-center gap-3">
+                    <i class="fas fa-globe-americas text-blue-500"></i> BCon (Blender Conference) 사례 보기
+                </h3>
+                <p class="text-gray-600 mb-8">
+                    매년 전 세계 3D 아티스트와 스튜디오가 모여 자신들의 작업 파이프라인과 포스트모템을 아낌없이 공유하는 축제입니다. 아래 강연들을 통해 포스트모템이 무엇인지 감을 잡아보세요!
+                </p>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <a href="https://www.youtube.com/watch?v=IhgJ69uXnQU&list=PLa1F2ddGya_8u-HEvmfCVuS_OImW8HaLd&index=5" target="_blank" class="bg-white p-6 rounded-2xl shadow-sm hover:shadow-md transition border border-gray-200 group block text-left">
+                        <div class="text-red-500 text-4xl mb-4"><i class="fab fa-youtube group-hover:scale-110 transition-transform"></i></div>
+                        <h4 class="font-bold text-gray-800 mb-2 group-hover:text-blue-600 transition-colors">BCon 사례 1 (English)</h4>
+                        <p class="text-sm text-gray-500">블렌더 컨퍼런스에서 공유된 작업 과정 및 문제 해결 사례 강연입니다.</p>
+                    </a>
+                    <a href="https://www.youtube.com/watch?v=X7-TCnbjM_Y&list=PLa1F2ddGya_8u-HEvmfCVuS_OImW8HaLd&index=4" target="_blank" class="bg-white p-6 rounded-2xl shadow-sm hover:shadow-md transition border border-gray-200 group block text-left">
+                        <div class="text-red-500 text-4xl mb-4"><i class="fab fa-youtube group-hover:scale-110 transition-transform"></i></div>
+                        <h4 class="font-bold text-gray-800 mb-2 group-hover:text-blue-600 transition-colors">BCon 사례 2 (English)</h4>
+                        <p class="text-sm text-gray-500">오픈 무비 프로젝트 등에서 겪었던 시행착오와 포스트모템 기록입니다.</p>
+                    </a>
+                    <a href="https://www.youtube.com/watch?v=PTzdKFrhn3A&list=PLkHDai4yit5XbWCn-t97oLRPCk6nGRS35&index=24" target="_blank" class="bg-white p-6 rounded-2xl shadow-sm hover:shadow-md transition border border-blue-200 group block text-left border-t-4 border-t-blue-500">
+                        <div class="text-red-500 text-4xl mb-4"><i class="fab fa-youtube group-hover:scale-110 transition-transform"></i></div>
+                        <h4 class="font-bold text-gray-800 mb-2 group-hover:text-blue-600 transition-colors">언리얼 페스트 사례 (Korean)</h4>
+                        <p class="text-sm text-gray-500">한국어로 진행된 언리얼 엔진 기반 프로젝트의 포스트모템 강연입니다.</p>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Section 7: Archive in Video 우수 사례 -->
+    <section id="archive-video" class="py-20 px-4 bg-gray-900 text-white">
+        <div class="max-w-6xl mx-auto">
+            <h2 class="text-3xl font-bold mb-4 flex items-center gap-3">
+                <span class="text-rose-500"><i class="fas fa-video"></i></span> Archive in Video: 이전 학기 우수 사례
+            </h2>
+            <p class="text-gray-300 mb-10 text-lg font-light">
+                과제전 홈페이지를 통해 이미 보신 분들도 있겠지만, 모두 훌륭한 우수 사례들이니 꼭 참고해 보시길 바랍니다!
+            </p>
+            
+            <div class="space-y-12">
+                <!-- VR 월드 -->
+                <div>
+                    <h3 class="text-2xl font-bold text-indigo-300 mb-6 flex items-center gap-2">
+                        <i class="fas fa-vr-cardboard"></i> VR 월드
+                    </h3>
+                    <div class="grid grid-cols-2 md:grid-cols-5 gap-4">
+                        <a href="https://www.youtube.com/watch?v=QXhqXzXAQKk" target="_blank" class="block group relative rounded-xl overflow-hidden bg-black">
+                            <img src="https://img.youtube.com/vi/QXhqXzXAQKk/hqdefault.jpg" alt="VR 월드" class="w-full h-32 object-cover group-hover:scale-105 transition duration-300 opacity-80 group-hover:opacity-100">
+                            <div class="absolute inset-0 bg-black/20 flex items-center justify-center group-hover:bg-transparent transition"><i class="fab fa-youtube text-white text-3xl drop-shadow-lg"></i></div>
+                        </a>
+                        <a href="https://www.youtube.com/watch?v=3HhGv5DRSBk" target="_blank" class="block group relative rounded-xl overflow-hidden bg-black">
+                            <img src="https://img.youtube.com/vi/3HhGv5DRSBk/hqdefault.jpg" alt="VR 월드" class="w-full h-32 object-cover group-hover:scale-105 transition duration-300 opacity-80 group-hover:opacity-100">
+                            <div class="absolute inset-0 bg-black/20 flex items-center justify-center group-hover:bg-transparent transition"><i class="fab fa-youtube text-white text-3xl drop-shadow-lg"></i></div>
+                        </a>
+                        <a href="https://www.youtube.com/watch?v=nMLCaibWghA" target="_blank" class="block group relative rounded-xl overflow-hidden bg-black">
+                            <img src="https://img.youtube.com/vi/nMLCaibWghA/hqdefault.jpg" alt="VR 월드" class="w-full h-32 object-cover group-hover:scale-105 transition duration-300 opacity-80 group-hover:opacity-100">
+                            <div class="absolute inset-0 bg-black/20 flex items-center justify-center group-hover:bg-transparent transition"><i class="fab fa-youtube text-white text-3xl drop-shadow-lg"></i></div>
+                        </a>
+                        <a href="https://www.youtube.com/watch?v=QpHGP_WB5gA" target="_blank" class="block group relative rounded-xl overflow-hidden bg-black">
+                            <img src="https://img.youtube.com/vi/QpHGP_WB5gA/hqdefault.jpg" alt="VR 월드" class="w-full h-32 object-cover group-hover:scale-105 transition duration-300 opacity-80 group-hover:opacity-100">
+                            <div class="absolute inset-0 bg-black/20 flex items-center justify-center group-hover:bg-transparent transition"><i class="fab fa-youtube text-white text-3xl drop-shadow-lg"></i></div>
+                        </a>
+                        <a href="https://www.youtube.com/watch?v=KfzdJphXkb8" target="_blank" class="block group relative rounded-xl overflow-hidden bg-black">
+                            <img src="https://img.youtube.com/vi/KfzdJphXkb8/hqdefault.jpg" alt="VR 월드" class="w-full h-32 object-cover group-hover:scale-105 transition duration-300 opacity-80 group-hover:opacity-100">
+                            <div class="absolute inset-0 bg-black/20 flex items-center justify-center group-hover:bg-transparent transition"><i class="fab fa-youtube text-white text-3xl drop-shadow-lg"></i></div>
+                        </a>
+                    </div>
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-12">
+                    <!-- VR 프로덕션을 활용한 영상 -->
+                    <div>
+                        <h3 class="text-2xl font-bold text-blue-300 mb-6 flex items-center gap-2">
+                            <i class="fas fa-film"></i> VR 프로덕션 영상
+                        </h3>
+                        <div class="grid grid-cols-2 gap-4">
+                            <a href="https://www.youtube.com/watch?v=mpGEjX6_1Vg" target="_blank" class="block group relative rounded-xl overflow-hidden bg-black">
+                                <img src="https://img.youtube.com/vi/mpGEjX6_1Vg/hqdefault.jpg" alt="VR 영상" class="w-full h-40 object-cover group-hover:scale-105 transition duration-300 opacity-80 group-hover:opacity-100">
+                                <div class="absolute inset-0 bg-black/20 flex items-center justify-center group-hover:bg-transparent transition"><i class="fab fa-youtube text-white text-4xl drop-shadow-lg"></i></div>
+                            </a>
+                            <a href="https://www.youtube.com/watch?v=gQOLJ3C01G4" target="_blank" class="block group relative rounded-xl overflow-hidden bg-black">
+                                <img src="https://img.youtube.com/vi/gQOLJ3C01G4/hqdefault.jpg" alt="VR 영상" class="w-full h-40 object-cover group-hover:scale-105 transition duration-300 opacity-80 group-hover:opacity-100">
+                                <div class="absolute inset-0 bg-black/20 flex items-center justify-center group-hover:bg-transparent transition"><i class="fab fa-youtube text-white text-4xl drop-shadow-lg"></i></div>
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- AR 콘텐츠 -->
+                    <div>
+                        <h3 class="text-2xl font-bold text-yellow-300 mb-6 flex items-center gap-2">
+                            <i class="fas fa-magic"></i> AR 필터 & 앱
+                        </h3>
+                        <div class="grid grid-cols-3 gap-4">
+                            <a href="https://www.youtube.com/watch?v=MMpIM-Tc0cQ" target="_blank" class="block group relative rounded-xl overflow-hidden bg-black">
+                                <img src="https://img.youtube.com/vi/MMpIM-Tc0cQ/hqdefault.jpg" alt="AR 필터" class="w-full h-40 object-cover group-hover:scale-105 transition duration-300 opacity-80 group-hover:opacity-100">
+                                <div class="absolute inset-0 bg-black/20 flex items-center justify-center group-hover:bg-transparent transition"><i class="fab fa-youtube text-white text-3xl drop-shadow-lg"></i></div>
+                            </a>
+                            <a href="https://www.youtube.com/shorts/qG0SNwTH4J0" target="_blank" class="block group relative rounded-xl overflow-hidden bg-black">
+                                <img src="https://img.youtube.com/vi/qG0SNwTH4J0/hqdefault.jpg" alt="AR 필터 쇼츠" class="w-full h-40 object-cover group-hover:scale-105 transition duration-300 opacity-80 group-hover:opacity-100">
+                                <div class="absolute inset-0 bg-black/20 flex items-center justify-center group-hover:bg-transparent transition"><i class="fab fa-youtube text-white text-3xl drop-shadow-lg"></i></div>
+                            </a>
+                            <a href="https://www.youtube.com/watch?v=SPpfyNcQmLc" target="_blank" class="block group relative rounded-xl overflow-hidden bg-black border border-green-500">
+                                <img src="https://img.youtube.com/vi/SPpfyNcQmLc/hqdefault.jpg" alt="AR 앱" class="w-full h-40 object-cover group-hover:scale-105 transition duration-300 opacity-80 group-hover:opacity-100">
+                                <div class="absolute inset-0 bg-black/20 flex items-center justify-center group-hover:bg-transparent transition"><i class="fab fa-youtube text-white text-3xl drop-shadow-lg"></i></div>
+                                <div class="absolute top-2 right-2 bg-green-500 text-white text-xs font-bold px-2 py-1 rounded">App</div>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Section 8: 운영 방식 (Timetable, Meta Quest, 좌석) -->
+    <section id="operation" class="py-20 px-4 bg-slate-50 border-y border-gray-200">
+        <div class="max-w-6xl mx-auto space-y-20">
+            
+            <!-- Timetable -->
+            <div>
+                <h2 class="text-3xl font-bold text-gray-800 mb-10 text-center">플립 러닝 및 수업 시간 운영 ⏰</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8 text-left">
+                    <div class="bg-white p-8 rounded-3xl shadow-sm border-t-8 border-orange-400">
+                        <h3 class="text-2xl font-bold text-gray-800 mb-6 text-center">오전 분반 <span class="text-lg text-gray-500 font-normal">(1-2교시)</span></h3>
+                        <div class="space-y-4">
+                            <div class="flex items-center gap-4 bg-gray-50 p-4 rounded-xl">
+                                <span class="font-bold text-gray-500 w-16 text-center">09:00<br>~ 10:00</span>
+                                <div class="flex-1">
+                                    <h4 class="font-bold text-orange-600">사전 플립 러닝 (60분)</h4>
+                                    <p class="text-sm text-gray-600">장비 대여 및 사전 영상 강의 시청</p>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-4 bg-orange-50 p-4 rounded-xl border border-orange-100">
+                                <span class="font-bold text-gray-500 w-16 text-center">10:00<br>~ 11:40</span>
+                                <div class="flex-1">
+                                    <h4 class="font-bold text-gray-800">대면 연강 (100분)</h4>
+                                    <p class="text-sm text-gray-600">15분 리뷰 + 75분 실습 등<br>(*쉬는 시간 없이 실습 중 개별 휴식)</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-white p-8 rounded-3xl shadow-sm border-t-8 border-indigo-400">
+                        <h3 class="text-2xl font-bold text-gray-800 mb-6 text-center">오후 분반 <span class="text-lg text-gray-500 font-normal">(3-4교시)</span></h3>
+                        <div class="space-y-4">
+                            <div class="flex items-center gap-4 bg-gray-50 p-4 rounded-xl">
+                                <span class="font-bold text-gray-500 w-16 text-center">12:00<br>~ 12:30</span>
+                                <div class="flex-1">
+                                    <h4 class="font-bold text-indigo-600">사전 플립 러닝 (30분)</h4>
+                                    <p class="text-sm text-gray-600">사전 영상 강의 시청 등</p>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-4 bg-indigo-50 p-4 rounded-xl border border-indigo-100">
+                                <span class="font-bold text-gray-500 w-16 text-center">12:30<br>~ 14:00</span>
+                                <div class="flex-1">
+                                    <h4 class="font-bold text-gray-800">대면 연강 (90분)</h4>
+                                    <p class="text-sm text-gray-600">45분 + 45분 실습 등<br>(*쉬는 시간 없이 실습 중 개별 휴식)</p>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-4 bg-gray-50 p-4 rounded-xl">
+                                <span class="font-bold text-gray-500 w-16 text-center">14:00<br>~ 14:30</span>
+                                <div class="flex-1">
+                                    <h4 class="font-bold text-gray-500">사후 플립 러닝 (30분)</h4>
+                                    <p class="text-sm text-gray-600">영상 시청 마무리 및 <strong>장비 반납</strong></p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Meta Quest 2 -->
+            <div>
+                <h2 class="text-3xl font-bold text-gray-800 mb-6 flex items-center gap-3">
+                    <span class="text-indigo-600"><i class="fas fa-vr-cardboard"></i></span> Meta Quest 2 소개
+                </h2>
+                <p class="text-lg text-gray-600 mb-8 font-light">이번 학기 동안 여러분의 가장 든든한 파트너가 될 실감형 XR 기기입니다.</p>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                    <div class="bg-white p-8 rounded-2xl shadow-sm border border-gray-100 hover:-translate-y-1 transition duration-300">
+                        <div class="text-3xl text-blue-500 mb-4"><i class="fas fa-headset"></i></div>
+                        <h3 class="font-bold text-lg mb-2 text-gray-800">All-in-One VR</h3>
+                        <p class="text-gray-600 text-sm leading-relaxed">PC 연결 없이 독립적으로 구동되는 스탠드얼론 기기로 자유로운 무선 환경을 제공합니다.</p>
+                    </div>
+                    <div class="bg-white p-8 rounded-2xl shadow-sm border border-gray-100 hover:-translate-y-1 transition duration-300">
+                        <div class="text-3xl text-purple-500 mb-4"><i class="fas fa-gamepad"></i></div>
+                        <h3 class="font-bold text-lg mb-2 text-gray-800">6DoF & 핸드 트래킹</h3>
+                        <p class="text-gray-600 text-sm leading-relaxed">상하좌우 전후 이동을 정밀하게 추적하며, 컨트롤러 없는 맨손 조작도 지원합니다.</p>
+                    </div>
+                    <div class="bg-white p-8 rounded-2xl shadow-sm border border-gray-100 hover:-translate-y-1 transition duration-300">
+                        <div class="text-3xl text-rose-500 mb-4"><i class="fas fa-link"></i></div>
+                        <h3 class="font-bold text-lg mb-2 text-gray-800">PC VR 연동 (Link)</h3>
+                        <p class="text-gray-600 text-sm leading-relaxed">C타입 케이블로 PC와 연결하여 Unity 고사양 렌더링 작업 및 테스트를 원활하게 진행합니다.</p>
+                    </div>
+                </div>
+
+                <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-200">
+                    <h3 class="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
+                        <i class="fab fa-youtube text-red-500"></i> 필수 참고 영상 가이드
+                    </h3>
+                    <div class="grid grid-cols-2 md:grid-cols-5 gap-4">
+                        <a href="https://www.youtube.com/watch?v=ATVGl9wOJsM" target="_blank" class="block group relative rounded-xl overflow-hidden bg-gray-100 border border-gray-200">
+                            <img src="https://img.youtube.com/vi/ATVGl9wOJsM/hqdefault.jpg" alt="안내 영상 1" class="w-full aspect-video object-cover group-hover:scale-105 transition duration-300">
+                            <div class="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition"><i class="fab fa-youtube text-white text-2xl"></i></div>
+                        </a>
+                        <a href="https://www.youtube.com/watch?v=uJCAZabPwmg&list=PLL2xVXGs1SP48B3fTgaAjiHks6gSEaQUn" target="_blank" class="block group relative rounded-xl overflow-hidden bg-gray-100 border border-gray-200">
+                            <img src="https://img.youtube.com/vi/uJCAZabPwmg/hqdefault.jpg" alt="안내 영상 2" class="w-full aspect-video object-cover group-hover:scale-105 transition duration-300">
+                            <div class="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition"><i class="fab fa-youtube text-white text-2xl"></i></div>
+                        </a>
+                        <a href="https://www.youtube.com/watch?v=60yP8f5E-B4&t=61s" target="_blank" class="block group relative rounded-xl overflow-hidden bg-gray-100 border border-gray-200">
+                            <img src="https://img.youtube.com/vi/60yP8f5E-B4/hqdefault.jpg" alt="안내 영상 3" class="w-full aspect-video object-cover group-hover:scale-105 transition duration-300">
+                            <div class="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition"><i class="fab fa-youtube text-white text-2xl"></i></div>
+                        </a>
+                        <a href="https://www.youtube.com/watch?v=HgP4VhaOfVw" target="_blank" class="block group relative rounded-xl overflow-hidden bg-gray-100 border border-gray-200">
+                            <img src="https://img.youtube.com/vi/HgP4VhaOfVw/hqdefault.jpg" alt="안내 영상 4" class="w-full aspect-video object-cover group-hover:scale-105 transition duration-300">
+                            <div class="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition"><i class="fab fa-youtube text-white text-2xl"></i></div>
+                        </a>
+                        <a href="https://www.youtube.com/watch?v=tLsAnrsXoxA" target="_blank" class="block group relative rounded-xl overflow-hidden bg-gray-100 border border-gray-200">
+                            <img src="https://img.youtube.com/vi/tLsAnrsXoxA/hqdefault.jpg" alt="안내 영상 5" class="w-full aspect-video object-cover group-hover:scale-105 transition duration-300">
+                            <div class="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition"><i class="fab fa-youtube text-white text-2xl"></i></div>
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Seat/Pairing -->
+            <div class="bg-indigo-900 text-white p-10 rounded-3xl shadow-lg flex flex-col md:flex-row items-center gap-10">
+                <div class="flex-1 space-y-6">
+                    <h2 class="text-3xl font-bold mb-4">장비 대여 & 지정좌석제 🪑</h2>
+                    <div class="bg-indigo-800 p-6 rounded-2xl border border-indigo-700">
+                        <h3 class="font-bold text-indigo-200 mb-2"><i class="fas fa-box-open"></i> 기본 대여 장비</h3>
+                        <p class="text-sm leading-relaxed">Meta Quest 2, C타입 케이블, 아이마스크, AA배터리 2개<br>(조형예술관 514호 학과 사무실 대여/반납)</p>
+                    </div>
+                    <div class="bg-indigo-800 p-6 rounded-2xl border border-indigo-700">
+                        <h3 class="font-bold text-yellow-300 mb-3"><i class="fas fa-exclamation-circle"></i> 3주차부터 '지정좌석제/페어' 시행</h3>
+                        <ul class="text-sm leading-relaxed space-y-3 text-indigo-100">
+                            <li class="flex gap-2"><strong class="text-yellow-400">목적:</strong> 점심시간 장비 혼잡 해소 및 실습 PC 데이터 연계</li>
+                            <li class="flex gap-2"><strong class="text-yellow-400">매칭:</strong> 같은 좌석의 오전/오후 분반 학생을 <strong>1:1 페어(Pair)</strong>로 지정</li>
+                            <li class="flex gap-2"><strong class="text-yellow-400">인계:</strong> 오전 학생이 빌린 장비를 자리에 두면, 오후 학생이 사용 후 최종 반납</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="text-[10rem] text-indigo-400 opacity-50 hidden md:block px-8">
+                    <i class="fas fa-vr-cardboard"></i>
+                </div>
+            </div>
+            
+        </div>
+    </section>
+
+    <!-- Section 9: 평가 기준 -->
+    <section id="grading" class="py-20 px-4 bg-white">
+        <div class="max-w-5xl mx-auto">
+            <h2 class="text-3xl font-bold text-gray-800 mb-4 text-center">성적 평가 기준 📊</h2>
+            <p class="text-center text-indigo-600 font-bold mb-10 bg-indigo-50 inline-block px-4 py-2 rounded-full mx-auto table">상대평가 (A등급 0~50% / B~F 제한없음)</p>
+            
+            <div class="grid grid-cols-2 md:grid-cols-5 gap-4 mb-10">
+                <div class="bg-slate-50 p-6 rounded-2xl border border-gray-200 text-center border-b-4 border-b-red-500">
+                    <div class="text-3xl font-black text-red-500 mb-2">20%</div>
+                    <div class="font-bold text-gray-700">출석</div>
+                </div>
+                <div class="bg-slate-50 p-6 rounded-2xl border border-gray-200 text-center border-b-4 border-b-green-500">
+                    <div class="text-3xl font-black text-green-500 mb-2">20%</div>
+                    <div class="font-bold text-gray-700">과제</div>
+                </div>
+                <div class="bg-slate-50 p-6 rounded-2xl border border-gray-200 text-center border-b-4 border-b-blue-500">
+                    <div class="text-3xl font-black text-blue-500 mb-2">20%</div>
+                    <div class="font-bold text-gray-700 text-sm">팀프1(중간)</div>
+                </div>
+                <div class="bg-white p-6 rounded-2xl border border-purple-200 text-center border-b-4 border-b-purple-500 transform scale-105 shadow-md">
+                    <div class="text-4xl font-black text-purple-500 mb-2">30%</div>
+                    <div class="font-bold text-gray-800 text-sm">팀프2(기말)</div>
+                </div>
+                <div class="bg-slate-50 p-6 rounded-2xl border border-gray-200 text-center border-b-4 border-b-yellow-500">
+                    <div class="text-3xl font-black text-yellow-500 mb-2">10%</div>
+                    <div class="font-bold text-gray-700">발표</div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <!-- 출석 감점 주의 -->
+                <div class="bg-red-50 p-8 rounded-3xl border border-red-200 flex flex-col justify-center">
+                    <h3 class="font-bold text-red-800 mb-4 text-xl"><i class="fas fa-exclamation-triangle"></i> 출석 감점 주의</h3>
+                    <ul class="text-sm text-gray-700 space-y-3 leading-relaxed">
+                        <li>• 총 수업시간 1/3 초과 결석 시 'F' 처리 (개인 진단서 인정 불가, 교무/학생처 직인 필수)</li>
+                        <li>• 사유 미증빙 결석은 <strong>1시간당 -1점</strong> 처리됩니다.</li>
+                        <li class="bg-red-100 p-2 rounded text-red-900 font-bold">• 대면 수업은 1일 2시간 연강이므로, 하루 결석 시 총 -2점이 감점됩니다. (상대평가에서 치명적)</li>
+                    </ul>
+                </div>
+                
+                <!-- 상대평가에 대한 안내 -->
+                <div class="bg-blue-50 p-8 rounded-3xl border border-blue-200 flex flex-col justify-center">
+                    <h3 class="font-bold text-blue-800 mb-4 text-xl"><i class="fas fa-info-circle"></i> 상대평가에 대한 조심스러운 안내</h3>
+                    <p class="text-sm text-gray-700 leading-relaxed mb-4">
+                        본 과목은 상대평가로 진행됩니다. 여러분 모두 훌륭한 성과를 보여주시더라도, 상대적으로 조금 더 많은 시간을 쏟거나 성실히 참여한 학우분들로 인해 불가피하게 'A' 등급을 드리지 못하는 안타까운 상황이 종종 발생합니다.
+                    </p>
+                    <p class="text-sm text-gray-700 leading-relaxed font-bold">
+                        성적표의 결과 문자보다, 한 학기 동안 여러분이 쏟은 열정과 그로 인해 얻어간 값진 성장에 더 큰 자부심을 가져주시길 진심으로 부탁드립니다.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Section 10: 15주차 강의 계획 -->
+    <section id="schedule" class="py-20 px-4 bg-slate-50 border-t border-gray-200">
+        <div class="max-w-6xl mx-auto">
+            <h2 class="text-3xl font-bold text-gray-800 mb-10 flex items-center gap-3">
+                <span class="text-indigo-600"><i class="fas fa-calendar-alt"></i></span> 주차별 강의 계획 (15주)
+            </h2>
+            
+            <div class="bg-white p-8 md:p-12 rounded-3xl shadow-sm border border-gray-200">
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-x-16 gap-y-6">
+                    
+                    <!-- 1~8주차 -->
+                    <div class="space-y-6">
+                        <div class="flex items-start gap-4 border-b border-gray-100 pb-4">
+                            <span class="bg-gray-100 text-gray-600 font-bold px-3 py-1 rounded-lg text-sm shrink-0 w-16 text-center">1주차</span>
+                            <div><span class="font-bold text-indigo-600 mr-2">3/4</span> 오리엔테이션</div>
+                        </div>
+                        <div class="flex items-start gap-4 border-b border-red-200 pb-4 bg-red-50 -mx-4 px-4 pt-4 rounded-xl shadow-sm">
+                            <span class="bg-red-200 text-red-800 font-bold px-3 py-1 rounded-lg text-sm shrink-0 w-16 text-center">2주차</span>
+                            <div>
+                                <span class="font-bold text-red-600 mr-2">3/11</span> 
+                                <strong class="text-red-700 text-lg">학교 등교 안 함! (100% 온라인)</strong><br>
+                                <p class="text-sm text-red-600 font-bold mt-1">※ 해외 출장으로 인해 전체 온라인 영상 강의 대체</p>
+                                <ul class="text-sm text-gray-700 mt-2 space-y-1 bg-white/60 p-3 rounded-lg">
+                                    <li><strong>[1차시]</strong> Blender 5.0 설치, 환경설정 및 기초 조작</li>
+                                    <li><strong>[2차시]</strong> 계란 후라이 모델링/렌더링 실습 및 Quest 사용법</li>
+                                </ul>
+                            </div>
+                        </div>
+                        <div class="flex items-start gap-4 border-b border-gray-100 pb-4">
+                            <span class="bg-indigo-100 text-indigo-800 font-bold px-3 py-1 rounded-lg text-sm shrink-0 w-16 text-center">3주차</span>
+                            <div>
+                                <span class="font-bold text-indigo-600 mr-2">3/18</span> XR 장비 활용의 이해<br>
+                                <ul class="text-sm text-gray-500 mt-2 space-y-1">
+                                    <li>• Meta Quest 장비 PC 연결 및 기초 체험</li>
+                                    <li>• Blender 오브젝트 관리 실습</li>
+                                    <li>• VRChat 콘텐츠 체험</li>
+                                </ul>
+                            </div>
+                        </div>
+                        <div class="flex items-start gap-4 border-b border-gray-100 pb-4">
+                            <span class="bg-indigo-100 text-indigo-800 font-bold px-3 py-1 rounded-lg text-sm shrink-0 w-16 text-center">4주차</span>
+                            <div>
+                                <span class="font-bold text-indigo-600 mr-2">3/25</span> XR 디자인 기초 실습 1<br>
+                                <ul class="text-sm text-gray-500 mt-2 space-y-1">
+                                    <li>• VR 아바타 제작 및 내보내기 (Vroid)</li>
+                                    <li>• VRC 개발환경 세팅 (Unity Hub, VCC 설치)</li>
+                                </ul>
+                            </div>
+                        </div>
+                        <div class="flex items-start gap-4 border-b border-gray-100 pb-4">
+                            <span class="bg-gray-100 text-gray-600 font-bold px-3 py-1 rounded-lg text-sm shrink-0 w-16 text-center">5주차</span>
+                            <div><span class="font-bold text-indigo-600 mr-2">4/1</span> XR 디자인 기초 실습 2</div>
+                        </div>
+                        <div class="flex items-start gap-4 border-b border-gray-100 pb-4">
+                            <span class="bg-gray-100 text-gray-600 font-bold px-3 py-1 rounded-lg text-sm shrink-0 w-16 text-center">6주차</span>
+                            <div><span class="font-bold text-indigo-600 mr-2">4/8</span> XR 디자인 기초 실습 3</div>
+                        </div>
+                        <div class="flex items-start gap-4 pb-4 bg-blue-50 -mx-4 px-4 pt-4 rounded-xl">
+                            <span class="bg-blue-200 text-blue-800 font-bold px-3 py-1 rounded-lg text-sm shrink-0 w-16 text-center">7주차</span>
+                            <div>
+                                <span class="font-bold text-indigo-600 mr-2">4/15</span> 
+                                <strong class="text-blue-700 text-lg">XR 디자인 중간 프로젝트 발표/평가</strong>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 8~15주차 -->
+                    <div class="space-y-6">
+                        <div class="flex items-start gap-4 border-b border-gray-100 pb-4 pt-4 lg:pt-0">
+                            <span class="bg-gray-100 text-gray-600 font-bold px-3 py-1 rounded-lg text-sm shrink-0 w-16 text-center">8주차</span>
+                            <div><span class="font-bold text-indigo-600 mr-2">4/22</span> XR 디자인 기초 실습 4</div>
+                        </div>
+                        <div class="flex items-start gap-4 border-b border-gray-100 pb-4">
+                            <span class="bg-gray-100 text-gray-600 font-bold px-3 py-1 rounded-lg text-sm shrink-0 w-16 text-center">9주차</span>
+                            <div><span class="font-bold text-indigo-600 mr-2">4/29</span> XR 디자인 기초 실습 5</div>
+                        </div>
+                        <div class="flex items-start gap-4 border-b border-gray-100 pb-4">
+                            <span class="bg-gray-100 text-gray-600 font-bold px-3 py-1 rounded-lg text-sm shrink-0 w-16 text-center">10주차</span>
+                            <div><span class="font-bold text-indigo-600 mr-2">5/6</span> XR 디자인 기초 실습 6</div>
+                        </div>
+                        <div class="flex items-start gap-4 border-b border-gray-100 pb-4">
+                            <span class="bg-gray-100 text-gray-600 font-bold px-3 py-1 rounded-lg text-sm shrink-0 w-16 text-center">11주차</span>
+                            <div><span class="font-bold text-indigo-600 mr-2">5/13</span> XR 디자인 기초 실습 7</div>
+                        </div>
+                        <div class="flex items-start gap-4 border-b border-gray-100 pb-4">
+                            <span class="bg-gray-100 text-gray-600 font-bold px-3 py-1 rounded-lg text-sm shrink-0 w-16 text-center">12주차</span>
+                            <div>
+                                <span class="font-bold text-indigo-600 mr-2">5/20</span> XR 디자인 기초 실습 8<br>
+                                <p class="text-sm text-gray-500 mt-1">올해 학사일정 상 개교기념일 휴무 없음</p>
+                            </div>
+                        </div>
+                        <div class="flex items-start gap-4 border-b border-gray-100 pb-4">
+                            <span class="bg-gray-100 text-gray-600 font-bold px-3 py-1 rounded-lg text-sm shrink-0 w-16 text-center">13주차</span>
+                            <div><span class="font-bold text-indigo-600 mr-2">5/27</span> XR 디자인 기초 실습 9</div>
+                        </div>
+                        <div class="flex items-start gap-4 border-b border-gray-100 pb-4">
+                            <span class="bg-gray-100 text-gray-600 font-bold px-3 py-1 rounded-lg text-sm shrink-0 w-16 text-center">14주차</span>
+                            <div>
+                                <span class="font-bold text-indigo-600 mr-2">6/10</span> XR 디자인 기초 실습 10<br>
+                                <p class="text-sm text-rose-500 mt-1 font-bold">※ 6/3 지방선거 휴강</p>
+                            </div>
+                        </div>
+                        <div class="flex items-start gap-4 pb-4 bg-purple-50 -mx-4 px-4 pt-4 rounded-xl">
+                            <span class="bg-purple-200 text-purple-800 font-bold px-3 py-1 rounded-lg text-sm shrink-0 w-16 text-center">15주차</span>
+                            <div>
+                                <span class="font-bold text-indigo-600 mr-2">6/17</span> 
+                                <strong class="text-purple-700 text-lg">XR 콘텐츠 최종 프로젝트 발표</strong>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Section 11: Closing Message -->
+    <section class="py-24 px-4 bg-indigo-700 text-white text-center">
+        <div class="max-w-4xl mx-auto">
+            <div class="text-6xl text-indigo-400 mb-8"><i class="fas fa-quote-left"></i></div>
+            <h2 class="text-4xl md:text-5xl font-extrabold mb-10 leading-tight">
+                학점보다는 <span class="text-yellow-300">경험</span>을,<br>
+                성적보다는 <span class="text-pink-300">관계</span>를 남기세요.
+            </h2>
+            <div class="bg-indigo-800/50 p-10 rounded-3xl inline-block text-left max-w-2xl border border-indigo-500/30 backdrop-blur-sm">
+                <p class="text-lg text-indigo-100 leading-relaxed mb-6">
+                    팀 프로젝트가 여러명이 동시에 플레이하는 테트리스처럼 처음엔 삐걱대고, 때론 소중한 작업물이 날아가는 위기도 겪을 수 있습니다.
+                </p>
+                <p class="text-lg text-indigo-100 leading-relaxed">
+                    하지만 이 모든 과정 속에서 서로의 장점을 발견하고 함께 문제를 해결하며, <strong>훗날 현업에서 다시 만날 든든한 동료</strong>를 얻어가는 귀중한 한 학기가 되기를 진심으로 바랍니다.
+                </p>
+            </div>
+        </div>
+    </section>
+
+</body>
+</html>
+```
