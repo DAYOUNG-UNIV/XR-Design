@@ -755,6 +755,7 @@
         const slides = document.querySelectorAll('.slide');
         let currentSlide = 0;
         const totalSlides = slides.length;
+        let isAnimating = false;
 
         function updateSlide() {
             slides.forEach((slide, index) => {
@@ -784,10 +785,41 @@
             }
         }
 
+        // 키보드 이벤트
         document.addEventListener('keydown', (e) => {
             if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'PageDown') nextSlide();
             else if (e.key === 'ArrowLeft' || e.key === 'PageUp') prevSlide();
         });
+
+        // 마우스 휠 스크롤 이벤트 (디바운싱 적용)
+        window.addEventListener('wheel', (e) => {
+            // 스크롤 가능한 내부 컨테이너 처리 (.custom-scrollbar 영역 등)
+            const scrollContainer = e.target.closest('.overflow-y-auto');
+            if (scrollContainer) {
+                const isAtTop = scrollContainer.scrollTop <= 0;
+                // scrollHeight와 clientHeight의 차이가 scrollTop과 거의 같으면 바닥에 도달한 것
+                const isAtBottom = Math.abs(scrollContainer.scrollHeight - scrollContainer.clientHeight - scrollContainer.scrollTop) <= 2;
+                
+                // 컨테이너 내부 스크롤이 아직 남아있다면 기본 스크롤 동작 수행 (슬라이드 넘기지 않음)
+                if (e.deltaY > 0 && !isAtBottom) return; 
+                if (e.deltaY < 0 && !isAtTop) return; 
+            }
+
+            // 애니메이션 중복 실행 방지
+            if (isAnimating) return;
+
+            if (e.deltaY > 0) {
+                nextSlide();
+            } else if (e.deltaY < 0) {
+                prevSlide();
+            }
+
+            isAnimating = true;
+            // CSS transition 시간(0.5s)을 고려해 0.6초 딜레이
+            setTimeout(() => {
+                isAnimating = false;
+            }, 600);
+        }, { passive: false });
 
         // Initialize
         updateSlide();
