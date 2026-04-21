@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>기말 프로젝트 공간 빌딩 워크샵</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.8/dist/web/static/pretendard.css" rel="stylesheet" />
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        body {
+            font-family: 'Pretendard', sans-serif;
+            background-color: #f3f4f6;
+            background-image: radial-gradient(#e5e7eb 1px, transparent 1px);
+            background-size: 20px 20px;
+        }
+        .step-content {
+            display: none;
+            animation: fadeIn 0.3s ease-in-out;
+        }
+        .step-content.active {
+            display: block;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .checkbox-custom:checked + label {
+            background-color: #ede9fe;
+            border-color: #8b5cf6;
+            color: #5b21b6;
+        }
+    </style>
+</head>
+<body class="text-gray-800 antialiased min-h-screen pb-20">
+
+    <!-- Header -->
+    <header class="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-10">
+        <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h1 class="text-2xl font-bold text-gray-900 flex items-center gap-2">
+                        <i data-lucide="cuboid" class="text-indigo-600"></i>
+                        기말 프로젝트 공간 빌딩 워크샵
+                    </h1>
+                    <p class="mt-1 text-sm text-gray-500">순서에 따라 팀원들과 함께 프로젝트 기획을 구체화해 보세요.</p>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 mt-8 space-y-4">
+
+        <!-- STEP 1 -->
+        <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+            <button onclick="toggleStep('step1')" class="w-full px-6 py-5 flex items-center justify-between bg-indigo-50 hover:bg-indigo-100 transition-colors text-left">
+                <div class="flex items-center gap-4">
+                    <span class="flex items-center justify-center w-10 h-10 rounded-full bg-indigo-600 text-white font-bold text-lg">1</span>
+                    <h2 class="text-xl font-bold text-indigo-900">임시 조 착석 및 '테마 예고편' 제작</h2>
+                </div>
+                <i data-lucide="chevron-down" class="text-indigo-600 transition-transform duration-300" id="icon-step1"></i>
+            </button>
+            <div id="step1" class="step-content active px-6 py-6 border-t border-gray-100">
+                <p class="text-gray-600 mb-6">피그잼(FigJam)에 모여 우리 조가 만들 세계관의 큰 그림을 맞추는 단계입니다.</p>
+                
+                <div class="space-y-8">
+                    <!-- 1.1 -->
+                    <div>
+                        <h3 class="text-lg font-bold text-gray-800 flex items-center gap-2 mb-3">
+                            <i data-lucide="message-circle" class="w-5 h-5 text-indigo-500"></i> 1. 내 키워드 꺼내기
+                        </h3>
+                        <div class="bg-gray-50 rounded-lg p-4 text-sm text-gray-700">
+                            사전 조사에서 본인이 제출했던 <strong>'공간 컨셉'</strong>과 <strong>'희망 역할(기획/3D/로직/영상 등)'</strong>을 조원들에게 공유합니다. 서로의 교집합을 찾아보세요.
+                        </div>
+                    </div>
+
+                    <!-- 1.2 -->
+                    <div>
+                        <h3 class="text-lg font-bold text-gray-800 flex items-center gap-2 mb-4">
+                            <i data-lucide="check-square" class="w-5 h-5 text-indigo-500"></i> 2. 공간 설정 체크리스트
+                        </h3>
+                        <p class="text-sm text-gray-500 mb-4">우리 조의 방향성과 가장 잘 맞는 항목을 카테고리별로 1~2개씩 선택해 합의해 보세요.</p>
+                        
+                        <div class="grid md:grid-cols-3 gap-4">
+                            <!-- 시간대/날씨 -->
+                            <div class="border rounded-lg p-4 bg-white shadow-sm">
+                                <h4 class="font-bold text-indigo-700 mb-3 text-sm flex items-center gap-1"><i data-lucide="cloud-sun" class="w-4 h-4"></i> 시간대 & 날씨</h4>
+                                <ul class="space-y-2.5 text-sm text-gray-700">
+                                    <li class="flex items-start gap-2"><input type="checkbox" class="rounded text-indigo-600 mt-0.5 shrink-0"> <span class="leading-tight">☀️ 청명한 낮 (눈부신 자연광, 선명한 그림자)</span></li>
+                                    <li class="flex items-start gap-2"><input type="checkbox" class="rounded text-indigo-600 mt-0.5 shrink-0"> <span class="leading-tight">⛅ 흐린 날 (빛바랜 색감, 차분하고 부드러운 빛)</span></li>
+                                    <li class="flex items-start gap-2"><input type="checkbox" class="rounded text-indigo-600 mt-0.5 shrink-0"> <span class="leading-tight">🌅 해 질 녘 (황금빛 노을, 길게 늘어지는 그림자)</span></li>
+                                    <li class="flex items-start gap-2"><input type="checkbox" class="rounded text-indigo-600 mt-0.5 shrink-0"> <span class="leading-tight">🌆 매직 아워 (보랏빛/오렌지빛이 섞인 하늘)</span></li>
+                                    <li class="flex items-start gap-2"><input type="checkbox" class="rounded text-indigo-600 mt-0.5 shrink-0"> <span class="leading-tight">🌙 깊은 밤 (은은한 달빛, 짙은 어둠의 대비)</span></li>
+                                    <li class="flex items-start gap-2"><input type="checkbox" class="rounded text-indigo-600 mt-0.5 shrink-0"> <span class="leading-tight">🌃 화려한 밤 (네온사인, 다채로운 인공 조명)</span></li>
+                                    <li class="flex items-start gap-2"><input type="checkbox" class="rounded text-indigo-600 mt-0.5 shrink-0"> <span class="leading-tight">🌫️ 새벽 안개 (시야가 제한된 몽환적인 분위기)</span></li>
+                                    <li class="flex items-start gap-2"><input type="checkbox" class="rounded text-indigo-600 mt-0.5 shrink-0"> <span class="leading-tight">🌧️ 비/폭풍우 (우중충함, 물에 젖은 바닥 반사)</span></li>
+                                    <li class="flex items-start gap-2"><input type="checkbox" class="rounded text-indigo-600 mt-0.5 shrink-0"> <span class="leading-tight">🌌 우주/초현실 (물리법칙을 벗어난 비현실적 광원)</span></li>
+                                </ul>
+                            </div>
+                            <!-- 시각적 테마 (확장됨) -->
+                            <div class="border rounded-lg p-4 bg-white shadow-sm">
+                                <h4 class="font-bold text-indigo-700 mb-3 text-sm flex items-center gap-1"><i data-lucide="palette" class="w-4 h-4"></i> 시각적 테마</h4>
+                                <ul class="space-y-2.5 text-sm text-gray-700">
+                                    <li class="flex items-start gap-2"><input type="checkbox" class="rounded text-indigo-600 mt-0.5 shrink-0"> <span class="leading-tight">🌿 힐링 정원 / 숲 (식물, 동양풍, 몽글몽글한 자연)</span></li>
+                                    <li class="flex items-start gap-2"><input type="checkbox" class="rounded text-indigo-600 mt-0.5 shrink-0"> <span class="leading-tight">🌊 심해 / 물의 공간 (수중 도시, 고요한 바다)</span></li>
+                                    <li class="flex items-start gap-2"><input type="checkbox" class="rounded text-indigo-600 mt-0.5 shrink-0"> <span class="leading-tight">⚙️ 사이버펑크 (화려한 네온, 복잡한 기계 도시)</span></li>
+                                    <li class="flex items-start gap-2"><input type="checkbox" class="rounded text-indigo-600 mt-0.5 shrink-0"> <span class="leading-tight">🕰️ 스팀펑크 / 인더스트리얼 (톱니바퀴, 낡은 금속)</span></li>
+                                    <li class="flex items-start gap-2"><input type="checkbox" class="rounded text-indigo-600 mt-0.5 shrink-0"> <span class="leading-tight">📺 Y2K / 레트로 (낡은 전자기기, 90년대 캠코더 감성)</span></li>
+                                    <li class="flex items-start gap-2"><input type="checkbox" class="rounded text-indigo-600 mt-0.5 shrink-0"> <span class="leading-tight">🍭 키치 / 테마파크 (알록달록, 장난감, 놀이공원)</span></li>
+                                    <li class="flex items-start gap-2"><input type="checkbox" class="rounded text-indigo-600 mt-0.5 shrink-0"> <span class="leading-tight">🏰 환상 / 동화 (마법, 거대한 사물, 앨리스의 세계)</span></li>
+                                    <li class="flex items-start gap-2"><input type="checkbox" class="rounded text-indigo-600 mt-0.5 shrink-0"> <span class="leading-tight">🏚️ 포스트 아포칼립스 (자연이 덮은 폐허, 생존)</span></li>
+                                    <li class="flex items-start gap-2"><input type="checkbox" class="rounded text-indigo-600 mt-0.5 shrink-0"> <span class="leading-tight">🔮 리미널 스페이스 (무한 반복, 묘하게 기괴한 공간)</span></li>
+                                    <li class="flex items-start gap-2"><input type="checkbox" class="rounded text-indigo-600 mt-0.5 shrink-0"> <span class="leading-tight">🏛️ 모던 / 미니멀 갤러리 (깔끔한 직선, 여백의 미)</span></li>
+                                    <li class="flex items-start gap-2"><input type="checkbox" class="rounded text-indigo-600 mt-0.5 shrink-0"> <span class="leading-tight">☁️ 천상 / 신화적 (구름 위 성전, 성스럽고 초월적인)</span></li>
+                                    <li class="flex items-start gap-2"><input type="checkbox" class="rounded text-indigo-600 mt-0.5 shrink-0"> <span class="leading-tight">🩸 다크 / 고딕 미스터리 (으스스한 저택, 그림자)</span></li>
+                                </ul>
+                            </div>
+                            <!-- 핵심 감정 -->
+                            <div class="border rounded-lg p-4 bg-white shadow-sm">
+                                <h4 class="font-bold text-indigo-700 mb-3 text-sm flex items-center gap-1"><i data-lucide="heart" class="w-4 h-4"></i> 방문자 핵심 감정</h4>
+                                <ul class="space-y-2.5 text-sm text-gray-700">
+                                    <li class="flex items-start gap-2"><input type="checkbox" class="rounded text-indigo-600 mt-0.5 shrink-0"> <span class="leading-tight">☕ 편안함과 위로 (마음이 차분해지는 힐링)</span></li>
+                                    <li class="flex items-start gap-2"><input type="checkbox" class="rounded text-indigo-600 mt-0.5 shrink-0"> <span class="leading-tight">😲 경이로움과 압도감 (스케일에 감탄하는 경험)</span></li>
+                                    <li class="flex items-start gap-2"><input type="checkbox" class="rounded text-indigo-600 mt-0.5 shrink-0"> <span class="leading-tight">🎢 호기심과 모험심 (계속 탐험하고 싶은 기대감)</span></li>
+                                    <li class="flex items-start gap-2"><input type="checkbox" class="rounded text-indigo-600 mt-0.5 shrink-0"> <span class="leading-tight">🎉 신남과 해방감 (현실의 스트레스를 벗어나는 즐거움)</span></li>
+                                    <li class="flex items-start gap-2"><input type="checkbox" class="rounded text-indigo-600 mt-0.5 shrink-0"> <span class="leading-tight">🎞️ 아련함과 향수 (과거를 회상하게 되는 뭉클함)</span></li>
+                                    <li class="flex items-start gap-2"><input type="checkbox" class="rounded text-indigo-600 mt-0.5 shrink-0"> <span class="leading-tight">😔 고독감과 쓸쓸함 (세상에 혼자 남겨진 듯한 여운)</span></li>
+                                    <li class="flex items-start gap-2"><input type="checkbox" class="rounded text-indigo-600 mt-0.5 shrink-0"> <span class="leading-tight">🥶 긴장감과 오싹함 (미지의 공간이 주는 스릴)</span></li>
+                                    <li class="flex items-start gap-2"><input type="checkbox" class="rounded text-indigo-600 mt-0.5 shrink-0"> <span class="leading-tight">🤔 신비로움 (현실인지 꿈인지 헷갈리는 몽환)</span></li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 1.3 -->
+                    <div>
+                        <h3 class="text-lg font-bold text-gray-800 flex items-center gap-2 mb-3">
+                            <i data-lucide="image" class="w-5 h-5 text-indigo-500"></i> 3. 레퍼런스 수집 및 1줄 로그라인
+                        </h3>
+                        <div class="bg-gray-50 rounded-lg p-4 text-sm text-gray-700 space-y-3">
+                            <p>📌 각자 합의된 분위기에 맞는 <strong>레퍼런스 이미지(핀터레스트 등)를 1~2장씩 찾아 피그잼에 수집</strong>합니다. (AI 이미지 믹싱 툴을 활용해도 좋습니다.)</p>
+                            <p>📌 수집된 이미지와 키워드를 조합하여 우리 조를 소개할 <strong>'1줄 로그라인'</strong>을 완성합니다.</p>
+                            <div class="bg-white border border-dashed border-gray-300 p-3 rounded text-center text-gray-500 font-medium">
+                                " ( &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; )에서 ( &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; )하는 ( &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ) 공간 "
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- STEP 2 -->
+        <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+            <button onclick="toggleStep('step2')" class="w-full px-6 py-5 flex items-center justify-between bg-white hover:bg-gray-50 transition-colors text-left">
+                <div class="flex items-center gap-4">
+                    <span class="flex items-center justify-center w-10 h-10 rounded-full bg-gray-200 text-gray-600 font-bold text-lg" id="badge-step2">2</span>
+                    <h2 class="text-xl font-bold text-gray-800">전체 테마 전시 및 조 이동 (FA)</h2>
+                </div>
+                <i data-lucide="chevron-down" class="text-gray-400 transition-transform duration-300" id="icon-step2"></i>
+            </button>
+            <div id="step2" class="step-content px-6 py-6 border-t border-gray-100">
+                <div class="flex items-start gap-4 bg-amber-50 border border-amber-200 rounded-lg p-5">
+                    <i data-lucide="megaphone" class="w-6 h-6 text-amber-600 shrink-0 mt-1"></i>
+                    <div>
+                        <h3 class="text-lg font-bold text-amber-800 mb-2">교수님 안내에 따라 진행됩니다!</h3>
+                        <p class="text-sm text-amber-700 mb-4">
+                            모든 조의 '테마 예고편(로그라인과 이미지)'이 메인 스크린에 전시됩니다. 전체 테마를 확인한 후, 본인의 강점과 가장 잘 맞는 조로 자율적인 이동을 시작합니다.
+                        </p>
+                        <ul class="list-disc list-inside text-sm text-amber-800 space-y-1 font-medium">
+                            <li>이동 시 조 인원은 최소 3명 ~ 최대 5명으로 제한합니다.</li>
+                            <li>역할(기획/3D/로직 등)이 너무 겹치지 않는지 꼭 확인하세요.</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- STEP 3 -->
+        <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+            <button onclick="toggleStep('step3')" class="w-full px-6 py-5 flex items-center justify-between bg-white hover:bg-gray-50 transition-colors text-left">
+                <div class="flex items-center gap-4">
+                    <span class="flex items-center justify-center w-10 h-10 rounded-full bg-gray-200 text-gray-600 font-bold text-lg" id="badge-step3">3</span>
+                    <h2 class="text-xl font-bold text-gray-800">최종 팀 확정 및 아이디어 발산</h2>
+                </div>
+                <i data-lucide="chevron-down" class="text-gray-400 transition-transform duration-300" id="icon-step3"></i>
+            </button>
+            <div id="step3" class="step-content px-6 py-6 border-t border-gray-100">
+                <div class="space-y-6">
+                    <div>
+                        <h3 class="text-lg font-bold text-gray-800 flex items-center gap-2 mb-2">
+                            <i data-lucide="users" class="w-5 h-5 text-indigo-500"></i> 1. 새로운 팀원 맞이하기 (3문장 자기소개)
+                        </h3>
+                        <p class="text-sm text-gray-600 mb-3">팀 이동이 끝난 후 확정된 팀원들과 가볍게 인사를 나눕니다.</p>
+                        <div class="bg-gray-50 rounded-lg p-4 text-sm text-gray-700">
+                            1️⃣ "내 이름은 [ OOO ] 입니다."<br>
+                            2️⃣ "우리 조 테마에서 가장 마음에 들었던 부분(또는 합류한 이유)은 [ OOO ] 입니다."<br>
+                            3️⃣ "나는 이번 프로젝트에서 [ 기획 / 3D / 로직 / 영상 등 ] 역할을 맡아 기여하고 싶습니다."
+                        </div>
+                    </div>
+
+                    <div>
+                        <h3 class="text-lg font-bold text-gray-800 flex items-center gap-2 mb-2">
+                            <i data-lucide="lightbulb" class="w-5 h-5 text-indigo-500"></i> 2. 디테일 요소 무작위 발산 (포스트잇)
+                        </h3>
+                        <p class="text-sm text-gray-600 mb-3">공간을 채울 구체적인 요소들을 피그잼 포스트잇에 자유롭게 적어냅니다. (질보다 양!)</p>
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-3 text-center">
+                            <div class="bg-yellow-100 text-yellow-800 p-3 rounded-md text-sm font-medium shadow-sm">건축물/자연물</div>
+                            <div class="bg-green-100 text-green-800 p-3 rounded-md text-sm font-medium shadow-sm">소품(오브젝트)</div>
+                            <div class="bg-blue-100 text-blue-800 p-3 rounded-md text-sm font-medium shadow-sm">사운드/BGM</div>
+                            <div class="bg-pink-100 text-pink-800 p-3 rounded-md text-sm font-medium shadow-sm">인터랙션(상호작용)</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- STEP 4 -->
+        <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+            <button onclick="toggleStep('step4')" class="w-full px-6 py-5 flex items-center justify-between bg-white hover:bg-gray-50 transition-colors text-left">
+                <div class="flex items-center gap-4">
+                    <span class="flex items-center justify-center w-10 h-10 rounded-full bg-gray-200 text-gray-600 font-bold text-lg" id="badge-step4">4</span>
+                    <h2 class="text-xl font-bold text-gray-800">어피니티 다이어그램 & 공간 스케치</h2>
+                </div>
+                <i data-lucide="chevron-down" class="text-gray-400 transition-transform duration-300" id="icon-step4"></i>
+            </button>
+            <div id="step4" class="step-content px-6 py-6 border-t border-gray-100">
+                <div class="space-y-6">
+                    <div>
+                        <h3 class="text-lg font-bold text-gray-800 flex items-center gap-2 mb-2">
+                            <i data-lucide="network" class="w-5 h-5 text-indigo-500"></i> 1. 어피니티 다이어그램 (아이디어 묶기)
+                        </h3>
+                        <p class="text-sm text-gray-600">앞 단계에서 흩뿌려진 포스트잇 중 버릴 것은 버리고, 비슷한 요소끼리 드래그하여 그룹으로 묶어 공간의 구성 요소를 확정합니다.</p>
+                    </div>
+
+                    <div>
+                        <h3 class="text-lg font-bold text-gray-800 flex items-center gap-2 mb-3">
+                            <i data-lucide="map" class="w-5 h-5 text-indigo-500"></i> 2. 탑다운(Top-down) 2D 맵 스케치
+                        </h3>
+                        <p class="text-sm text-gray-600 mb-4">정리된 요소를 바탕으로 유니티(Unity) 씬에 올릴 맵의 평면도를 피그잼이나 종이에 그립니다.</p>
+                        <div class="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                            <h4 class="font-bold text-gray-700 mb-2 text-sm">✅ 스케치 필수 포함 요소</h4>
+                            <ul class="space-y-2 text-sm text-gray-600">
+                                <li class="flex items-start gap-2"><i data-lucide="map-pin" class="w-4 h-4 mt-0.5 text-red-500"></i> <strong>Spawn Point (시작점):</strong> 유저가 처음 공간에 들어왔을 때의 위치</li>
+                                <li class="flex items-start gap-2"><i data-lucide="move" class="w-4 h-4 mt-0.5 text-blue-500"></i> <strong>유저 동선 (Path):</strong> 유저가 둘러보길 바라는 주 이동 경로 (화살표)</li>
+                                <li class="flex items-start gap-2"><i data-lucide="flag" class="w-4 h-4 mt-0.5 text-green-500"></i> <strong>메인 랜드마크:</strong> 공간의 주제를 보여주는 가장 큰 오브젝트의 위치</li>
+                                <li class="flex items-start gap-2"><i data-lucide="shield" class="w-4 h-4 mt-0.5 text-gray-500"></i> <strong>바운더리(가벽):</strong> 맵의 끝을 막아줄 장치 (절벽, 울타리 등)</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- STEP 5 -->
+        <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden mb-10">
+            <button onclick="toggleStep('step5')" class="w-full px-6 py-5 flex items-center justify-between bg-white hover:bg-gray-50 transition-colors text-left">
+                <div class="flex items-center gap-4">
+                    <span class="flex items-center justify-center w-10 h-10 rounded-full bg-gray-200 text-gray-600 font-bold text-lg" id="badge-step5">5</span>
+                    <h2 class="text-xl font-bold text-gray-800">에셋/로직 해체 및 R&R 분배</h2>
+                </div>
+                <i data-lucide="chevron-down" class="text-gray-400 transition-transform duration-300" id="icon-step5"></i>
+            </button>
+            <div id="step5" class="step-content px-6 py-6 border-t border-gray-100">
+                <p class="text-gray-600 mb-6">스케치한 맵을 구현하기 위해 <strong class="text-indigo-600">당장 만들어야 할 준비물 목록</strong>을 작성하고 역할을 나눕니다.</p>
+
+                <div class="overflow-x-auto">
+                    <table class="w-full text-sm text-left text-gray-600 border-collapse border border-gray-200">
+                        <thead class="text-xs text-gray-700 uppercase bg-gray-50">
+                            <tr>
+                                <th class="border border-gray-200 px-4 py-3 bg-indigo-50 w-1/4">카테고리</th>
+                                <th class="border border-gray-200 px-4 py-3">제작해야 할 에셋/로직 명</th>
+                                <th class="border border-gray-200 px-4 py-3">담당자 (R&R)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td class="border border-gray-200 px-4 py-3 font-medium text-gray-900 bg-gray-50" rowspan="2">🎨 3D 에셋 (모델링)</td>
+                                <td class="border border-gray-200 px-4 py-3 text-gray-500 italic">예: 메인 오두막 외관 모델링</td>
+                                <td class="border border-gray-200 px-4 py-3 text-gray-500 italic">예: 김메타</td>
+                            </tr>
+                            <tr>
+                                <td class="border border-gray-200 px-4 py-3 text-gray-500 italic">예: 로우폴리 나무 3종 세트</td>
+                                <td class="border border-gray-200 px-4 py-3 text-gray-500 italic">예: 박블렌</td>
+                            </tr>
+                            <tr>
+                                <td class="border border-gray-200 px-4 py-3 font-medium text-gray-900 bg-gray-50" rowspan="2">⚙️ 로직/개발 (유니티)</td>
+                                <td class="border border-gray-200 px-4 py-3 text-gray-500 italic">예: 다가가면 문 열리는 스크립트</td>
+                                <td class="border border-gray-200 px-4 py-3 text-gray-500 italic">예: 이코딩</td>
+                            </tr>
+                            <tr>
+                                <td class="border border-gray-200 px-4 py-3 text-gray-500 italic">예: 전체 조명(Skybox) 및 지형 세팅</td>
+                                <td class="border border-gray-200 px-4 py-3 text-gray-500 italic">예: 최유닛</td>
+                            </tr>
+                            <tr>
+                                <td class="border border-gray-200 px-4 py-3 font-medium text-gray-900 bg-gray-50">📝 기타 (영상/디자인 등)</td>
+                                <td class="border border-gray-200 px-4 py-3 text-gray-500 italic">예: BGM 서치 및 오프닝 UI 기획</td>
+                                <td class="border border-gray-200 px-4 py-3 text-gray-500 italic">예: 정기획</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                
+                <div class="mt-6 bg-indigo-50 rounded-lg p-4 text-sm text-indigo-900 border border-indigo-100 flex items-start gap-3">
+                    <i data-lucide="info" class="w-5 h-5 shrink-0 mt-0.5"></i>
+                    <div>
+                        <p class="font-bold mb-1">교수님 안내 사항</p>
+                        <p>워크샵이 종료되면 오늘 작업한 피그잼 보드 결과물(팀명, 맵 스케치, 역할 분배표 등)을 캡처하여 정해진 곳(LMS 등)에 업로드 후 퇴실해 주시기 바랍니다. 수고하셨습니다!</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <script>
+        // Initialize Lucide icons
+        lucide.createIcons();
+
+        // Step toggle logic
+        function toggleStep(stepId) {
+            const content = document.getElementById(stepId);
+            const icon = document.getElementById('icon-' + stepId);
+            
+            // Toggle current
+            if (content.classList.contains('active')) {
+                content.classList.remove('active');
+                icon.style.transform = 'rotate(0deg)';
+                updateHeaderStyle(stepId, false);
+            } else {
+                // Close all others (Accordion style)
+                document.querySelectorAll('.step-content').forEach(el => {
+                    el.classList.remove('active');
+                    const otherIcon = document.getElementById('icon-' + el.id);
+                    if(otherIcon) otherIcon.style.transform = 'rotate(0deg)';
+                    updateHeaderStyle(el.id, false);
+                });
+                
+                // Open clicked
+                content.classList.add('active');
+                icon.style.transform = 'rotate(180deg)';
+                updateHeaderStyle(stepId, true);
+            }
+        }
+
+        // Update active header styling
+        function updateHeaderStyle(stepId, isActive) {
+            const button = document.querySelector(`[onclick="toggleStep('${stepId}')"]`);
+            const badge = document.getElementById('badge-' + stepId);
+            const title = button.querySelector('h2');
+            
+            if (isActive) {
+                button.classList.replace('bg-white', 'bg-indigo-50');
+                button.classList.replace('hover:bg-gray-50', 'hover:bg-indigo-100');
+                if(badge) {
+                    badge.classList.replace('bg-gray-200', 'bg-indigo-600');
+                    badge.classList.replace('text-gray-600', 'text-white');
+                }
+                title.classList.replace('text-gray-800', 'text-indigo-900');
+                document.getElementById('icon-' + stepId).classList.replace('text-gray-400', 'text-indigo-600');
+            } else {
+                button.classList.replace('bg-indigo-50', 'bg-white');
+                button.classList.replace('hover:bg-indigo-100', 'hover:bg-gray-50');
+                if(badge) {
+                    badge.classList.replace('bg-indigo-600', 'bg-gray-200');
+                    badge.classList.replace('text-white', 'text-gray-600');
+                }
+                title.classList.replace('text-indigo-900', 'text-gray-800');
+                const icon = document.getElementById('icon-' + stepId);
+                if(icon) {
+                    icon.classList.replace('text-indigo-600', 'text-gray-400');
+                }
+            }
+        }
+
+        // Init initial rotation
+        document.getElementById('icon-step1').style.transform = 'rotate(180deg)';
+    </script>
+</body>
+</html>
