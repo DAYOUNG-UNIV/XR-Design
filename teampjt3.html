@@ -1,0 +1,1151 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>기말 프로젝트 공간 빌딩 워크샵 2</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.8/dist/web/static/pretendard.css" rel="stylesheet" />
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        body {
+            font-family: 'Pretendard', sans-serif;
+            background-color: #f8fafc;
+            background-image: radial-gradient(#cbd5e1 1px, transparent 1px);
+            background-size: 20px 20px;
+        }
+        .step-content {
+            display: none;
+            animation: fadeIn 0.4s ease-out forwards;
+            opacity: 0;
+            transform: translateY(-5px);
+            position: relative;
+            z-index: 20;
+        }
+        .step-content.active {
+            display: block;
+        }
+        @keyframes fadeIn {
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        /* 스텝 박스 겹침(Z-index) 방지용 스타일 */
+        .step-wrapper {
+            position: relative;
+            z-index: 1;
+            transition: z-index 0s;
+        }
+        .step-wrapper:hover {
+            z-index: 100; /* 마우스가 올라간 박스를 최상단으로 올려 툴팁이 밑에 가려지지 않게 함 */
+        }
+
+        /* 툴팁(Tooltip) 및 팁(Tip) CSS 추가 */
+        .tooltip-trigger {
+            position: relative;
+            display: inline-block;
+            border-bottom: 1.5px dashed #94a3b8;
+            cursor: help;
+        }
+        .tooltip-content {
+            visibility: hidden;
+            opacity: 0;
+            position: absolute;
+            bottom: calc(100% + 8px);
+            left: 50%;
+            /* JS에서 계산한 보정값(--shift-x)을 더해 동적으로 위치 이동 */
+            transform: translateX(calc(-50% + var(--shift-x, 0px)));
+            background-color: #1e293b; /* slate-800 */
+            color: #f8fafc;
+            text-align: center;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            font-weight: 400;
+            line-height: 1.4;
+            width: max-content;
+            max-width: 220px;
+            z-index: 50;
+            transition: opacity 0.2s ease-in-out;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            pointer-events: none;
+            word-break: keep-all;
+        }
+        /* 말풍선 꼬리(화살표) */
+        .tooltip-content::after {
+            content: "";
+            position: absolute;
+            top: 100%;
+            /* 상자가 이동한 만큼 화살표는 반대 방향으로 이동하여 원래 단어를 유지 */
+            left: calc(50% - var(--shift-x, 0px));
+            margin-left: -6px;
+            border-width: 6px;
+            border-style: solid;
+            border-color: #1e293b transparent transparent transparent;
+        }
+
+        .tooltip-trigger:hover .tooltip-content {
+            visibility: visible;
+            opacity: 1;
+        }
+        
+        /* 팁 전용 스타일 */
+        .tip-badge {
+            display: inline-flex;
+            align-items: center;
+            background-color: #fffbeb;
+            color: #d97706;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 0.7rem;
+            font-weight: 700;
+            cursor: help;
+            border: 1px solid #fde68a;
+            margin-left: 6px;
+            vertical-align: middle;
+            border-bottom: none;
+        }
+    </style>
+</head>
+<body class="text-slate-800 antialiased min-h-screen pb-24">
+
+    <!-- Header (스크롤 시 박스보다 항상 위에 있도록 z-50 적용) -->
+    <header class="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-50">
+        <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h1 class="text-2xl font-bold text-gray-900 flex items-center gap-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="cuboid" aria-hidden="true" class="lucide lucide-cuboid text-indigo-600"><path d="M10 22v-8"></path><path d="M2.336 8.89 10 14l11.715-7.029"></path><path d="M22 14a2 2 0 0 1-.971 1.715l-10 6a2 2 0 0 1-2.138-.05l-6-4A2 2 0 0 1 2 16v-6a2 2 0 0 1 .971-1.715l10-6a2 2 0 0 1 2.138.05l6 4A2 2 0 0 1 22 8z"></path></svg>
+                        기말 프로젝트 공간 빌딩 워크샵
+                    </h1>
+                    <p class="mt-1 text-sm text-gray-500">순서에 따라 팀원들과 함께 프로젝트 기획을 구체화해 보세요.</p>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 mt-8 space-y-5">
+        
+        <!-- Intro Notice -->
+        <div class="bg-indigo-50 border border-indigo-200 rounded-xl p-5 flex items-start gap-4">
+            <div class="bg-indigo-600 p-2 rounded-lg shrink-0 mt-0.5">
+                <i data-lucide="flag" class="text-white w-5 h-5"></i>
+            </div>
+            <div>
+                <h3 class="font-bold text-indigo-900 text-lg mb-1">오늘의 미션</h3>
+                <p class="text-indigo-800 text-sm leading-relaxed">
+                    최종 팀원들과 함께 피그잼(FigJam)에서 <strong>아이디어를 구체화하고 기존 월드 레퍼런스를 분석</strong>합니다. 
+                    이를 바탕으로 <strong>2D 평면도</strong>를 그리고, 지난주에 배운 유니티 기초를 활용해 <strong>기본 도형과 조명, 스카이박스로 3D 공간의 뼈대(화이트박싱)</strong>를 만들어 봅니다.
+                </p>
+            </div>
+        </div>
+
+        <!-- STEP 1 -->
+        <div class="step-wrapper bg-white rounded-xl shadow-sm border border-slate-200">
+            <button onclick="toggleStep('step1')" class="relative z-10 w-full px-6 py-5 flex items-center justify-between bg-white hover:bg-slate-50 transition-colors text-left group rounded-t-xl">
+                <div class="flex items-center gap-4">
+                    <span class="flex items-center justify-center w-10 h-10 rounded-full bg-slate-100 text-slate-500 font-bold text-lg group-hover:bg-indigo-100 group-hover:text-indigo-600 transition-colors" id="badge-step1">1</span>
+                    <h2 class="text-xl font-bold text-slate-800 group-hover:text-indigo-700 transition-colors">개인 아이디어 공유 및 어피니티 다이어그램</h2>
+                </div>
+                <i data-lucide="chevron-down" class="text-slate-400 transition-transform duration-300" id="icon-step1"></i>
+            </button>
+            <div id="step1" class="step-content px-6 py-6 border-t border-slate-100 rounded-b-xl">
+                <div class="space-y-6">
+                    <div>
+                        <h3 class="text-lg font-bold text-slate-800 flex items-center mb-2">
+                            <i data-lucide="lightbulb" class="w-5 h-5 text-amber-500 mr-2"></i> 개인 아이디어 쏟아내기
+                            <span class="tooltip-trigger tip-badge"><i data-lucide="zap" class="w-3 h-3 mr-1"></i>Tip<span class="tooltip-content">피그잼(FigJam)에서 단축키 'S'를 누르면 빠르게 포스트잇을 꺼낼 수 있어요!</span></span>
+                        </h3>
+                        <p class="text-sm text-slate-600 mb-3">지난 한 주 동안 <strong>각자 고민해 온 공간의 컨셉이나 만들고 싶은 개인 오브젝트 아이디어</strong>를 먼저 피그잼에 모두 적어냅니다. 우리 조의 테마를 구체화하기 위해 질보다 양으로 승부해 보세요!</p>
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-3 text-center">
+                            <div class="bg-amber-50 border border-amber-200 text-amber-800 p-3 rounded-md text-sm font-medium">건축물/자연물</div>
+                            <div class="bg-emerald-50 border border-emerald-200 text-emerald-800 p-3 rounded-md text-sm font-medium">소품(오브젝트)</div>
+                            <div class="bg-blue-50 border border-blue-200 text-blue-800 p-3 rounded-md text-sm font-medium">사운드/BGM</div>
+                            <div class="bg-purple-50 border border-purple-200 text-purple-800 p-3 rounded-md text-sm font-medium">인터랙션(상호작용)</div>
+                        </div>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-bold text-slate-800 flex items-center gap-2 mb-2">
+                            <i data-lucide="network" class="w-5 h-5 text-indigo-500"></i> 어피니티 다이어그램 (핵심 키워드 도출)
+                        </h3>
+                        <p class="text-sm text-slate-600 mb-4">흩뿌려진 개인의 포스트잇 중 버릴 것은 과감히 버리고, 비슷한 요소끼리 드래그하여 묶어냅니다. 이를 통해 다음 단계 리서치에 활용할 <strong>우리 팀만의 '핵심 검색 키워드 2~3개'</strong>를 확정합니다.</p>
+                        
+                        <!-- 구체적인 텍스트 예시 추가 -->
+                        <div class="bg-indigo-50 border border-indigo-100 rounded-xl p-4 mb-4">
+                            <h4 class="text-sm font-bold text-indigo-900 mb-3 flex items-center gap-1.5"><i data-lucide="text-select" class="w-4 h-4 text-indigo-500"></i> 키워드 도출 예시 (테마: 잊혀진 신전)</h4>
+                            <div class="grid md:grid-cols-3 gap-3 relative">
+                                <!-- 화살표 (Desktop) -->
+                                <div class="hidden md:flex absolute top-1/2 left-[31%] -translate-y-1/2 z-10 text-indigo-300">
+                                    <i data-lucide="arrow-right" class="w-5 h-5"></i>
+                                </div>
+                                <div class="hidden md:flex absolute top-1/2 left-[64.5%] -translate-y-1/2 z-10 text-indigo-300">
+                                    <i data-lucide="arrow-right" class="w-5 h-5"></i>
+                                </div>
+
+                                <div class="bg-white p-3.5 rounded-lg shadow-sm border border-indigo-50 flex flex-col h-full">
+                                    <span class="text-[11px] font-bold text-slate-400 block mb-1.5 border-b border-slate-100 pb-1">1. 무작위 발산 (Raw Ideas)</span>
+                                    <p class="text-xs text-slate-600 leading-relaxed mt-1">"이끼 낀 바위", "부서진 기둥", "어두운 안개", "반딧불이", "낡은 오르골 소리"</p>
+                                </div>
+                                <div class="bg-white p-3.5 rounded-lg shadow-sm border border-indigo-50 flex flex-col h-full">
+                                    <span class="text-[11px] font-bold text-slate-400 block mb-1.5 border-b border-slate-100 pb-1">2. 그룹핑 (Grouping)</span>
+                                    <p class="text-xs text-slate-600 leading-relaxed mt-1">
+                                        <span class="font-medium text-slate-700">[건축/자연]</span> 이끼 바위, 부서진 기둥<br>
+                                        <span class="font-medium text-slate-700 mt-1 inline-block">[무드/사운드]</span> 안개, 반딧불이, 오르골
+                                    </p>
+                                </div>
+                                <div class="bg-indigo-600 p-3.5 rounded-lg shadow-sm flex flex-col h-full border border-indigo-700 relative overflow-hidden">
+                                    <div class="absolute -right-2 -bottom-2 opacity-10">
+                                        <i data-lucide="key" class="w-16 h-16 text-white"></i>
+                                    </div>
+                                    <span class="text-[11px] font-bold text-indigo-200 block mb-1.5 border-b border-indigo-500/50 pb-1 relative z-10">3. 타겟 키워드 확정</span>
+                                    <div class="mt-1.5 space-y-1.5 relative z-10">
+                                        <span class="inline-block bg-indigo-500 text-white text-[11px] font-bold px-2 py-0.5 rounded shadow-sm"># 고대유적 (Ancient Ruins)</span>
+                                        <span class="inline-block bg-indigo-500 text-white text-[11px] font-bold px-2 py-0.5 rounded shadow-sm"># 신비로운 (Mystical)</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- SVG Recipe Illustration: Affinity Diagram -->
+                        <div class="bg-slate-50 border border-slate-200 rounded-xl p-4 flex items-center justify-center">
+                            <svg viewBox="0 0 500 120" class="w-full max-w-lg h-auto" aria-hidden="true">
+                                <defs>
+                                    <filter id="shadow-sm" x="-10%" y="-10%" width="130%" height="130%">
+                                        <feDropShadow dx="1" dy="2" stdDeviation="2" flood-opacity="0.1"/>
+                                    </filter>
+                                </defs>
+                                <!-- Before (Scattered) -->
+                                <g transform="translate(20, 10)">
+                                    <text x="50" y="10" font-family="Pretendard, sans-serif" font-size="12" font-weight="bold" fill="#64748b" text-anchor="middle">정리 전 (발산)</text>
+                                    <rect x="10" y="30" width="30" height="30" fill="#fef08a" rx="2" transform="rotate(-10 25 45)" filter="url(#shadow-sm)"/>
+                                    <rect x="50" y="20" width="30" height="30" fill="#a7f3d0" rx="2" transform="rotate(5 65 35)" filter="url(#shadow-sm)"/>
+                                    <rect x="25" y="65" width="30" height="30" fill="#bfdbfe" rx="2" transform="rotate(15 40 80)" filter="url(#shadow-sm)"/>
+                                    <rect x="70" y="55" width="30" height="30" fill="#fbcfe8" rx="2" transform="rotate(-5 85 70)" filter="url(#shadow-sm)"/>
+                                </g>
+                                
+                                <!-- Arrow -->
+                                <g transform="translate(180, 50)">
+                                    <path d="M 0 10 L 30 10 M 20 0 L 30 10 L 20 20" fill="none" stroke="#94a3b8" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+                                </g>
+
+                                <!-- After (Organized) -->
+                                <g transform="translate(270, 10)">
+                                    <text x="100" y="10" font-family="Pretendard, sans-serif" font-size="12" font-weight="bold" fill="#4f46e5" text-anchor="middle">정리 후 (어피니티 다이어그램)</text>
+                                    <!-- Group 1 -->
+                                    <rect x="0" y="25" width="90" height="75" fill="none" stroke="#cbd5e1" stroke-width="2" stroke-dasharray="4 4" rx="6"/>
+                                    <text x="45" y="40" font-family="Pretendard, sans-serif" font-size="10" font-weight="bold" fill="#64748b" text-anchor="middle">건축/공간</text>
+                                    <rect x="10" y="50" width="30" height="30" fill="#fef08a" rx="2" filter="url(#shadow-sm)"/>
+                                    <rect x="50" y="50" width="30" height="30" fill="#a7f3d0" rx="2" filter="url(#shadow-sm)"/>
+                                    
+                                    <!-- Group 2 -->
+                                    <rect x="110" y="25" width="90" height="75" fill="none" stroke="#cbd5e1" stroke-width="2" stroke-dasharray="4 4" rx="6"/>
+                                    <text x="155" y="40" font-family="Pretendard, sans-serif" font-size="10" font-weight="bold" fill="#64748b" text-anchor="middle">상호작용</text>
+                                    <rect x="120" y="50" width="30" height="30" fill="#bfdbfe" rx="2" filter="url(#shadow-sm)"/>
+                                    <rect x="160" y="50" width="30" height="30" fill="#fbcfe8" rx="2" filter="url(#shadow-sm)"/>
+                                </g>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- STEP 2 -->
+        <div class="step-wrapper bg-white rounded-xl shadow-sm border border-slate-200">
+            <button onclick="toggleStep('step2')" class="relative z-10 w-full px-6 py-5 flex items-center justify-between bg-white hover:bg-slate-50 transition-colors text-left group rounded-t-xl rounded-b-xl">
+                <div class="flex items-center gap-4">
+                    <span class="flex items-center justify-center w-10 h-10 rounded-full bg-slate-100 text-slate-500 font-bold text-lg group-hover:bg-indigo-100 group-hover:text-indigo-600 transition-colors" id="badge-step2">2</span>
+                    <h2 class="text-xl font-bold text-slate-800 group-hover:text-indigo-700 transition-colors">타겟 키워드 리서치 및 공간 역기획</h2>
+                </div>
+                <i data-lucide="chevron-down" class="text-slate-400 transition-transform duration-300" id="icon-step2"></i>
+            </button>
+            <div id="step2" class="step-content px-6 py-6 border-t border-slate-100 rounded-b-xl">
+                <div class="space-y-6">
+                    <!-- 레퍼런스 탐방 기본 -->
+                    <div>
+                        <h3 class="text-lg font-bold text-slate-800 flex items-center gap-2 mb-2">
+                            <i data-lucide="search" class="w-5 h-5 text-indigo-500"></i> 타겟 키워드로 VRChat 1대 화면 탐방
+                        </h3>
+                        <p class="text-sm text-slate-600 mb-3">앞 단계(Step 1)에서 도출한 핵심 키워드를 VRChat에 검색하여 가장 적합한 레퍼런스 월드를 <strong>단 1곳만 선정</strong>합니다. 시간 제약을 고려하여 조원 중 <strong>1대의 컴퓨터(또는 화면 공유)로 다 함께 탐방</strong>하며 해당 월드를 집중적으로 <span class="tooltip-trigger font-bold text-slate-800">역기획<span class="tooltip-content">완성된 결과물을 보고 역으로 기획자의 의도와 설계 구조를 추적하고 분석하는 방법입니다.</span></span> 해봅시다.</p>
+                    </div>
+                    
+                    <!-- 역기획 가이드 및 체크리스트 -->
+                    <div class="bg-slate-50 border border-slate-200 rounded-lg p-5">
+                        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4">
+                            <h4 class="font-bold text-slate-800 text-sm flex items-center gap-1.5">
+                                <i data-lucide="microscope" class="w-4 h-4 text-emerald-500"></i> 공간 역기획 가이드 및 체크리스트
+                            </h4>
+                            <span class="text-xs text-slate-500 bg-white px-2 py-1 rounded border border-slate-200 shadow-sm w-fit"><i data-lucide="check-square" class="w-3 h-3 inline mr-1 -mt-0.5"></i>항목별로 점검해 보세요</span>
+                        </div>
+                        
+                        <div class="grid md:grid-cols-2 gap-4 mb-4">
+                            <!-- 1. 공간 스케일 및 구조 -->
+                            <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-col">
+                                <h5 class="font-bold text-slate-800 text-sm mb-2 flex items-center gap-2">
+                                    <div class="bg-blue-100 p-1 rounded text-blue-600"><i data-lucide="ruler" class="w-3.5 h-3.5"></i></div>
+                                    공간 스케일 및 구조
+                                </h5>
+                                <p class="text-xs text-slate-500 mb-3 leading-relaxed">공간의 크기와 형태는 유저의 첫인상을 결정합니다. 천장의 높이나 통로의 폭이 유저에게 어떤 감정(경외감, 아늑함, 압박감 등)을 주는지 아바타 눈높이에서 파악해 보세요.</p>
+                                <div class="border-t border-slate-100 pt-3">
+                                    <ul class="space-y-2 text-xs text-slate-600">
+                                        <li class="flex items-start gap-2"><i data-lucide="square" class="w-3.5 h-3.5 mt-0.5 text-slate-300 shrink-0"></i> <span class="leading-relaxed">아바타 대비 <strong>천장 높이와 통로 넓이</strong>는 적절한가?</span></li>
+                                        <li class="flex items-start gap-2"><i data-lucide="square" class="w-3.5 h-3.5 mt-0.5 text-slate-300 shrink-0"></i> <span class="leading-relaxed">주된 용도에 맞게 <strong>전체 맵 크기</strong>가 기획되었는가?</span></li>
+                                        <li class="flex items-start gap-2"><i data-lucide="square" class="w-3.5 h-3.5 mt-0.5 text-slate-300 shrink-0"></i> <span class="leading-relaxed">장애물(기둥, 벽) 배치가 불쾌한 <strong>압박감</strong>을 주진 않는가?</span></li>
+                                    </ul>
+                                </div>
+                            </div>
+                            
+                            <!-- 2. 빛과 색감 -->
+                            <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-col">
+                                <h5 class="font-bold text-slate-800 text-sm mb-2 flex items-center gap-2">
+                                    <div class="bg-amber-100 p-1 rounded text-amber-600"><i data-lucide="sun" class="w-3.5 h-3.5"></i></div>
+                                    빛과 색감
+                                </h5>
+                                <p class="text-xs text-slate-500 mb-3 leading-relaxed">조명과 색상은 분위기를 좌우하는 가장 강력한 요소입니다. 주 광원의 종류와 그림자의 방향, 메인 컬러가 기획 의도와 어떻게 연결되는지 관찰하세요.</p>
+                                <div class="border-t border-slate-100 pt-3">
+                                    <ul class="space-y-2 text-xs text-slate-600">
+                                        <li class="flex items-start gap-2"><i data-lucide="square" class="w-3.5 h-3.5 mt-0.5 text-slate-300 shrink-0"></i> <span class="leading-relaxed">공간의 핵심 감정을 표현하는 <strong>메인 컬러 톤</strong>은 무엇인가?</span></li>
+                                        <li class="flex items-start gap-2"><i data-lucide="square" class="w-3.5 h-3.5 mt-0.5 text-slate-300 shrink-0"></i> <span class="leading-relaxed">주 광원과 <strong>그림자의 대비</strong>가 입체감을 잘 살려주는가?</span></li>
+                                        <li class="flex items-start gap-2"><i data-lucide="square" class="w-3.5 h-3.5 mt-0.5 text-slate-300 shrink-0"></i> <span class="leading-relaxed">시선이 머물러야 할 주요 랜드마크에 <strong>조명이 집중</strong>되어 있는가?</span></li>
+                                    </ul>
+                                </div>
+                            </div>
+                            
+                            <!-- 3. 시선 유도와 동선 -->
+                            <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-col">
+                                <h5 class="font-bold text-slate-800 text-sm mb-2 flex items-center gap-2">
+                                    <div class="bg-emerald-100 p-1 rounded text-emerald-600"><i data-lucide="footprints" class="w-3.5 h-3.5"></i></div>
+                                    시선 유도와 동선
+                                </h5>
+                                <p class="text-xs text-slate-500 mb-3 leading-relaxed">잘 만들어진 맵은 유저가 헤매지 않도록 돕습니다. 시작점에서 목표 지점까지 시선을 이끄는 장치(조명, 이정표 등)가 어떻게 배치되어 있는지 추적해 보세요.</p>
+                                <div class="border-t border-slate-100 pt-3">
+                                    <ul class="space-y-2 text-xs text-slate-600">
+                                        <li class="flex items-start gap-2"><i data-lucide="square" class="w-3.5 h-3.5 mt-0.5 text-slate-300 shrink-0"></i> <span class="leading-relaxed">스폰 지점에서 <strong>나아가야 할 방향</strong>이 직관적으로 보이는가?</span></li>
+                                        <li class="flex items-start gap-2"><i data-lucide="square" class="w-3.5 h-3.5 mt-0.5 text-slate-300 shrink-0"></i> <span class="leading-relaxed">동선이 꺾이는 곳마다 <strong>이정표나 작은 랜드마크</strong>가 있는가?</span></li>
+                                        <li class="flex items-start gap-2"><i data-lucide="square" class="w-3.5 h-3.5 mt-0.5 text-slate-300 shrink-0"></i> <span class="leading-relaxed">맵의 끝을 어색하지 않게 가려주는 <strong>자연스러운 경계</strong>가 있는가?</span></li>
+                                    </ul>
+                                </div>
+                            </div>
+                            
+                            <!-- 4. 상호작용 요소 -->
+                            <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-col">
+                                <h5 class="font-bold text-slate-800 text-sm mb-2 flex items-center gap-2">
+                                    <div class="bg-purple-100 p-1 rounded text-purple-600"><i data-lucide="mouse-pointer-click" class="w-3.5 h-3.5"></i></div>
+                                    상호작용 요소
+                                </h5>
+                                <p class="text-xs text-slate-500 mb-3 leading-relaxed">유저가 맵에 머무르는 시간을 늘리는 핵심은 '즐길 거리'입니다. 거울, 의자, 소품 등 유저 간 소통을 돕거나 테마를 강조하는 장치를 확인하세요.</p>
+                                <div class="border-t border-slate-100 pt-3">
+                                    <ul class="space-y-2 text-xs text-slate-600">
+                                        <li class="flex items-start gap-2"><i data-lucide="square" class="w-3.5 h-3.5 mt-0.5 text-slate-300 shrink-0"></i> <span class="leading-relaxed">유저들이 주로 모여 소통할 만한 <strong>거점(거울 앞 등)</strong>이 있는가?</span></li>
+                                        <li class="flex items-start gap-2"><i data-lucide="square" class="w-3.5 h-3.5 mt-0.5 text-slate-300 shrink-0"></i> <span class="leading-relaxed">테마를 부각하는 <span class="tooltip-trigger font-medium text-slate-700">기믹<span class="tooltip-content">유저의 흥미를 끌기 위해 공간에 숨겨둔 특별한 장치나 상호작용 요소를 의미합니다.</span></span>(집어들 수 있는 소품 등)이 있는가?</span></li>
+                                        <li class="flex items-start gap-2"><i data-lucide="square" class="w-3.5 h-3.5 mt-0.5 text-slate-300 shrink-0"></i> <span class="leading-relaxed">특정 액션 시 나타나는 <strong>피드백(소리, 파티클 등)</strong>이 명확한가?</span></li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 시네마토그래피 영역 -->
+                        <div class="mb-6 bg-white p-5 sm:p-6 rounded-xl border border-slate-200 shadow-sm">
+                            <h5 class="font-bold text-slate-800 text-base mb-3 flex items-center gap-2">
+                                <div class="bg-pink-100 p-1.5 rounded-md"><i data-lucide="camera" class="w-4 h-4 text-pink-600"></i></div>
+                                스크린샷 수집 및 공간 다이내믹스 분석
+                            </h5>
+                            <p class="text-sm text-slate-600 mb-5 leading-relaxed">
+                                VRChat 내장 카메라를 활용해 <strong>직접 인증샷을 찍어보며</strong> 공간을 기록하세요. 애니메이션이나 영화의 <span class="tooltip-trigger tooltip-left font-bold text-slate-800">미장센<span class="tooltip-content">화면 안에 배치되는 모든 시각적 요소(인물, 사물, 조명 등)를 연출하는 기법을 뜻합니다.</span></span> 원리를 참고하여, 하나의 공간에서 얼마나 다이내믹한 장면들이 연출될 수 있는지 아래 3가지 원리를 기준으로 앵글을 찾아봅니다.
+                            </p>
+
+                            <!-- SVG Recipe Illustration: Cinematography -->
+                            <div class="bg-slate-50 border border-slate-200 rounded-xl p-4 mb-8 flex items-center justify-center overflow-x-auto">
+                                <svg viewBox="0 0 600 200" class="w-full min-w-[500px] max-w-3xl h-auto" aria-label="시네마토그래피 3가지 원리 예시">
+                                    <defs>
+                                        <clipPath id="frameClip">
+                                            <rect width="180" height="120" rx="6"/>
+                                        </clipPath>
+                                    </defs>
+
+                                    <!-- 1. Framing -->
+                                    <g transform="translate(10, 20)">
+                                        <rect width="180" height="120" rx="6" fill="#e2e8f0" stroke="#cbd5e1" stroke-width="2"/>
+                                        <g clip-path="url(#frameClip)">
+                                            <rect width="180" height="120" fill="#bae6fd"/>
+                                            <path d="M 0 120 L 0 0 L 180 0 L 180 120 L 140 120 L 140 40 A 50 50 0 0 0 40 40 L 40 120 Z" fill="#334155"/>
+                                            <circle cx="90" cy="70" r="14" fill="#f59e0b"/>
+                                            <path d="M 15 25 L 15 15 L 25 15 M 165 25 L 165 15 L 155 15 M 15 95 L 15 105 L 25 105 M 165 95 L 165 105 L 155 105" fill="none" stroke="#ffffff" stroke-width="2" opacity="0.6"/>
+                                            <circle cx="90" cy="60" r="2" fill="#ffffff" opacity="0.6"/>
+                                        </g>
+                                        <text x="90" y="150" font-family="Pretendard, sans-serif" font-size="14" font-weight="bold" fill="#475569" text-anchor="middle">1. 프레이밍 (액자 구도)</text>
+                                    </g>
+
+                                    <!-- 2. Depth -->
+                                    <g transform="translate(210, 20)">
+                                        <rect width="180" height="120" rx="6" fill="#f8fafc" stroke="#cbd5e1" stroke-width="2"/>
+                                        <g clip-path="url(#frameClip)">
+                                            <rect width="180" height="120" fill="#f1f5f9"/>
+                                            <polygon points="0,120 40,60 90,120" fill="#cbd5e1"/>
+                                            <polygon points="60,120 120,40 180,120" fill="#94a3b8"/>
+                                            <circle cx="110" cy="85" r="10" fill="#3b82f6"/>
+                                            <rect x="105" y="95" width="10" height="25" fill="#3b82f6"/>
+                                            <polygon points="0,120 50,30 80,120" fill="#334155" opacity="0.95"/>
+                                            <path d="M 15 25 L 15 15 L 25 15 M 165 25 L 165 15 L 155 15 M 15 95 L 15 105 L 25 105 M 165 95 L 165 105 L 155 105" fill="none" stroke="#475569" stroke-width="2" opacity="0.4"/>
+                                            <circle cx="90" cy="60" r="2" fill="#475569" opacity="0.4"/>
+                                        </g>
+                                        <text x="90" y="150" font-family="Pretendard, sans-serif" font-size="14" font-weight="bold" fill="#475569" text-anchor="middle">2. 레이어와 깊이감</text>
+                                    </g>
+
+                                    <!-- 3. Contraction & Expansion -->
+                                    <g transform="translate(410, 20)">
+                                        <rect width="180" height="120" rx="6" fill="#f8fafc" stroke="#cbd5e1" stroke-width="2"/>
+                                        <g clip-path="url(#frameClip)">
+                                            <rect width="180" height="120" fill="#fef08a"/>
+                                            <circle cx="140" cy="60" r="40" fill="#fde047" opacity="0.5"/>
+                                            <polygon points="120,120 150,30 180,120" fill="#f59e0b"/>
+                                            <polygon points="0,0 70,30 70,90 0,120" fill="#334155"/>
+                                            <path d="M 40 60 L 90 60" fill="none" stroke="#ef4444" stroke-width="3" stroke-linecap="round" stroke-dasharray="4 4"/>
+                                            <polygon points="90,55 100,60 90,65" fill="#ef4444"/>
+                                            <path d="M 15 25 L 15 15 L 25 15 M 165 25 L 165 15 L 155 15 M 15 95 L 15 105 L 25 105 M 165 95 L 165 105 L 155 105" fill="none" stroke="#475569" stroke-width="2" opacity="0.4"/>
+                                            <circle cx="90" cy="60" r="2" fill="#475569" opacity="0.4"/>
+                                        </g>
+                                        <text x="90" y="150" font-family="Pretendard, sans-serif" font-size="14" font-weight="bold" fill="#475569" text-anchor="middle">3. 시야의 수축과 팽창</text>
+                                    </g>
+                                </svg>
+                            </div>
+
+                            <div class="space-y-6">
+                                <div class="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm">
+                                    <div class="bg-slate-50 px-4 py-3 border-b border-slate-200">
+                                        <strong class="text-sm text-slate-800 flex items-center gap-2">
+                                            <i data-lucide="aperture" class="w-4 h-4 text-indigo-500"></i> 1. 프레이밍 : 시선의 집중
+                                        </strong>
+                                    </div>
+                                    <div class="p-4 grid md:grid-cols-2 gap-4">
+                                        <div>
+                                            <p class="text-xs text-slate-600 leading-relaxed mb-3">
+                                                월드 내에서 유저들이 가장 사진을 찍고 싶어하는 '포토 스팟'을 찾아 찍어보세요. 아치형 문틀, 갈라진 동굴 틈, 창문, 혹은 양옆으로 늘어진 나뭇가지 등이 피사체(아바타나 랜드마크)를 감싸는 <strong>자연스러운 액자</strong> 역할을 합니다.
+                                            </p>
+                                        </div>
+                                        <div class="bg-slate-50 p-3 rounded text-xs">
+                                            <div class="text-rose-600 font-bold mb-1 flex items-center gap-1"><i data-lucide="x-circle" class="w-3.5 h-3.5"></i> 피해야 할 구도</div>
+                                            <p class="text-slate-600 mb-2">허허벌판 한가운데 덩그러니 서 있는 건물. 시선이 화면 밖으로 분산됩니다.</p>
+                                            <div class="text-emerald-600 font-bold mb-1 flex items-center gap-1"><i data-lucide="check-circle" class="w-3.5 h-3.5"></i> VRChat 적용 팁</div>
+                                            <p class="text-slate-600">스폰 지점을 어두운 동굴이나 문 안쪽으로 설정하세요. 출구 너머로 밝은 랜드마크가 보이도록 배치하면 완벽한 프레이밍이 완성됩니다.</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm">
+                                    <div class="bg-slate-50 px-4 py-3 border-b border-slate-200">
+                                        <strong class="text-sm text-slate-800 flex items-center gap-2">
+                                            <i data-lucide="layers" class="w-4 h-4 text-indigo-500"></i> 2. 레이어와 공간의 깊이감 : 입체감 부여
+                                        </strong>
+                                    </div>
+                                    <div class="p-4 grid md:grid-cols-2 gap-4">
+                                        <div>
+                                            <p class="text-xs text-slate-600 leading-relaxed mb-3">
+                                                렌즈 바로 앞을 스치는 <strong>전경(풀숲, 기둥 등)</strong>, 아바타가 서 있는 <strong>중경</strong>, 멀리 보이는 <strong>원경(하늘, 먼 산)</strong>이 겹치도록 각도를 틀어보세요. 평면적인 공간이 입체적이고 거대하게 느껴집니다.
+                                            </p>
+                                        </div>
+                                        <div class="bg-slate-50 p-3 rounded text-xs">
+                                            <div class="text-rose-600 font-bold mb-1 flex items-center gap-1"><i data-lucide="x-circle" class="w-3.5 h-3.5"></i> 피해야 할 구도</div>
+                                            <p class="text-slate-600 mb-2">벽에 딱 붙어서 반대쪽 벽만 찍는 1차원적인 앵글. 공간의 규모를 알 수 없습니다.</p>
+                                            <div class="text-emerald-600 font-bold mb-1 flex items-center gap-1"><i data-lucide="check-circle" class="w-3.5 h-3.5"></i> VRChat 적용 팁</div>
+                                            <p class="text-slate-600">카메라 렌즈 바로 앞 시야의 10% 정도를 살짝 가리는 '오브젝트(나뭇잎 등)'를 배치해 보세요. 시차 효과가 생겨 공간이 웅장해 보입니다.</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm">
+                                    <div class="bg-slate-50 px-4 py-3 border-b border-slate-200">
+                                        <strong class="text-sm text-slate-800 flex items-center gap-2">
+                                            <i data-lucide="expand" class="w-4 h-4 text-indigo-500"></i> 3. 시야의 수축과 팽창
+                                        </strong>
+                                    </div>
+                                    <div class="p-4 grid md:grid-cols-2 gap-4">
+                                        <div>
+                                            <p class="text-xs text-slate-600 leading-relaxed mb-3">
+                                                좁고 어두운 복도를 지나, 갑자기 확 트인 거대한 공간이 나타날 때 유저는 가장 큰 압도감(다이내믹)을 느낍니다. 제작자가 유저에게 환상적인 스케일감을 주기 위해 동선을 어떻게 조절했는지 찾아보세요.
+                                            </p>
+                                        </div>
+                                        <div class="bg-slate-50 p-3 rounded text-xs">
+                                            <div class="text-rose-600 font-bold mb-1 flex items-center gap-1"><i data-lucide="x-circle" class="w-3.5 h-3.5"></i> 피해야 할 구도</div>
+                                            <p class="text-slate-600 mb-2">처음부터 끝까지 똑같은 크기와 높이로 일관된 동선. 지루함을 유발합니다.</p>
+                                            <div class="text-emerald-600 font-bold mb-1 flex items-center gap-1"><i data-lucide="check-circle" class="w-3.5 h-3.5"></i> VRChat 적용 팁</div>
+                                            <p class="text-slate-600">거대한 랜드마크를 만들었다면, 좁고 굽이진 길을 걷다가 갑자기 시야가 탁 트이며 목표물이 등장하도록 동선을 설계하세요.</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 우리 팀만의 차별점 가이드라인 강화 -->
+                        <div class="bg-indigo-50 p-5 rounded-xl border border-indigo-200">
+                            <h5 class="font-bold text-indigo-900 text-base mb-2 flex items-center gap-2">
+                                <i data-lucide="sparkles" class="w-5 h-5 text-indigo-600"></i> 우리 팀만의 차별점 기획하기
+                            </h5>
+                            <p class="text-sm text-indigo-800 mb-4 leading-relaxed">
+                                단순히 예쁘게 만드는 것을 넘어, 유저의 기억에 남는 <strong>'결정적인 한 방'</strong>을 기획해야 합니다. 레퍼런스의 아쉬운 점을 보완하거나, 아래의 3가지 방향성 중 하나를 선택해 우리 조만의 독창적인 무기를 피그잼에 기록해 보세요.
+                            </p>
+                            
+                            <div class="grid md:grid-cols-3 gap-4">
+                                <div class="bg-white p-4 rounded-lg border border-indigo-100 shadow-sm flex flex-col h-full">
+                                    <div class="bg-indigo-100 w-8 h-8 rounded flex items-center justify-center mb-3">
+                                        <i data-lucide="book-open" class="w-4 h-4 text-indigo-700"></i>
+                                    </div>
+                                    <h6 class="font-bold text-indigo-900 text-sm mb-1.5">1. 스토리 / 세계관의 반전</h6>
+                                    <p class="text-xs text-slate-600 mb-3 flex-grow">
+                                        복잡한 로직 없이도, 공간에 배치된 <strong>'단서'</strong>들을 통해 유저가 서사를 추론하게 만드는 환경적 스토리텔링을 부여합니다.
+                                    </p>
+                                    <div class="bg-indigo-50/50 p-2.5 rounded border border-indigo-50">
+                                        <strong class="text-[11px] text-indigo-800 block mb-1">💡 아이디어 예시</strong>
+                                        <ul class="text-[11px] text-slate-600 space-y-1 list-disc list-inside leading-relaxed">
+                                            <li>평화로운 요정의 숲 구석에 파묻힌 거대한 톱니바퀴와 쇳조각들 (과거 기계 문명의 멸망 추측)</li>
+                                            <li>화려한 생일 파티장이지만, 돌처럼 굳은 케이크와 수십 년 전에 멈춘 달력 (시간이 멈춘 비극 암시)</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                                
+                                <div class="bg-white p-4 rounded-lg border border-indigo-100 shadow-sm flex flex-col h-full">
+                                    <div class="bg-indigo-100 w-8 h-8 rounded flex items-center justify-center mb-3">
+                                        <i data-lucide="hand" class="w-4 h-4 text-indigo-700"></i>
+                                    </div>
+                                    <h6 class="font-bold text-indigo-900 text-sm mb-1.5">2. 특수 상호작용</h6>
+                                    <p class="text-xs text-slate-600 mb-3 flex-grow">
+                                        유니티 로직(트리거)을 활용해 유저의 행동에 공간이 반응하도록 만들어 체류 시간을 늘립니다.
+                                    </p>
+                                    <div class="bg-indigo-50/50 p-2.5 rounded border border-indigo-50">
+                                        <strong class="text-[11px] text-indigo-800 block mb-1">💡 아이디어 예시</strong>
+                                        <ul class="text-[11px] text-slate-600 space-y-1 list-disc list-inside">
+                                            <li>특정 피아노 건반을 누르면 숨겨진 맵의 문이 열림</li>
+                                            <li>손전등을 들었을 때만 벽에 숨겨진 메시지가 야광으로 빛남</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                                
+                                <div class="bg-white p-4 rounded-lg border border-indigo-100 shadow-sm flex flex-col h-full">
+                                    <div class="bg-indigo-100 w-8 h-8 rounded flex items-center justify-center mb-3">
+                                        <i data-lucide="palette" class="w-4 h-4 text-indigo-700"></i>
+                                    </div>
+                                    <h6 class="font-bold text-indigo-900 text-sm mb-1.5">3. 강렬한 시각적 대비</h6>
+                                    <p class="text-xs text-slate-600 mb-3 flex-grow">
+                                        평범한 색감이나 조명 배치를 비틀어, 카메라 셔터를 누를 수밖에 없는 독보적인 미장센을 만듭니다.
+                                    </p>
+                                    <div class="bg-indigo-50/50 p-2.5 rounded border border-indigo-50">
+                                        <strong class="text-[11px] text-indigo-800 block mb-1">💡 아이디어 예시</strong>
+                                        <ul class="text-[11px] text-slate-600 space-y-1 list-disc list-inside">
+                                            <li>모든 것이 흑백인 맵에, 흩날리는 나비들만 네온 컬러로 발광함</li>
+                                            <li>위아래가 거꾸로 뒤집혀 있어 천장을 걸어 다니는 듯한 착각을 줌</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- STEP 3 -->
+        <div class="step-wrapper bg-white rounded-xl shadow-sm border border-slate-200">
+            <button onclick="toggleStep('step3')" class="relative z-10 w-full px-6 py-5 flex items-center justify-between bg-white hover:bg-slate-50 transition-colors text-left group rounded-t-xl rounded-b-xl">
+                <div class="flex items-center gap-4">
+                    <span class="flex items-center justify-center w-10 h-10 rounded-full bg-slate-100 text-slate-500 font-bold text-lg group-hover:bg-indigo-100 group-hover:text-indigo-600 transition-colors" id="badge-step3">3</span>
+                    <h2 class="text-xl font-bold text-slate-800 group-hover:text-indigo-700 transition-colors">탑다운 공간 스케치</h2>
+                </div>
+                <i data-lucide="chevron-down" class="text-slate-400 transition-transform duration-300" id="icon-step3"></i>
+            </button>
+            <div id="step3" class="step-content px-6 py-6 border-t border-slate-100 rounded-b-xl">
+                <h3 class="text-lg font-bold text-slate-800 flex items-center mb-3">
+                    <i data-lucide="map" class="w-5 h-5 text-indigo-500 mr-2"></i> 2D 평면도 그리기
+                    <span class="tooltip-trigger tip-badge"><i data-lucide="zap" class="w-3 h-3 mr-1"></i>Tip<span class="tooltip-content">초보자일수록 공간을 너무 넓게 잡으면 채우기 힘듭니다! 오밀조밀하게 작은 스케일부터 시작하세요.</span></span>
+                </h3>
+                <p class="text-sm text-slate-600 mb-4">어피니티 다이어그램으로 정리된 요소를 바탕으로, <span class="tooltip-trigger text-slate-700 font-medium">탑다운<span class="tooltip-content">하늘에서 땅을 내려다보는 시점(위에서 아래로)을 의미합니다.</span></span> 시점의 맵 평면도를 피그잼 펜 툴이나 종이에 그립니다.</p>
+                
+                <div class="bg-slate-50 border border-slate-200 rounded-lg p-5">
+                    <div class="flex flex-col lg:flex-row gap-6 items-start">
+                        
+                        <div class="flex-1 space-y-6">
+                            <!-- 1. 필수 포함 요소 -->
+                            <div>
+                                <h4 class="font-bold text-slate-800 mb-3 text-sm flex items-center gap-1.5">
+                                    <i data-lucide="check-circle" class="w-4 h-4 text-emerald-500"></i> 스케치 필수 포함 요소
+                                </h4>
+                                <ul class="space-y-2.5 text-sm text-slate-600">
+                                    <li class="flex items-start gap-2 bg-white p-2 rounded border border-slate-100 shadow-sm"><i data-lucide="map-pin" class="w-4 h-4 mt-0.5 text-red-500 shrink-0"></i> <div><strong><span class="tooltip-trigger">스폰 포인트<span class="tooltip-content">유저가 월드에 접속했을 때 처음 나타나는 시작 위치입니다.</span></span> (시작점)</strong><br><span class="text-xs text-slate-400">유저가 처음 공간에 들어왔을 때의 위치</span></div></li>
+                                    <li class="flex items-start gap-2 bg-white p-2 rounded border border-slate-100 shadow-sm"><i data-lucide="move" class="w-4 h-4 mt-0.5 text-blue-500 shrink-0"></i> <div><strong>유저 동선</strong><br><span class="text-xs text-slate-400">유저가 둘러보길 바라는 주 이동 경로 (화살표)</span></div></li>
+                                    <li class="flex items-start gap-2 bg-white p-2 rounded border border-slate-100 shadow-sm"><i data-lucide="flag" class="w-4 h-4 mt-0.5 text-amber-500 shrink-0"></i> <div><strong>메인 랜드마크</strong><br><span class="text-xs text-slate-400">시선을 사로잡는 가장 큰 오브젝트의 위치</span></div></li>
+                                    <li class="flex items-start gap-2 bg-white p-2 rounded border border-slate-100 shadow-sm"><i data-lucide="shield" class="w-4 h-4 mt-0.5 text-slate-500 shrink-0"></i> <div><strong>맵의 경계 (가벽, 산맥 등)</strong><br><span class="text-xs text-slate-400">맵의 끝을 막아줄 장치 (절벽, 울타리, 벽 등)</span></div></li>
+                                </ul>
+                            </div>
+                            
+                            <!-- 2. 레벨 디자인 팁 -->
+                            <div class="bg-indigo-50/50 border border-indigo-100 rounded-lg p-4 shadow-sm">
+                                <h4 class="font-bold text-indigo-900 mb-3 text-sm flex items-center gap-1.5">
+                                    <i data-lucide="trending-up" class="w-4 h-4 text-indigo-500"></i> 레벨 디자인 관점의 스케치 팁
+                                </h4>
+                                <ul class="space-y-3.5 text-xs text-slate-700">
+                                    <li>
+                                        <strong class="text-indigo-800 block mb-1">1. 조닝 (Zoning) 기법 활용</strong>
+                                        처음부터 세세한 벽이나 나무를 그리지 마세요. '모여서 대화하는 광장', '통과하는 복도' 등 <strong>목적에 따른 큼직한 구역(Bubble)</strong>을 먼저 나눈 뒤 세부 요소를 채워 넣어야 구조가 탄탄해집니다.
+                                    </li>
+                                    <li>
+                                        <strong class="text-indigo-800 block mb-1">2. 평면의 함정 벗어나기 (고저차 설계)</strong>
+                                        2D로 스케치하다 보면 유니티에서도 평평한 맵을 만들게 됩니다. 계단, 언덕 등 <strong>높낮이가 변하는 구간</strong>을 반드시 설계하세요.<br>
+                                        <div class="mt-2 bg-white p-2.5 rounded border border-indigo-100 text-slate-600 leading-relaxed">
+                                            <span class="text-indigo-600 font-bold block mb-0.5 text-[11px]"><i data-lucide="pen-tool" class="w-3 h-3 inline"></i> 어떻게 표현하나요?</span>
+                                            계단 기호(가로줄 여러 개), 언덕을 뜻하는 빗금, 또는 구역에 층수(+1F, -1F)를 적어주면 됩니다.<br>
+                                            <span class="text-emerald-600 font-bold block mt-1.5 mb-0.5 text-[11px]"><i data-lucide="map-pin" class="w-3 h-3 inline"></i> 어디에 배치하나요?</span>
+                                            <strong>구역을 전환할 때</strong> (예: 숲에서 신전으로 넘어갈 때 긴 계단) 또는 <strong>랜드마크를 시각적으로 강조할 때</strong> (예: 언덕 위에 집 배치) 고저차를 두면 압도감이 살아납니다.
+                                        </div>
+                                    </li>
+                                    <li>
+                                        <strong class="text-indigo-800 block mb-1">3. 휴먼 스케일 (Human Scale) 기준 잡기</strong>
+                                        맵을 무작정 크게 그리지 마세요. 스케치 한구석에 <strong>아바타 크기(보통 1.5~1.8m)의 작은 점</strong>을 하나 찍어두고, 그 점에 비례해서 문이나 광장의 크기를 가늠해야 공간감이 어색해지지 않습니다.
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                        
+                        <!-- SVG Recipe Illustration: Top-down Map (Interactive Step-by-Step) -->
+                        <div class="w-full lg:w-1/2 flex flex-col gap-3">
+                            <!-- Step Controls -->
+                            <div class="grid grid-cols-2 md:grid-cols-4 gap-1.5 bg-white border border-slate-200 rounded-lg p-1.5 shadow-sm">
+                                <button onclick="setMapStep(1)" id="btn-map-1" class="py-1.5 px-1 text-[11px] sm:text-xs font-bold rounded-md bg-indigo-50 text-indigo-700 transition-colors truncate">1. 경계/스폰</button>
+                                <button onclick="setMapStep(2)" id="btn-map-2" class="py-1.5 px-1 text-[11px] sm:text-xs font-bold rounded-md text-slate-500 hover:bg-slate-50 transition-colors truncate">2. 구역 설정</button>
+                                <button onclick="setMapStep(3)" id="btn-map-3" class="py-1.5 px-1 text-[11px] sm:text-xs font-bold rounded-md text-slate-500 hover:bg-slate-50 transition-colors truncate">3. 고저차/랜드마크</button>
+                                <button onclick="setMapStep(4)" id="btn-map-4" class="py-1.5 px-1 text-[11px] sm:text-xs font-bold rounded-md text-slate-500 hover:bg-slate-50 transition-colors truncate">4. 동선/디테일</button>
+                            </div>
+
+                            <!-- Interactive SVG Area -->
+                            <div class="bg-white border border-slate-200 rounded-xl p-3 shadow-sm flex items-center justify-center relative overflow-hidden h-full min-h-[280px]">
+                                <div class="absolute inset-0 opacity-10" style="background-image: linear-gradient(#64748b 1px, transparent 1px), linear-gradient(90deg, #64748b 1px, transparent 1px); background-size: 20px 20px;"></div>
+                                
+                                <svg viewBox="0 0 300 220" class="w-full h-auto relative z-10" aria-label="2D 평면도 단계별 예시">
+                                    
+                                    <!-- LAYER 1: Boundary & Spawn -->
+                                    <g id="map-layer-1" class="transition-opacity duration-500">
+                                        <rect x="20" y="20" width="260" height="180" fill="none" stroke="#64748b" stroke-width="4" rx="8"/>
+                                        <text x="30" y="35" font-family="Pretendard" font-size="10" font-weight="bold" fill="#64748b">경계 (가벽/산맥)</text>
+                                        
+                                        <circle cx="60" cy="170" r="10" fill="#ef4444" opacity="0.2"/>
+                                        <circle cx="60" cy="170" r="4" fill="#ef4444"/>
+                                        <text x="60" y="192" font-family="Pretendard" font-size="10" font-weight="bold" fill="#ef4444" text-anchor="middle">스폰</text>
+
+                                        <rect x="200" y="170" width="70" height="25" fill="#ffffff" stroke="#cbd5e1" stroke-width="1" rx="4"/>
+                                        <circle cx="215" cy="182.5" r="3" fill="#0f172a"/>
+                                        <text x="225" y="180" font-family="Pretendard" font-size="7" font-weight="bold" fill="#475569">휴먼 스케일</text>
+                                        <text x="225" y="189" font-family="Pretendard" font-size="6" fill="#64748b">(아바타 크기)</text>
+                                    </g>
+
+                                    <!-- LAYER 2: Zoning -->
+                                    <g id="map-layer-2" class="transition-opacity duration-500" style="opacity: 0;">
+                                        <!-- Zoning Bubbles -->
+                                        <ellipse cx="80" cy="150" rx="50" ry="40" fill="#fef08a" opacity="0.2" stroke="#eab308" stroke-width="1.5" stroke-dasharray="4 4"/>
+                                        <text x="80" y="130" font-family="Pretendard" font-size="9" font-weight="bold" fill="#ca8a04" text-anchor="middle">진입 구역 (낮은 지대)</text>
+                                        
+                                        <ellipse cx="180" cy="80" rx="60" ry="50" fill="#bae6fd" opacity="0.2" stroke="#3b82f6" stroke-width="1.5" stroke-dasharray="4 4"/>
+                                        <text x="180" y="45" font-family="Pretendard" font-size="9" font-weight="bold" fill="#2563eb" text-anchor="middle">핵심 구역 (언덕 위)</text>
+                                    </g>
+
+                                    <!-- LAYER 3: Elevation & Landmark -->
+                                    <g id="map-layer-3" class="transition-opacity duration-500" style="opacity: 0;">
+                                        <!-- Elevation/Stairs Bridge -->
+                                        <g transform="translate(105, 125) rotate(-35)">
+                                            <!-- Stair base -->
+                                            <rect x="0" y="0" width="35" height="25" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1"/>
+                                            <!-- Stair lines -->
+                                            <line x1="0" y1="5" x2="35" y2="5" stroke="#94a3b8" stroke-width="1"/>
+                                            <line x1="0" y1="10" x2="35" y2="10" stroke="#94a3b8" stroke-width="1"/>
+                                            <line x1="0" y1="15" x2="35" y2="15" stroke="#94a3b8" stroke-width="1"/>
+                                            <line x1="0" y1="20" x2="35" y2="20" stroke="#94a3b8" stroke-width="1"/>
+                                            <!-- Arrow pointing up -->
+                                            <path d="M 17.5 22 L 17.5 3 M 14.5 6 L 17.5 3 L 20.5 6" fill="none" stroke="#64748b" stroke-width="1.5" stroke-linecap="round"/>
+                                            <text x="17.5" y="-5" font-family="Pretendard" font-size="9" font-weight="bold" fill="#64748b" text-anchor="middle">계단 (고저차)</text>
+                                        </g>
+
+                                        <!-- Landmark -->
+                                        <polygon points="180,50 210,105 150,105" fill="#f59e0b" opacity="0.2"/>
+                                        <polygon points="180,60 200,100 160,100" fill="#f59e0b"/>
+                                        <text x="180" y="120" font-family="Pretendard" font-size="10" font-weight="bold" fill="#d97706" text-anchor="middle">메인 랜드마크</text>
+                                    </g>
+
+                                    <!-- LAYER 4: Path & Props -->
+                                    <g id="map-layer-4" class="transition-opacity duration-500" style="opacity: 0;">
+                                        <!-- Sub objects -->
+                                        <rect x="230" y="130" width="30" height="30" fill="#10b981" opacity="0.5" rx="4"/>
+                                        <circle cx="100" cy="70" r="15" fill="#10b981" opacity="0.5"/>
+                                        
+                                        <!-- Path (Dashed line) -->
+                                        <path d="M 70 160 C 90 145, 110 145, 125 125 L 140 105" fill="none" stroke="#3b82f6" stroke-width="3" stroke-dasharray="6 4" stroke-linecap="round"/>
+                                        <path d="M 132 107 L 140 105 L 138 113" fill="none" stroke="#3b82f6" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+                                        <text x="135" y="150" font-family="Pretendard" font-size="10" font-weight="bold" fill="#3b82f6" text-anchor="middle">동선</text>
+                                    </g>
+                                </svg>
+                            </div>
+                            
+                            <!-- Description Box -->
+                            <div id="map-desc" class="bg-indigo-50 border border-indigo-100 rounded-lg p-3 text-xs text-indigo-800 text-center shadow-sm">
+                                <strong>Step 1:</strong> 맵의 전체적인 크기를 가늠할 외곽선과 아바타가 태어날 시작점(스폰)을 먼저 잡습니다.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- STEP 4 -->
+        <div class="step-wrapper bg-white rounded-xl shadow-sm border border-slate-200">
+            <button onclick="toggleStep('step4')" class="relative z-10 w-full px-6 py-5 flex items-center justify-between bg-white hover:bg-slate-50 transition-colors text-left group rounded-t-xl rounded-b-xl">
+                <div class="flex items-center gap-4">
+                    <span class="flex items-center justify-center w-10 h-10 rounded-full bg-slate-100 text-slate-500 font-bold text-lg group-hover:bg-indigo-100 group-hover:text-indigo-600 transition-colors" id="badge-step4">4</span>
+                    <h2 class="text-xl font-bold text-slate-800 group-hover:text-indigo-700 transition-colors">도면 해체 및 에셋 리스트업 (R&R)</h2>
+                </div>
+                <i data-lucide="chevron-down" class="text-slate-400 transition-transform duration-300" id="icon-step4"></i>
+            </button>
+            <div id="step4" class="step-content px-6 py-6 border-t border-slate-100 rounded-b-xl">
+                
+                <div class="space-y-6">
+                    <!-- 해체 가이드 -->
+                    <div>
+                        <h3 class="text-lg font-bold text-slate-800 flex items-center gap-2 mb-2">
+                            <i data-lucide="layers" class="w-5 h-5 text-indigo-500"></i> 도면 해체 및 역할 분배 전략
+                        </h3>
+                        <p class="text-sm text-slate-600 mb-4 leading-relaxed">앞서 그린 2D 평면도를 바탕으로, 3D 공간을 구성하기 위해 필요한 <strong>'모든 재료(Asset)'와 '기능(Logic)'을 해체하여 리스트업</strong>합니다. 스케치를 보며 아래 3단계 전략에 따라 구체화해 보세요.</p>
+                        
+                        <div class="grid md:grid-cols-3 gap-4">
+                            <!-- Strategy 1 -->
+                            <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-col h-full">
+                                <div class="bg-indigo-100 text-indigo-700 w-6 h-6 rounded flex items-center justify-center font-bold text-xs mb-2">1</div>
+                                <h4 class="font-bold text-slate-800 text-sm mb-1.5">도면의 시각적 해체</h4>
+                                <p class="text-xs text-slate-600 leading-relaxed mb-2">스케치를 3가지 카테고리로 나누어 바라보세요.</p>
+                                <ul class="text-xs text-slate-600 space-y-1.5 flex-grow">
+                                    <li class="flex gap-1.5"><span class="text-indigo-500">•</span> <strong>건축/환경:</strong> 바닥, 가벽, 하늘, 큰 건물</li>
+                                    <li class="flex gap-1.5"><span class="text-indigo-500">•</span> <strong>소품(프랍):</strong> 나무, 의자, 가로등, 간판</li>
+                                    <li class="flex gap-1.5"><span class="text-indigo-500">•</span> <strong>로직/효과:</strong> 문 열림, 브금(BGM), 조명</li>
+                                </ul>
+                            </div>
+                            
+                            <!-- Strategy 2 -->
+                            <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-col h-full">
+                                <div class="bg-amber-100 text-amber-700 w-6 h-6 rounded flex items-center justify-center font-bold text-xs mb-2">2</div>
+                                <h4 class="font-bold text-slate-800 text-sm mb-1.5">우선순위 (Priority) 부여</h4>
+                                <p class="text-xs text-slate-600 leading-relaxed mb-2">모든 걸 한 번에 다 만들 수는 없습니다. 없으면 공간의 정체성이 무너지는 핵심부터 분류하세요.</p>
+                                <ul class="text-xs text-slate-600 space-y-1.5 flex-grow">
+                                    <li class="flex gap-1.5"><span class="text-amber-500">P1.</span> <strong>핵심 에셋:</strong> 메인 랜드마크, 기본 바닥</li>
+                                    <li class="flex gap-1.5"><span class="text-amber-500">P2.</span> <strong>보조 에셋:</strong> 주요 동선의 소품, 텍스처</li>
+                                    <li class="flex gap-1.5"><span class="text-amber-500">P3.</span> <strong>장식 요소:</strong> 디테일한 장식, 추가 효과</li>
+                                </ul>
+                            </div>
+                            
+                            <!-- Strategy 3 (수정됨: 공수 추정 및 분배) -->
+                            <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-col h-full">
+                                <div class="bg-emerald-100 text-emerald-700 w-6 h-6 rounded flex items-center justify-center font-bold text-xs mb-2">3</div>
+                                <h4 class="font-bold text-slate-800 text-sm mb-1.5">역할 및 공수 분배 (R&R & Workload)</h4>
+                                <p class="text-xs text-slate-600 leading-relaxed mb-2">팀원에게 역할을 나눌 때, 작업 1개가 똑같은 1인분의 노동력이 아닙니다. 특정 조원에게 무거운 작업이 몰리지 않게 <strong>작업량(Size)</strong>을 함께 적어 조율하세요.</p>
+                                <ul class="text-xs text-slate-600 space-y-1.5 mb-3">
+                                    <li class="flex gap-1.5"><span class="text-rose-500 font-bold">[L]</span> 무거움 (예: 메인 건물 모델링, 지형 세팅)</li>
+                                    <li class="flex gap-1.5"><span class="text-amber-500 font-bold">[M]</span> 보통 (예: 가구 모델링, 쉐이더 적용)</li>
+                                    <li class="flex gap-1.5"><span class="text-emerald-500 font-bold">[S]</span> 가벼움 (예: BGM 서치, 간단한 로직)</li>
+                                </ul>
+                                <div class="bg-rose-50 border border-rose-100 p-2.5 rounded text-[11px] text-rose-700 leading-relaxed mt-auto">
+                                    <strong>🚨 필수 주의사항:</strong> 본 과목의 목표 달성을 위해, 역할을 어떻게 나누더라도 <strong>모든 팀원은 반드시 1개 이상의 '3D 모델링'을 분담하여 제작</strong>해야 합니다. (유니티/기획 전담자도 예외 없음)
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 에셋 리스트 템플릿 (카테고리 중심 & 작업량 추가) -->
+                    <div class="bg-slate-50 p-5 rounded-xl border border-slate-200">
+                        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3">
+                            <h4 class="font-bold text-slate-800 text-sm flex items-center gap-1.5">
+                                <i data-lucide="list-checks" class="w-4 h-4 text-slate-500"></i>작성 예시 (To-do List)
+                            </h4>
+                            <span class="text-xs text-slate-500 bg-white px-2 py-1 rounded border border-slate-200 shadow-sm w-fit">총 작업량이 한 명에게 쏠리지 않도록 확인하세요!</span>
+                        </div>
+                        
+                        <div class="overflow-x-auto rounded-lg border border-slate-200 shadow-sm">
+                            <table class="w-full text-sm text-left text-slate-600 bg-white min-w-[600px]">
+                                <thead class="text-xs text-slate-700 uppercase bg-slate-100 border-b border-slate-200">
+                                    <tr>
+                                        <th class="px-4 py-3 w-1/6">카테고리</th>
+                                        <th class="border-l border-slate-200 px-4 py-3 w-24 text-center">우선순위</th>
+                                        <th class="border-l border-slate-200 px-4 py-3">제작해야 할 에셋/로직 명</th>
+                                        <th class="border-l border-slate-200 px-4 py-3 w-24 text-center">작업량</th>
+                                        <th class="border-l border-slate-200 px-4 py-3 w-24 text-center">담당자</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-slate-100">
+                                    <!-- 3D 에셋 그룹 -->
+                                    <tr>
+                                        <td class="px-4 py-3 font-medium text-slate-900 bg-slate-50" rowspan="4">🎨 3D 에셋 (필수)</td>
+                                        <td class="border-l border-slate-200 px-4 py-3 text-center"><span class="inline-block px-2 py-0.5 font-bold text-[10px] text-amber-700 bg-amber-100 rounded">P1 (필수)</span></td>
+                                        <td class="border-l border-slate-200 px-4 py-3">메인 랜드마크 (오두막 외관) 형태 잡기</td>
+                                        <td class="border-l border-slate-200 px-4 py-3 text-center"><span class="inline-block px-2 py-0.5 font-bold text-[11px] text-rose-700 bg-rose-100 rounded">L (무거움)</span></td>
+                                        <td class="border-l border-slate-200 px-4 py-3 text-center font-bold text-indigo-600">김XR</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="border-l border-slate-200 px-4 py-3 text-center"><span class="inline-block px-2 py-0.5 font-bold text-[10px] text-amber-700 bg-amber-100 rounded">P1 (필수)</span></td>
+                                        <td class="border-l border-slate-200 px-4 py-3">공간 내부 가구 1종 모델링</td>
+                                        <td class="border-l border-slate-200 px-4 py-3 text-center"><span class="inline-block px-2 py-0.5 font-bold text-[11px] text-amber-700 bg-amber-100 rounded">M (보통)</span></td>
+                                        <td class="border-l border-slate-200 px-4 py-3 text-center font-bold text-indigo-600">박유닛</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="border-l border-slate-200 px-4 py-3 text-center"><span class="inline-block px-2 py-0.5 font-semibold text-[10px] text-blue-700 bg-blue-100 rounded">P2 (보조)</span></td>
+                                        <td class="border-l border-slate-200 px-4 py-3">주변 환경 프랍 (나무 3종, 바위 세트)</td>
+                                        <td class="border-l border-slate-200 px-4 py-3 text-center"><span class="inline-block px-2 py-0.5 font-bold text-[11px] text-amber-700 bg-amber-100 rounded">M (보통)</span></td>
+                                        <td class="border-l border-slate-200 px-4 py-3 text-center font-bold text-indigo-600">이블렌</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="border-l border-slate-200 px-4 py-3 text-center"><span class="inline-block px-2 py-0.5 font-semibold text-[10px] text-blue-700 bg-blue-100 rounded">P2 (보조)</span></td>
+                                        <td class="border-l border-slate-200 px-4 py-3">핵심 소품(랜턴 및 문짝) 모델링</td>
+                                        <td class="border-l border-slate-200 px-4 py-3 text-center"><span class="inline-block px-2 py-0.5 font-bold text-[11px] text-amber-700 bg-amber-100 rounded">M (보통)</span></td>
+                                        <td class="border-l border-slate-200 px-4 py-3 text-center font-bold text-indigo-600">최코딩</td>
+                                    </tr>
+
+                                    <!-- 유니티 로직/월드 그룹 -->
+                                    <tr>
+                                        <td class="px-4 py-3 font-medium text-slate-900 bg-slate-50 border-t border-slate-200" rowspan="2">⚙️ 로직/월드 (유니티)</td>
+                                        <td class="border-l border-slate-200 px-4 py-3 text-center border-t border-slate-200"><span class="inline-block px-2 py-0.5 font-bold text-[10px] text-amber-700 bg-amber-100 rounded">P1 (필수)</span></td>
+                                        <td class="border-l border-slate-200 px-4 py-3 border-t border-slate-200">지형(Terrain) 세팅 및 큐브 화이트박싱</td>
+                                        <td class="border-l border-slate-200 px-4 py-3 text-center border-t border-slate-200"><span class="inline-block px-2 py-0.5 font-bold text-[11px] text-amber-700 bg-amber-100 rounded">M (보통)</span></td>
+                                        <td class="border-l border-slate-200 px-4 py-3 text-center font-bold text-indigo-600 border-t border-slate-200">박유닛</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="border-l border-slate-200 px-4 py-3 text-center"><span class="inline-block px-2 py-0.5 text-[10px] text-slate-500 bg-slate-100 rounded">P3 (장식)</span></td>
+                                        <td class="border-l border-slate-200 px-4 py-3 text-slate-500">다가가면 문 열리고 파티클 터지는 로직</td>
+                                        <td class="border-l border-slate-200 px-4 py-3 text-center"><span class="inline-block px-2 py-0.5 font-bold text-[11px] text-emerald-700 bg-emerald-100 rounded">S (가벼움)</span></td>
+                                        <td class="border-l border-slate-200 px-4 py-3 text-center font-bold text-indigo-600">최코딩</td>
+                                    </tr>
+
+                                    <!-- 기획/기타 그룹 -->
+                                    <tr>
+                                        <td class="px-4 py-3 font-medium text-slate-900 bg-slate-50 border-t border-slate-200">📝 기획/기타</td>
+                                        <td class="border-l border-slate-200 px-4 py-3 text-center border-t border-slate-200"><span class="inline-block px-2 py-0.5 font-semibold text-[10px] text-blue-700 bg-blue-100 rounded">P2 (보조)</span></td>
+                                        <td class="border-l border-slate-200 px-4 py-3 border-t border-slate-200">테마에 맞는 BGM 및 Skybox 서치/관리</td>
+                                        <td class="border-l border-slate-200 px-4 py-3 text-center border-t border-slate-200"><span class="inline-block px-2 py-0.5 font-bold text-[11px] text-emerald-700 bg-emerald-100 rounded">S (가벼움)</span></td>
+                                        <td class="border-l border-slate-200 px-4 py-3 text-center font-bold text-indigo-600 border-t border-slate-200">정기획</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- STEP 5 (THE HIGHLIGHT) -->
+        <div class="step-wrapper bg-indigo-600 rounded-xl shadow-md border border-indigo-700 mb-10">
+            <button onclick="toggleStep('step5')" class="relative z-10 w-full px-6 py-5 flex items-center justify-between bg-indigo-600 hover:bg-indigo-700 transition-colors text-left rounded-t-xl rounded-b-xl">
+                <div class="flex items-center gap-4">
+                    <span class="flex items-center justify-center w-10 h-10 rounded-full bg-white text-indigo-700 font-bold text-lg shadow" id="badge-step5">5</span>
+                    <h2 class="text-xl font-bold text-white">🔥 실습: 유니티 화이트박싱</h2>
+                </div>
+                <i data-lucide="chevron-down" class="text-indigo-200 transition-transform duration-300" id="icon-step5"></i>
+            </button>
+            <div id="step5" class="step-content bg-white px-6 py-6 rounded-b-xl">
+                
+                <div class="bg-amber-50 border-l-4 border-amber-400 p-4 mb-6 rounded-r-lg flex flex-col md:flex-row gap-6 items-center">
+                    <div class="flex-1">
+                        <h4 class="font-bold text-amber-800 flex items-center gap-2 mb-2">
+                            <i data-lucide="alert-triangle" class="w-4 h-4"></i> <span class="tooltip-trigger tooltip-left">화이트박싱이란?<span class="tooltip-content text-left">본격적인 모델링 전, 뼈대만 잡아보는 레벨 디자인 초기 단계입니다.<br>(텍스처가 없는 흰 박스 상태라는 뜻)</span></span>
+                        </h4>
+                        <p class="text-sm text-amber-800 leading-relaxed">
+                            완성된 3D 모델을 넣기 전, <strong>유니티의 기본 도형(큐브, 원기둥 등)만을 사용해 공간의 크기와 동선을 대략적으로 잡아보는 레벨 디자인 단계</strong>입니다. (그레이박싱이라고도 합니다.) 8주차에 배운 오브젝트 배치와 스내핑(Snapping)을 적극 활용해 보세요!
+                        </p>
+                    </div>
+                    
+                    <div class="w-full md:w-1/3 bg-white/60 backdrop-blur-sm p-3 rounded-lg border border-amber-200/60 shadow-inner flex justify-center">
+                        <svg viewBox="0 0 160 120" class="w-40 h-auto" aria-hidden="true">
+                            <polygon points="80,100 150,65 80,30 10,65" fill="#e2e8f0" stroke="#cbd5e1" stroke-width="1"/>
+                            <polygon points="80,90 140,60 80,30 20,60" fill="none" stroke="#cbd5e1" stroke-width="0.5"/>
+                            <polygon points="80,80 130,55 80,30 30,55" fill="none" stroke="#cbd5e1" stroke-width="0.5"/>
+                            <polygon points="80,70 120,50 80,30 40,50" fill="none" stroke="#cbd5e1" stroke-width="0.5"/>
+                            
+                            <g transform="translate(40, 30)">
+                                <polygon points="20,10 30,5 20,0 10,5" fill="#f8fafc" stroke="#94a3b8" stroke-width="0.5"/>
+                                <polygon points="10,5 20,10 20,40 10,35" fill="#e2e8f0" stroke="#94a3b8" stroke-width="0.5"/>
+                                <polygon points="20,10 30,5 30,35 20,40" fill="#cbd5e1" stroke="#94a3b8" stroke-width="0.5"/>
+                            </g>
+
+                            <g transform="translate(80, 55)">
+                                <polygon points="15,7.5 22.5,3.75 15,0 7.5,3.75" fill="#f8fafc" stroke="#94a3b8" stroke-width="0.5"/>
+                                <polygon points="7.5,3.75 15,7.5 15,20 7.5,16.25" fill="#e2e8f0" stroke="#94a3b8" stroke-width="0.5"/>
+                                <polygon points="15,7.5 22.5,3.75 22.5,16.25 15,20" fill="#cbd5e1" stroke="#94a3b8" stroke-width="0.5"/>
+                            </g>
+
+                            <g transform="translate(110, 10)">
+                                <circle cx="10" cy="10" r="6" fill="#fef08a"/>
+                                <path d="M 5 15 L -5 25 M -5 22 L -5 25 L -2 25" fill="none" stroke="#eab308" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                            </g>
+                        </svg>
+                    </div>
+                </div>
+
+                <div class="space-y-6">
+                    <div class="flex gap-4">
+                        <div class="flex flex-col items-center mt-1">
+                            <div class="w-8 h-8 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center font-bold text-sm">1</div>
+                            <div class="w-px h-full bg-indigo-100 my-1"></div>
+                        </div>
+                        <div class="pb-4 w-full">
+                            <h3 class="font-bold text-slate-800 text-lg flex items-center">
+                                기본 도형으로 맵 뼈대 세우기
+                                <span class="tooltip-trigger tip-badge tooltip-left"><i data-lucide="zap" class="w-3 h-3 mr-1"></i>Tip<span class="tooltip-content">유니티 화면에서 'F' 키를 누르면 선택한 오브젝트로 카메라 초점이 바로 맞춰집니다!</span></span>
+                            </h3>
+                            <p class="text-sm text-slate-600 mt-1 mb-3">스케치한 2D 평면도를 보며 유니티 씬에 큐브를 배치합니다.</p>
+                            <ul class="list-disc list-inside text-sm text-slate-600 space-y-1 ml-1 bg-slate-50 p-3 rounded border border-slate-100">
+                                <li><code>GameObject > 3D Object > Cube</code> 를 생성하여 벽과 장애물을 만듭니다.</li>
+                                <li><code>Plane</code>을 생성하여 바닥을 넓게 깝니다.</li>
+                                <li>단축키 <strong>W(이동), E(회전), R(크기)</strong>을 사용하여 형태를 잡습니다.</li>
+                                <li><code>Ctrl (또는 Cmd)</code> 키를 누른 채 이동하여 <strong><span class="tooltip-trigger tooltip-left font-medium">스냅<span class="tooltip-content">오브젝트를 자석처럼 일정한 간격이나 모서리에 딱 맞게 붙여주는 유니티 기능입니다.</span></span></strong> 기능을 활용해 딱 맞게 조립해 보세요.</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="flex gap-4">
+                        <div class="flex flex-col items-center mt-1">
+                            <div class="w-8 h-8 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center font-bold text-sm">2</div>
+                            <div class="w-px h-full bg-indigo-100 my-1"></div>
+                        </div>
+                        <div class="pb-4">
+                            <h3 class="font-bold text-slate-800 text-lg">조명과 그림자 배치하기</h3>
+                            <p class="text-sm text-slate-600 mt-1 mb-3">공간의 분위기를 결정하는 빛을 세팅합니다.</p>
+                            <ul class="list-disc list-inside text-sm text-slate-600 space-y-1 ml-1 bg-slate-50 p-3 rounded border border-slate-100">
+                                <li><strong>Directional Light:</strong> 태양광입니다. 회전(E)시켜 낮/밤, 노을 지는 방향과 그림자의 길이를 조절해 봅니다.</li>
+                                <li><strong>Point Light:</strong> 전구나 모닥불 역할을 합니다. <code>GameObject > Light > Point Light</code>로 추가하고 <code>Color</code>와 <code>Intensity</code>(강도)를 변경해 보세요.</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="flex gap-4">
+                        <div class="flex flex-col items-center mt-1">
+                            <div class="w-8 h-8 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center font-bold text-sm">3</div>
+                        </div>
+                        <div>
+                            <h3 class="font-bold text-slate-800 text-lg">
+                                <span class="tooltip-trigger tooltip-left">스카이박스<span class="tooltip-content">월드의 하늘, 우주 등 아주 먼 배경을 감싸는 거대한 큐브 형태의 텍스처입니다.</span></span> 적용하여 무드 완성
+                            </h3>
+                            <p class="text-sm text-slate-600 mt-1 mb-3">가짜 하늘을 입혀 공간의 배경을 채워줍니다.</p>
+                            <ul class="list-disc list-inside text-sm text-slate-600 space-y-1 ml-1 bg-slate-50 p-3 rounded border border-slate-100">
+                                <li><a href="https://assetstore.unity.com/ko-KR/search#q=skybox&nf-ec_price_filter=0...0">Unity Asset Store(온라인)에 접속하여 <strong>'Free Skybox'</strong>를 검색</a> 후 내 에셋에 추가합니다.</li>
+                                <li>Package Manager에서 다운로드 및 Import 합니다.</li>
+                                <li><code>Window > Rendering > Lighting</code> 창을 열고, Environment 탭의 <strong>Skybox Material</strong>에 다운받은 하늘을 드래그&드롭 합니다.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- NEW: 향후 일정 및 개인 과제 로드맵 -->
+        <div class="bg-gradient-to-br from-slate-50 to-indigo-50/30 rounded-xl border border-indigo-100 overflow-hidden shadow-sm mb-8">
+            <div class="bg-indigo-100/50 px-6 py-4 border-b border-indigo-100 flex items-center gap-3">
+                <div class="bg-indigo-600 text-white p-1.5 rounded-lg shadow-sm">
+                    <i data-lucide="calendar-check" class="w-5 h-5"></i>
+                </div>
+                <h3 class="font-bold text-indigo-900 text-lg">향후 일정 및 개인 과제 안내</h3>
+            </div>
+            
+            <div class="p-6">
+                <!-- 이번 주 과제 (Task) -->
+                <h4 class="font-bold text-slate-800 text-sm mb-4 flex items-center gap-2">
+                    <i data-lucide="edit-3" class="w-4 h-4 text-emerald-500"></i> 이번 주 개인 과제 (10주차 수업 전까지)
+                </h4>
+                <div class="grid md:grid-cols-2 gap-4 mb-8">
+                    <!-- Task 1: 리서치 -->
+                    <div class="bg-white p-4 rounded-lg border border-slate-200 shadow-sm relative overflow-hidden">
+                        <div class="absolute top-0 left-0 w-1 h-full bg-emerald-400"></div>
+                        <h5 class="font-bold text-slate-800 text-sm mb-1">1. 개별 추가 리서치</h5>
+                        <p class="text-xs text-slate-600 leading-relaxed mb-2">수업 시간에 시간 제약으로 다 보지 못한 레퍼런스를 집에서 추가로 탐방해 보세요. 공간의 디테일(소품 배치, 텍스처 느낌 등)을 스크린샷으로 남겨 팀 피그잼에 공유합니다.</p>
+                    </div>
+                    
+                    <!-- Task 2: 모델링 (중요) -->
+                    <div class="bg-white p-4 rounded-lg border border-slate-200 shadow-sm relative overflow-hidden">
+                        <div class="absolute top-0 left-0 w-1 h-full bg-indigo-500"></div>
+                        <h5 class="font-bold text-slate-800 text-sm mb-1">2. 핵심 3D 오브젝트 모델링 (형태 잡기)</h5>
+                        <p class="text-xs text-slate-600 leading-relaxed mb-3">R&R 분배표를 바탕으로 본인이 맡은 <strong>'가장 중요한 핵심 오브젝트 1개'</strong>의 모델링을 시작합니다. 이번 주는 완벽한 채색보다 <span class="tooltip-trigger font-medium text-slate-700">형태(Blockout)<span class="tooltip-content">세부적인 장식이나 색상보다, 전체적인 실루엣과 덩어리감을 먼저 잡는 모델링 과정을 뜻합니다.</span></span>를 잡는 데 집중하세요.</p>
+                        <div class="bg-slate-50 p-2.5 rounded text-xs border border-slate-100 flex items-start gap-2">
+                            <i data-lucide="file-warning" class="w-4 h-4 text-rose-500 shrink-0 mt-0.5"></i>
+                            <div>
+                                <strong class="text-slate-700 block mb-0.5">제출 필수 파일 (2가지)</strong>
+                                <span class="text-slate-600">작업 원본인 <strong>.blend 파일</strong>과 유니티에 올리기 위한 <span class="tooltip-trigger font-bold text-indigo-600 tooltip-left">.fbx 파일<span class="tooltip-content">유니티 등 다른 3D 엔진으로 넘기기 위한 가장 범용적인 3D 익스포트 포맷입니다.</span></span>을 모두 저장하여 가져옵니다.</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 로드맵 (Roadmap) -->
+                <h4 class="font-bold text-slate-800 text-sm mb-4 flex items-center gap-2">
+                    <i data-lucide="map" class="w-4 h-4 text-indigo-500"></i> 10주차 ~ 11주차 로드맵 미리보기
+                </h4>
+                <div class="relative pl-4 border-l-2 border-indigo-100 space-y-6">
+                    <!-- Week 10 -->
+                    <div class="relative">
+                        <div class="absolute -left-[21px] top-1 w-2.5 h-2.5 rounded-full bg-indigo-400 ring-4 ring-white"></div>
+                        <h5 class="font-bold text-indigo-900 text-sm mb-1">10주차 (다음 주)</h5>
+                        <ul class="text-xs text-slate-600 space-y-1.5 list-disc list-inside">
+                            <li><strong>조별 기획 발표:</strong> 9주차 피그잼에서 논의한 우리 조의 기획(차별점, 평면도 등)을 짧게 발표합니다.</li>
+                            <li><strong>온라인 강의 학습:</strong> 3D 모델을 만화처럼 예쁘게 렌더링해주는 <span class="tooltip-trigger font-medium text-slate-700">릴툰(LilToon) 쉐이더<span class="tooltip-content">VRChat에서 가장 널리 쓰이는 애니메이션/카툰풍 렌더링 쉐이더(재질)입니다.</span></span>의 적용법을 학습합니다.</li>
+                            <li>각자 만들어 온 모델링에 릴툰 쉐이더를 적용해 텍스처링을 고도화하는 작업을 1주일간 진행합니다.</li>
+                        </ul>
+                    </div>
+                    
+                    <!-- Week 11 -->
+                    <div class="relative">
+                        <div class="absolute -left-[21px] top-1 w-2.5 h-2.5 rounded-full bg-slate-300 ring-4 ring-white"></div>
+                        <h5 class="font-bold text-slate-700 text-sm mb-1">11주차</h5>
+                        <ul class="text-xs text-slate-600 space-y-1.5 list-disc list-inside">
+                            <li><strong>씬 조립(Scene Assembly):</strong> 각자 쉐이더까지 완벽하게 적용해 온 핵심 `.fbx` 오브젝트들을 하나의 유니티 공간에 모아서 배치하고 조립합니다.</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </main>
+    <script>
+        // 1. 아이콘 초기화
+        lucide.createIcons();
+
+        // 2. 툴팁 화면 밖으로 나가는 현상 방지 동적 계산 로직
+        function initDynamicTooltips() {
+            const triggers = document.querySelectorAll('.tooltip-trigger');
+            
+            triggers.forEach(trigger => {
+                trigger.addEventListener('mouseenter', () => {
+                    const tooltip = trigger.querySelector('.tooltip-content');
+                    if (!tooltip) return;
+
+                    tooltip.style.setProperty('--shift-x', '0px');
+                    
+                    const rect = tooltip.getBoundingClientRect();
+                    const viewportWidth = window.innerWidth;
+                    const safePadding = 16; 
+                    
+                    let shiftAmount = 0;
+                    
+                    if (rect.right > viewportWidth - safePadding) {
+                        shiftAmount = (viewportWidth - safePadding) - rect.right;
+                    } 
+                    else if (rect.left < safePadding) {
+                        shiftAmount = safePadding - rect.left;
+                    }
+                    
+                    tooltip.style.setProperty('--shift-x', `${shiftAmount}px`);
+                });
+            });
+        }
+        
+        document.addEventListener('DOMContentLoaded', initDynamicTooltips);
+
+        // 3. 평면도(Map) 단계별 뷰어 로직
+        function setMapStep(step) {
+            for(let i=1; i<=4; i++) {
+                const btn = document.getElementById(`btn-map-${i}`);
+                if(!btn) continue;
+                if(i === step) {
+                    btn.classList.replace('text-slate-500', 'text-indigo-700');
+                    btn.classList.replace('hover:bg-slate-50', 'bg-indigo-50');
+                    btn.classList.add('bg-indigo-50');
+                } else {
+                    btn.classList.replace('text-indigo-700', 'text-slate-500');
+                    btn.classList.replace('bg-indigo-50', 'hover:bg-slate-50');
+                    btn.classList.remove('bg-indigo-50');
+                }
+            }
+
+            const layer1 = document.getElementById('map-layer-1');
+            const layer2 = document.getElementById('map-layer-2');
+            const layer3 = document.getElementById('map-layer-3');
+            const layer4 = document.getElementById('map-layer-4');
+            
+            if(layer1) layer1.style.opacity = step >= 1 ? '1' : '0';
+            if(layer2) layer2.style.opacity = step >= 2 ? '1' : '0';
+            if(layer3) layer3.style.opacity = step >= 3 ? '1' : '0';
+            if(layer4) layer4.style.opacity = step >= 4 ? '1' : '0';
+
+            const desc = document.getElementById('map-desc');
+            if(desc) {
+                if(step === 1) {
+                    desc.innerHTML = "<strong>Step 1:</strong> 맵의 전체적인 크기를 가늠할 외곽선과 아바타가 태어날 시작점(스폰)을 먼저 잡습니다.";
+                } else if (step === 2) {
+                    desc.innerHTML = "<strong>Step 2:</strong> '탐험', '휴식' 등 목적에 따라 큼직하게 구역(Zoning)을 나눕니다.";
+                } else if (step === 3) {
+                    desc.innerHTML = "<strong>Step 3:</strong> 구역 간 높낮이를 연결하는 계단을 설정하고, 시선을 끌 메인 랜드마크를 배치합니다.";
+                } else {
+                    desc.innerHTML = "<strong>Step 4:</strong> 스폰에서 랜드마크로 이어지는 주 동선(Path)과 세부 소품을 추가하여 완성합니다.";
+                }
+            }
+        }
+
+        // 4. 스텝 토글(Toggle) 로직
+        function toggleStep(stepId) {
+            const content = document.getElementById(stepId);
+            const icon = document.getElementById('icon-' + stepId);
+            const isActive = content.classList.contains('active');
+            
+            document.querySelectorAll('.step-content').forEach(el => {
+                el.classList.remove('active');
+                const btnIcon = document.getElementById('icon-' + el.id);
+                if(btnIcon) btnIcon.style.transform = 'rotate(0deg)';
+                updateHeaderStyle(el.id, false);
+            });
+            
+            if (!isActive) {
+                content.classList.add('active');
+                if(icon) icon.style.transform = 'rotate(180deg)';
+                updateHeaderStyle(stepId, true);
+            }
+        }
+
+        // 5. 헤더 스타일 업데이트 로직
+        function updateHeaderStyle(stepId, isActive) {
+            const button = document.querySelector(`[onclick="toggleStep('${stepId}')"]`);
+            if(!button) return;
+            
+            const badge = document.getElementById('badge-' + stepId);
+            const title = button.querySelector('h2');
+            
+            if (stepId === 'step5') {
+                if (isActive) {
+                    document.getElementById('icon-step5').style.transform = 'rotate(180deg)';
+                    button.classList.remove('rounded-b-xl');
+                } else {
+                    document.getElementById('icon-step5').style.transform = 'rotate(0deg)';
+                    button.classList.add('rounded-b-xl');
+                }
+                return;
+            }
+
+            if (isActive) {
+                button.classList.replace('bg-white', 'bg-indigo-50');
+                button.classList.replace('hover:bg-slate-50', 'hover:bg-indigo-100');
+                button.classList.remove('rounded-b-xl');
+                if(badge) {
+                    badge.classList.replace('bg-slate-100', 'bg-indigo-600');
+                    badge.classList.replace('text-slate-500', 'text-white');
+                    badge.classList.remove('group-hover:bg-indigo-100', 'group-hover:text-indigo-600');
+                }
+                title.classList.replace('text-slate-800', 'text-indigo-900');
+                title.classList.remove('group-hover:text-indigo-700');
+                document.getElementById('icon-' + stepId).classList.replace('text-slate-400', 'text-indigo-600');
+            } else {
+                button.classList.replace('bg-indigo-50', 'bg-white');
+                button.classList.replace('hover:bg-indigo-100', 'hover:bg-slate-50');
+                button.classList.add('rounded-b-xl');
+                if(badge) {
+                    badge.classList.replace('bg-indigo-600', 'bg-slate-100');
+                    badge.classList.replace('text-white', 'text-slate-500');
+                    badge.classList.add('group-hover:bg-indigo-100', 'group-hover:text-indigo-600');
+                }
+                title.classList.replace('text-indigo-900', 'text-slate-800');
+                title.classList.add('group-hover:text-indigo-700');
+                const icon = document.getElementById('icon-' + stepId);
+                if(icon) icon.classList.replace('text-indigo-600', 'text-slate-400');
+            }
+        }
+
+        // 초기화 실행
+        document.getElementById('step1').classList.add('active');
+        document.getElementById('icon-step1').style.transform = 'rotate(180deg)';
+        updateHeaderStyle('step1', true);
+    </script>
+</body>
+</html>
