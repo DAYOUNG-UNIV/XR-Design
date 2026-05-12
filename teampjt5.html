@@ -1,0 +1,2310 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>기말 프로젝트 공간 조립 워크샵</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.8/dist/web/static/pretendard.css" rel="stylesheet" />
+    <script src="https://unpkg.com/lucide@latest"></script>
+    
+    <!-- Three.js for Interactive Shader Viewer -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+
+    <style>
+        body {
+            font-family: 'Pretendard', sans-serif;
+            background-color: #f8fafc;
+            background-image: radial-gradient(#cbd5e1 1px, transparent 1px);
+            background-size: 20px 20px;
+        }
+        
+        .step-content {
+            display: none;
+            animation: fadeIn 0.4s ease-out forwards;
+            opacity: 0;
+            transform: translateY(-5px);
+            position: relative;
+            z-index: 20;
+        }
+        .step-content.active { display: block; }
+        
+        @keyframes fadeIn {
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .step-wrapper {
+            position: relative;
+            z-index: 1;
+            transition: z-index 0s;
+        }
+        .step-wrapper:hover { z-index: 40; }
+
+        /* Tooltip CSS */
+        .tooltip-trigger {
+            position: relative;
+            display: inline-block;
+            border-bottom: 1.5px dashed #94a3b8;
+            cursor: help;
+            font-weight: 600;
+        }
+        .tooltip-content {
+            visibility: hidden;
+            opacity: 0;
+            position: absolute;
+            bottom: calc(100% + 8px);
+            left: 50%;
+            transform: translateX(calc(-50% + var(--shift-x, 0px)));
+            background-color: #1e293b;
+            color: #f8fafc;
+            text-align: center;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            font-weight: 400;
+            line-height: 1.4;
+            width: max-content;
+            max-width: 240px;
+            z-index: 50;
+            transition: opacity 0.2s ease-in-out;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            pointer-events: none;
+            word-break: keep-all;
+        }
+        .tooltip-content::after {
+            content: "";
+            position: absolute;
+            top: 100%;
+            left: calc(50% - var(--shift-x, 0px));
+            margin-left: -6px;
+            border-width: 6px;
+            border-style: solid;
+            border-color: #1e293b transparent transparent transparent;
+        }
+        .tooltip-trigger:hover .tooltip-content {
+            visibility: visible;
+            opacity: 1;
+        }
+
+        /* Unity Inspector Custom Styles */
+        .unity-inspector::-webkit-scrollbar { width: 8px; }
+        .unity-inspector::-webkit-scrollbar-track { background: #282828; }
+        .unity-inspector::-webkit-scrollbar-thumb { background: #555; border-radius: 4px; }
+        .unity-inspector::-webkit-scrollbar-thumb:hover { background: #777; }
+        
+        .unity-slider {
+            -webkit-appearance: none;
+            width: 100%;
+            height: 4px;
+            background: #1e1e1e;
+            border: 1px solid #222;
+            border-radius: 2px;
+            outline: none;
+        }
+        .unity-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #4a90e2;
+            cursor: pointer;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.5);
+        }
+        .unity-foldout { user-select: none; }
+        .unity-foldout.open .arrow { transform: rotate(90deg); }
+    </style>
+</head>
+<body class="text-slate-800 antialiased min-h-screen pb-24">
+
+    <header class="bg-white shadow-sm border-b border-slate-200 sticky top-0 z-50">
+        <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-5">
+            <div class="flex items-center justify-between">
+                <div>
+                    <div class="flex items-center gap-2 mb-1">
+                        <span class="bg-indigo-100 text-indigo-700 text-xs font-bold px-2 py-0.5 rounded">11주차</span>
+                        <span class="text-sm text-slate-500 font-medium">기말 프로젝트 제작</span>
+                    </div>
+                    <h1 class="text-2xl font-bold text-slate-900 flex items-center gap-2">
+                        <i data-lucide="package-open" class="text-indigo-600"></i>
+                        공간 조립(포장이사) 및 쉐이더 기초
+                    </h1>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 mt-8 space-y-5">
+        
+        <!-- Intro Notice -->
+        <div class="bg-indigo-50 border border-indigo-200 rounded-xl p-5 flex items-start gap-4 shadow-sm">
+            <div class="bg-indigo-600 p-2 rounded-lg shrink-0 mt-0.5 shadow">
+                <i data-lucide="users" class="text-white w-5 h-5"></i>
+            </div>
+            <div>
+                <h3 class="font-bold text-indigo-900 text-lg mb-1">오늘의 미션: "수업 시간에 끝냅시다!"</h3>
+                <p class="text-indigo-800 text-sm leading-relaxed">
+                    조별 모임을 위해 주말 늦게까지 시간을 맞추는 부담을 줄이겠습니다.<br>
+                    오늘부터는 <strong>대규모 조를 서브 팀으로 분할</strong>하고, 각자 만든 구역을 유니티 패키지로 <strong>'포장이사'</strong>하여 합치는 효율적인 협업 방식을 실습합니다. 또한, <strong>각 조를 순회하며 피드백 및 화이트박싱 점검을 진행할 예정이니</strong> 수업 시간을 최대한 활용해 주세요!
+                </p>
+            </div>
+        </div>
+
+        <div class="step-wrapper bg-white rounded-xl shadow-sm border border-slate-200">
+            <button onclick="toggleStep('step1')" class="relative z-10 w-full px-6 py-5 flex items-center justify-between bg-white hover:bg-slate-50 transition-colors text-left group rounded-t-xl rounded-b-xl">
+                <div class="flex items-center gap-4">
+                    <span class="flex items-center justify-center w-10 h-10 rounded-full bg-slate-100 text-slate-500 font-bold text-lg group-hover:bg-indigo-100 group-hover:text-indigo-600 transition-colors" id="badge-step1">1</span>
+                    <div>
+                        <h2 class="text-xl font-bold text-slate-800 group-hover:text-indigo-700 transition-colors">공통 안내: 쉐이더(Shader)와 VRChat 파이프라인</h2>
+                        <p class="text-xs text-slate-500 mt-1 font-medium">블렌더에서 만든 발광 효과가 왜 유니티에선 안 보일까?</p>
+                    </div>
+                </div>
+                <i data-lucide="chevron-down" class="text-slate-400 transition-transform duration-300" id="icon-step1"></i>
+            </button>
+            <div id="step1" class="step-content px-6 py-6 border-t border-slate-100 rounded-b-xl">
+                
+                <div class="bg-rose-50 border border-rose-200 p-4 rounded-lg mb-6 flex items-start gap-3 shadow-sm">
+                    <i data-lucide="help-circle" class="w-5 h-5 text-rose-600 mt-0.5 shrink-0"></i>
+                    <div>
+                        <h4 class="font-bold text-rose-900 text-sm mb-1.5">가장 많이 나오는 질문</h4>
+                        <p class="text-xs text-rose-800 leading-relaxed font-medium">
+                            "Q. 블렌더 노드 에디터에서 예쁘게 색을 섞고 빛이 나게 만들었는데, 유니티로 넘기니까 그냥 칙칙한 회색 큐브가 됐어요. 왜 그런가요?"
+                        </p>
+                    </div>
+                </div>
+
+                <!-- 쉐이더 개념 정의 -->
+                <div class="mb-8">
+                    <h4 class="font-bold text-slate-800 text-base mb-3 border-b border-slate-100 pb-2 flex items-center gap-2">
+                        <i data-lucide="cpu" class="w-5 h-5 text-indigo-500"></i> 쉐이더(Shader)의 정확한 개념
+                    </h4>
+                    <p class="text-sm text-slate-600 leading-relaxed mb-4">
+                        쉐이더(Shader)란 3D 그래픽에서 화면의 각 픽셀이 어떤 색상으로, 어떻게 빛날지(또는 어두워질지)를 계산하는 <strong>'렌더링 연산 프로그램(코드)'</strong>입니다. 블렌더의 쉐이더 노드와 유니티의 쉐이더는 기반 시스템이 다르기 때문에 연산 규칙 자체가 호환되지 않습니다.
+                    </p>
+                    <div class="grid sm:grid-cols-2 gap-4">
+                        <div class="bg-slate-50 p-4 rounded-lg border border-slate-200">
+                            <strong class="text-sm text-slate-800 block mb-2 flex items-center gap-1.5"><i data-lucide="box" class="w-4 h-4 text-slate-500"></i> 머티리얼 (Material)</strong>
+                            <p class="text-xs text-slate-600 leading-relaxed">3D 모델의 표면에 할당되는 데이터 컨테이너입니다. 색상 값, 텍스처 이미지 파일(.png), 투명도 수치 등의 데이터를 저장합니다.</p>
+                        </div>
+                        <div class="bg-indigo-50 p-4 rounded-lg border border-indigo-200">
+                            <strong class="text-sm text-indigo-900 block mb-2 flex items-center gap-1.5"><i data-lucide="wand-2" class="w-4 h-4 text-indigo-500"></i> 쉐이더 (Shader)</strong>
+                            <p class="text-xs text-indigo-800 leading-relaxed">머티리얼의 데이터를 바탕으로, 조명에 어떻게 반응할지(플라스틱처럼 반짝일지, 만화처럼 보일지, 스스로 발광할지)를 계산하는 수학적 규칙입니다.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <h4 class="font-bold text-slate-800 text-base mb-4 border-b border-slate-100 pb-2 flex items-center gap-2">
+                    <i data-lucide="git-merge" class="w-5 h-5 text-emerald-500"></i> 올바른 VRChat 월드 제작 파이프라인
+                </h4>
+                
+                <div class="bg-slate-900 rounded-xl p-6 mb-8 shadow-inner overflow-hidden relative border border-slate-800">
+                    <!-- Background Grid -->
+                    <div class="absolute inset-0 opacity-10" style="background-image: linear-gradient(#475569 1px, transparent 1px), linear-gradient(90deg, #475569 1px, transparent 1px); background-size: 20px 20px;"></div>
+                    
+                    <svg viewBox="0 0 900 420" class="w-full h-auto relative z-10 font-sans" aria-label="블렌더에서 유니티로 이어지는 3D 파이프라인 다이어그램">
+                        <defs>
+                            <style>
+                                @keyframes dash { to { stroke-dashoffset: -24; } }
+                                .flow-line { stroke-dasharray: 6 6; animation: dash 1s linear infinite; }
+                                .flow-line-slow { stroke-dasharray: 6 6; animation: dash 2s linear infinite; }
+                            </style>
+                            <linearGradient id="blenderGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                                <stop offset="0%" stop-color="#f97316" />
+                                <stop offset="100%" stop-color="#c2410c" />
+                            </linearGradient>
+                            <linearGradient id="unityGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                                <stop offset="0%" stop-color="#1e293b" />
+                                <stop offset="100%" stop-color="#020617" />
+                            </linearGradient>
+                            <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+                                <feGaussianBlur stdDeviation="3" result="blur" />
+                                <feComposite in="SourceGraphic" in2="blur" operator="over" />
+                            </filter>
+                        </defs>
+
+                        <!-- 1. BLENDER STAGE -->
+                        <g transform="translate(20, 20)">
+                            <!-- Main Blender Container -->
+                            <rect width="260" height="380" rx="16" fill="#1e293b" stroke="#334155" stroke-width="2"/>
+                            
+                            <!-- Blender Logo & Header -->
+                            <g transform="translate(20, 20)">
+                                <!-- Blender Official Icon Image -->
+                                <image href="https://cdn.simpleicons.org/blender/EA7600" x="0" y="-2" width="36" height="36" />
+                                <text x="44" y="22" fill="#f8fafc" font-size="18" font-weight="bold">Blender</text>
+                                <text x="44" y="38" fill="#94a3b8" font-size="11">형태 제작 및 텍스처 베이킹</text>
+                            </g>
+                            
+                            <!-- Inside Blender: Nodes -->
+                            <g transform="translate(20, 90)">
+                                <!-- Modeling -->
+                                <rect width="220" height="46" rx="8" fill="#334155"/>
+                                <circle cx="24" cy="23" r="12" fill="#475569"/>
+                                <path d="M 18 23 L 24 17 L 30 23 L 24 29 Z" fill="none" stroke="#cbd5e1" stroke-width="1.5"/>
+                                <text x="45" y="27" fill="#e2e8f0" font-size="13" font-weight="bold">1. 메쉬 (Modeling)</text>
+                                
+                                <!-- Arrow -->
+                                <path d="M 110 46 L 110 65" fill="none" stroke="#64748b" stroke-width="2"/>
+                                <polygon points="106,60 110,65 114,60" fill="#64748b"/>
+
+                                <!-- UV -->
+                                <rect y="65" width="220" height="46" rx="8" fill="#334155"/>
+                                <circle cx="24" cy="88" r="12" fill="#475569"/>
+                                <rect x="18" y="82" width="12" height="12" fill="none" stroke="#cbd5e1" stroke-width="1.5" stroke-dasharray="2 2"/>
+                                <text x="45" y="92" fill="#e2e8f0" font-size="13" font-weight="bold">2. UV 좌표 전개</text>
+                                
+                                <!-- Arrow -->
+                                <path d="M 110 111 L 110 130" fill="none" stroke="#64748b" stroke-width="2"/>
+                                <polygon points="106,125 110,130 114,125" fill="#64748b"/>
+
+                                <!-- Texturing & Baking -->
+                                <rect y="130" width="220" height="70" rx="8" fill="#3b82f6" fill-opacity="0.15" stroke="#3b82f6" stroke-width="1.5"/>
+                                <circle cx="24" cy="165" r="12" fill="#1e3a8a"/>
+                                <circle cx="24" cy="165" r="6" fill="#60a5fa"/>
+                                <text x="45" y="155" fill="#93c5fd" font-size="13" font-weight="bold">3. 텍스처링 & 베이킹</text>
+                                <text x="45" y="172" fill="#60a5fa" font-size="11">블렌더 노드 연산을 이미지로 굽기</text>
+
+                                <!-- Output Ports -->
+                                <circle cx="220" cy="23" r="5" fill="#f8fafc" stroke="#334155" stroke-width="2"/>
+                                <circle cx="220" cy="88" r="5" fill="#f8fafc" stroke="#334155" stroke-width="2"/>
+                                <circle cx="220" cy="165" r="5" fill="#60a5fa" stroke="#1e3a8a" stroke-width="2"/>
+                            </g>
+                        </g>
+
+                        <!-- 2. DATA TRANSFER FLOW (The Bridge) -->
+                        <g transform="translate(260, 0)">
+                            <!-- A. FBX Flow (Geometry & Empty Slots) -->
+                            <!-- Port Y: 113, 178 from global view, mapped to relative bridge coordinates -->
+                            <path d="M 0 133 L 110 133" fill="none" stroke="#cbd5e1" stroke-width="3" class="flow-line-slow"/>
+                            <path d="M 0 198 C 50 198, 60 133, 110 133" fill="none" stroke="#cbd5e1" stroke-width="3" class="flow-line-slow"/>
+                            <polygon points="102,127 110,133 102,139" fill="#cbd5e1"/>
+                            
+                            <path d="M 270 133 L 380 133" fill="none" stroke="#cbd5e1" stroke-width="3" class="flow-line"/>
+                            <polygon points="370,127 380,133 370,139" fill="#cbd5e1"/>
+                            
+                            <!-- FBX Box -->
+                            <rect x="110" y="108" width="160" height="50" rx="6" fill="#f8fafc" stroke="#94a3b8" stroke-width="2" filter="url(#glow)"/>
+                            <text x="190" y="128" fill="#0f172a" font-size="14" font-weight="bold" text-anchor="middle">.FBX 내보내기</text>
+                            <text x="190" y="144" fill="#64748b" font-size="11" text-anchor="middle">형태, UV, Material 빈 슬롯</text>
+
+                            <!-- Warning Sign -->
+                            <rect x="110" y="166" width="160" height="34" rx="4" fill="#ef4444" fill-opacity="0.1" stroke="#ef4444" stroke-width="1" stroke-dasharray="4 4"/>
+                            <text x="190" y="182" fill="#fca5a5" font-size="10" text-anchor="middle" font-weight="bold">🚨 쉐이더 노드 연산은</text>
+                            <text x="190" y="194" fill="#f87171" font-size="10" text-anchor="middle">FBX에 담기지 않고 증발함</text>
+
+                            <!-- B. Texture Flow (Baked PNGs) -->
+                            <path d="M 0 275 C 50 275, 60 308, 110 308" fill="none" stroke="#60a5fa" stroke-width="3" class="flow-line-slow"/>
+                            <polygon points="102,302 110,308 102,314" fill="#60a5fa"/>
+                            
+                            <path d="M 270 308 L 380 308" fill="none" stroke="#60a5fa" stroke-width="3" class="flow-line"/>
+                            <polygon points="370,302 380,308 370,314" fill="#60a5fa"/>
+                            
+                            <!-- PNG Box -->
+                            <rect x="110" y="283" width="160" height="50" rx="6" fill="#1e3a8a" stroke="#60a5fa" stroke-width="2" filter="url(#glow)"/>
+                            <text x="190" y="303" fill="#ffffff" font-size="14" font-weight="bold" text-anchor="middle">.PNG / .EXR 이미지</text>
+                            <text x="190" y="319" fill="#93c5fd" font-size="11" text-anchor="middle">Color, Emission 등 구워진 텍스처</text>
+                        </g>
+
+                        <!-- 3. UNITY STAGE -->
+                        <g transform="translate(620, 20)">
+                            <!-- Main Unity Container -->
+                            <rect width="260" height="380" rx="16" fill="url(#unityGrad)" stroke="#475569" stroke-width="2"/>
+                            
+                            <!-- Unity Logo & Header -->
+                            <g transform="translate(20, 20)">
+                                <!-- Unity Official Icon Image -->
+                                <image href="https://cdn.simpleicons.org/unity/FFFFFF" x="0" y="-2" width="36" height="36" />
+                                <text x="44" y="22" fill="#f8fafc" font-size="18" font-weight="bold">Unity 3D</text>
+                                <text x="44" y="38" fill="#94a3b8" font-size="11">최종 렌더링 연산 및 조립</text>
+                            </g>
+                            
+                            <!-- Inside Unity: Nodes -->
+                            <g transform="translate(20, 90)">
+                                <!-- Mesh Import -->
+                                <rect width="220" height="46" rx="8" fill="#334155"/>
+                                <circle cx="24" cy="23" r="12" fill="#475569"/>
+                                <path d="M 24 16 L 24 30 M 17 23 L 31 23" fill="none" stroke="#cbd5e1" stroke-width="1.5"/>
+                                <text x="45" y="27" fill="#e2e8f0" font-size="13" font-weight="bold">1. FBX 임포트 및 배치</text>
+                                
+                                <!-- Arrow -->
+                                <path d="M 110 46 L 110 65" fill="none" stroke="#64748b" stroke-width="2"/>
+                                <polygon points="106,60 110,65 114,60" fill="#64748b"/>
+
+                                <!-- Material & Shader -->
+                                <rect y="65" width="220" height="76" rx="8" fill="#6366f1" fill-opacity="0.15" stroke="#6366f1" stroke-width="1.5"/>
+                                <circle cx="24" cy="103" r="12" fill="#4338ca"/>
+                                <circle cx="24" cy="103" r="6" fill="#a5b4fc"/>
+                                <text x="45" y="88" fill="#a5b4fc" font-size="13" font-weight="bold">2. Material & Shader 설정</text>
+                                <text x="45" y="108" fill="#818cf8" font-size="11">VRC용 쉐이더 적용</text>
+                                <text x="45" y="126" fill="#818cf8" font-size="11">유니티 환경 빛 연산 재정의</text>
+
+                                <!-- Arrow -->
+                                <path d="M 110 141 L 110 175" fill="none" stroke="#64748b" stroke-width="2"/>
+                                <polygon points="106,170 110,175 114,170" fill="#64748b"/>
+
+                                <!-- Texture Assign -->
+                                <rect y="175" width="220" height="46" rx="8" fill="#1e293b" stroke="#60a5fa" stroke-width="1.5"/>
+                                <rect x="18" y="192" width="12" height="12" fill="#60a5fa" rx="2"/>
+                                <text x="45" y="203" fill="#e2e8f0" font-size="13" font-weight="bold">3. 구워진 텍스처 연결</text>
+                                
+                                <!-- Final SDK Upload -->
+                                <path d="M 110 221 L 110 245" fill="none" stroke="#10b981" stroke-width="2" stroke-dasharray="4 4"/>
+                                <polygon points="106,240 110,245 114,240" fill="#10b981"/>
+                                
+                                <rect y="245" width="220" height="34" rx="6" fill="#10b981"/>
+                                <text x="110" y="267" fill="#ffffff" font-size="13" font-weight="bold" text-anchor="middle">VRChat SDK 업로드</text>
+
+                                <!-- Input Ports -->
+                                <circle cx="0" cy="23" r="5" fill="#f8fafc" stroke="#334155" stroke-width="2"/>
+                                <circle cx="0" cy="198" r="5" fill="#60a5fa" stroke="#1e3a8a" stroke-width="2"/>
+                            </g>
+                        </g>
+                    </svg>
+                </div>
+
+                <!-- 단계별 상세 설명 -->
+                <div class="grid md:grid-cols-3 gap-5 mb-8">
+                    <!-- Step 1: Blender -->
+                    <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-col">
+                        <div class="flex items-center gap-2 mb-3 border-b border-slate-100 pb-2">
+                            <div class="bg-orange-100 p-1.5 rounded text-orange-600 shrink-0"><i data-lucide="box" class="w-4 h-4"></i></div>
+                            <h5 class="font-bold text-slate-800 text-sm">1. 블렌더 (형태와 텍스처링)</h5>
+                        </div>
+                        <ul class="space-y-2 text-xs text-slate-600 flex-grow">
+                            <li><strong class="text-slate-800">메쉬(Mesh):</strong> 3D 모델의 뼈대를 만듭니다.</li>
+                            <li><strong class="text-slate-800"><span class="tooltip-trigger">UV 전개<span class="tooltip-content">3D 입체 도형의 표면을 2D 평면 이미지로 펼치는 작업입니다. 종이접기의 전개도를 만드는 것과 같습니다.</span></span>:</strong> 텍스처를 입히기 위해 3D 표면을 2D로 펼칩니다.</li>
+                            <li><strong class="text-slate-800">텍스처링 & 베이킹:</strong> 블렌더 내부의 그림자, 질감 연산 결과를 고정된 '2D 이미지 파일(.PNG)'로 구워냅니다. (이 과정을 위해 블렌더에서 텍스처 작업을 완료해야 합니다.)</li>
+                        </ul>
+                    </div>
+
+                    <!-- Step 2: FBX & PNG -->
+                    <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-col">
+                        <div class="flex items-center gap-2 mb-3 border-b border-slate-100 pb-2">
+                            <div class="bg-slate-100 p-1.5 rounded text-slate-600 shrink-0"><i data-lucide="arrow-right-left" class="w-4 h-4"></i></div>
+                            <h5 class="font-bold text-slate-800 text-sm">2. 이원화된 데이터 전송</h5>
+                        </div>
+                        <p class="text-xs text-slate-600 leading-relaxed mb-2 flex-grow">
+                            블렌더에서 만든 결과물은 <strong>두 가지 파일</strong>로 나뉘어 유니티로 전송됩니다.<br>
+                            <span class="inline-block mt-1">1) <strong>.FBX 파일:</strong> 모델의 형태, UV 좌표 전달</span><br>
+                            <span class="inline-block mt-1">2) <strong>.PNG 파일:</strong> 블렌더에서 구운 텍스처 이미지 전달</span>
+                        </p>
+                        <div class="bg-rose-50 border border-rose-100 p-2 rounded text-[11px] text-rose-700 leading-relaxed">
+                            블렌더 쉐이더 노드의 빛 연산 규칙 자체는 유니티로 호환되지 않습니다.
+                        </div>
+                    </div>
+
+                    <!-- Step 3: Unity -->
+                    <div class="bg-indigo-50 p-4 rounded-xl border border-indigo-200 shadow-sm flex flex-col">
+                        <div class="flex items-center gap-2 mb-3 border-b border-indigo-100 pb-2">
+                            <div class="bg-indigo-600 p-1.5 rounded text-white shrink-0"><i data-lucide="layers" class="w-4 h-4"></i></div>
+                            <h5 class="font-bold text-indigo-900 text-sm">3. 유니티 (최종 렌더링 조립)</h5>
+                        </div>
+                        <ul class="space-y-2 text-xs text-indigo-800 flex-grow">
+                            <li><strong class="text-indigo-900">머티리얼 할당:</strong> 가져온 FBX 모델에 유니티 머티리얼을 생성해 입힙니다.</li>
+                            <li><strong class="text-indigo-900">쉐이더 설정:</strong> 렌더링 규칙을 VRChat 호환 쉐이더(예: lilToon)로 변경합니다.</li>
+                            <li><strong class="text-indigo-900">텍스처 연결:</strong> 블렌더에서 구워낸 .PNG 이미지를 쉐이더 슬롯에 연결하여 유니티 환경에서 질감과 발광을 완성합니다.</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Shaders Recommendations -->
+                <div class="mt-8 bg-slate-50 p-5 sm:p-6 rounded-xl border border-slate-200 shadow-sm">
+                    <h5 class="font-bold text-slate-800 text-base mb-3 flex items-center gap-2">
+                        <i data-lucide="sparkles" class="w-5 h-5 text-indigo-500"></i> VRChat 호환 쉐이더 심층 분석 및 실무 가이드
+                    </h5>
+                    <p class="text-sm text-slate-600 mb-5 leading-relaxed">
+                        유니티의 기본 쉐이더(Standard)는 VRChat 환경에서 최적화 문제나 렌더링 오류(특히 조명이 없을 때 까맣게 타버리는 현상)를 일으킬 수 있어 월드 제작에 거의 사용하지 않습니다. 목적에 맞춰 아래 두 가지 검증된 무료 쉐이더를 적절히 섞어 사용하는 것이 실무 표준입니다.
+                    </p>
+
+                    <!-- 직관적인 주요 기능 및 차이점 비교표 -->
+                    <div class="overflow-x-auto mb-6 bg-white rounded-xl border border-slate-200 shadow-sm">
+                        <table class="w-full text-sm text-left text-slate-600 min-w-[600px]">
+                            <thead class="text-xs text-slate-700 bg-slate-50 border-b border-slate-200">
+                                <tr>
+                                    <th class="px-4 py-3 w-1/5">핵심 차이점</th>
+                                    <th class="px-4 py-3 w-2/5 border-l border-slate-200"><span class="text-blue-600 font-bold flex items-center gap-1.5"><div class="bg-slate-800 p-1 rounded flex items-center justify-center"><img src="https://lilxyzw.github.io/lilToon/images/logo.svg" class="w-3.5 h-3.5 object-contain"></div> 릴툰 (lilToon)</span></th>
+                                    <th class="px-4 py-3 w-2/5 border-l border-slate-200"><span class="text-purple-600 font-bold flex items-center gap-1.5"><img src="https://www.poiyomi.com/img/logo.svg" class="w-4 h-4 object-contain"> 포이요미 (Poiyomi)</span></th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-100">
+                                <tr>
+                                    <td class="px-4 py-3 font-bold text-slate-800 bg-slate-50/50">설계 목적</td>
+                                    <td class="border-l border-slate-200 px-4 py-3 text-blue-700 font-medium">압도적인 범용성과 최적화</td>
+                                    <td class="border-l border-slate-200 px-4 py-3 text-purple-700 font-medium">극한의 화려함과 특수 연출</td>
+                                </tr>
+                                <tr>
+                                    <td class="px-4 py-3 font-bold text-slate-800 bg-slate-50/50">연산량 (무게)</td>
+                                    <td class="border-l border-slate-200 px-4 py-3"><span class="bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded text-[11px] font-bold mr-1">가벼움</span> 맵 전체 배경용으로 도배 가능</td>
+                                    <td class="border-l border-slate-200 px-4 py-3"><span class="bg-rose-100 text-rose-700 px-2 py-0.5 rounded text-[11px] font-bold mr-1">무거움</span> 남용 시 FPS(프레임) 급락</td>
+                                </tr>
+                                <tr>
+                                    <td class="px-4 py-3 font-bold text-slate-800 bg-slate-50/50">주요 특화 기능</td>
+                                    <td class="border-l border-slate-200 px-4 py-3 text-xs leading-relaxed">가벼운 금속/플라스틱 반사(MatCap), 깔끔한 외곽선(Outline), 거리별 그림자 처리</td>
+                                    <td class="border-l border-slate-200 px-4 py-3 text-xs leading-relaxed">사운드 반응(AudioLink), 스크롤링 애니메이션, 홀로그램 디졸브, 부분 마스킹</td>
+                                </tr>
+                                <tr>
+                                    <td class="px-4 py-3 font-bold text-slate-800 bg-slate-50/50">실무 권장 사용처</td>
+                                    <td class="border-l border-slate-200 px-4 py-3 text-xs leading-relaxed">건물, 바닥, 나무, 가구 등 <strong>배경 오브젝트의 80% 이상</strong></td>
+                                    <td class="border-l border-slate-200 px-4 py-3 text-xs leading-relaxed">클럽 조명, 네온사인, 마법진, 폭포 등 <strong>핵심 포인트 20% 이하</strong></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- 3D Interactive Unity Inspector Simulator -->
+                    <h6 class="font-bold text-slate-800 text-sm mb-3 mt-10 flex items-center gap-2 border-b border-slate-200 pb-2">
+                        <i data-lucide="monitor-play" class="w-4 h-4 text-indigo-500"></i> 🎮 3D 인터랙티브: VRC 쉐이더 & 인스펙터 시뮬레이터
+                    </h6>
+                    <p class="text-xs text-slate-500 mb-4 leading-relaxed">실제 유니티 에디터의 인스펙터(Inspector) 창과 동일한 구조로 쉐이더의 고급 기능(MatCap, Dissolve, Rim Light 등)을 체험해 봅니다. 우측의 속성값을 조절해 보세요.</p>
+                    
+                    <div class="mb-8 border border-slate-300 rounded-xl overflow-hidden shadow-lg relative flex flex-col lg:flex-row h-auto lg:h-[500px]">
+                        
+                        <!-- Left: 3D Scene View Container -->
+                        <div id="shader-three-container" class="w-full lg:w-3/5 h-[350px] lg:h-full bg-[#2a2a2a] relative cursor-grab active:cursor-grabbing border-b lg:border-b-0 lg:border-r border-slate-300 flex items-center justify-center">
+                            <!-- Overlay Scene Stats -->
+                            <div class="absolute top-2 left-2 flex gap-2">
+                                <span class="bg-black/50 text-white text-[10px] px-2 py-1 rounded font-mono border border-white/10 backdrop-blur-sm">Scene</span>
+                                <span class="bg-black/50 text-emerald-400 text-[10px] px-2 py-1 rounded font-mono border border-white/10 backdrop-blur-sm" id="scene-fps">60 FPS</span>
+                            </div>
+                            <div class="absolute bottom-2 right-2 text-white/40 text-[10px] pointer-events-none flex items-center gap-1 font-sans">
+                                <i data-lucide="mouse" class="w-3 h-3"></i> 드래그로 회전, 휠로 확대
+                            </div>
+                        </div>
+
+                        <!-- Right: Unity Inspector Dark Theme Control Panel -->
+                        <div class="w-full lg:w-2/5 bg-[#383838] text-[#cccccc] flex flex-col font-sans text-xs h-[400px] lg:h-full overflow-y-auto unity-inspector">
+                            
+                            <!-- Inspector Header -->
+                            <div class="p-3 border-b border-[#222] bg-[#3e3e42]">
+                                <div class="flex items-center gap-2 mb-3">
+                                    <div class="w-8 h-8 bg-[#222] rounded flex items-center justify-center border border-[#111] shadow-inner text-[#888]">
+                                        <i data-lucide="box" class="w-5 h-5"></i>
+                                    </div>
+                                    <div>
+                                        <div class="font-bold text-[#eee] text-sm leading-tight">Mat_VRC_Object</div>
+                                        <div class="text-[#888] text-[10px]">Material</div>
+                                    </div>
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <span class="text-[#aaa] w-16">Shader</span>
+                                    <select id="shader-selector" onchange="changeShaderMode(this.value)" class="flex-1 bg-[#222] border border-[#111] text-[#eee] px-2 py-1 rounded focus:outline-none focus:border-[#4a90e2]">
+                                        <option value="standard">Standard (기본)</option>
+                                        <option value="liltoon">lilToon (카툰/범용)</option>
+                                        <option value="poiyomi">.poiyomi / Toon (특수/발광)</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <!-- Foldout: Main Colors -->
+                            <div class="unity-foldout open">
+                                <div class="flex items-center gap-1 bg-[#444] px-2 py-1.5 font-bold text-[#eee] border-t border-[#4a4a4a] border-b border-[#2a2a2a] cursor-pointer hover:bg-[#4a4a4a]" onclick="this.parentElement.classList.toggle('open')">
+                                    <i data-lucide="chevron-right" class="w-3 h-3 arrow transition-transform"></i> Main (기본 색상)
+                                </div>
+                                <div class="p-3 space-y-2 hidden group-open:block" style="display: block;">
+                                    <div class="flex items-center justify-between">
+                                        <span class="w-2/5 text-[#aaa]" title="기본 모델의 색상">Base Color</span>
+                                        <div class="w-3/5 flex gap-1">
+                                            <div class="w-full h-4 bg-slate-400 border border-[#222] rounded cursor-pointer"></div>
+                                        </div>
+                                    </div>
+                                    <p class="text-[10px] text-[#888] mt-1 break-keep leading-tight">모델의 기본 색상(Albedo)입니다.</p>
+                                </div>
+                            </div>
+
+                            <!-- Foldout: Lighting & Shadows (lilToon specific) -->
+                            <div class="unity-foldout open" id="panel-lighting">
+                                <div class="flex items-center gap-1 bg-[#444] px-2 py-1.5 font-bold text-[#eee] border-t border-[#4a4a4a] border-b border-[#2a2a2a] cursor-pointer hover:bg-[#4a4a4a]" onclick="this.parentElement.classList.toggle('open')">
+                                    <i data-lucide="chevron-right" class="w-3 h-3 arrow transition-transform"></i> Lighting & Shadow (조명/그림자)
+                                </div>
+                                <div class="p-3 space-y-3" style="display: block;">
+                                    <div class="flex items-center justify-between group">
+                                        <span class="w-2/5 text-[#aaa]">Shadow Color</span>
+                                        <input type="color" value="#475569" oninput="updateShaderParam('shadowColor', this.value)" class="w-3/5 h-5 bg-[#222] border border-[#111] cursor-pointer rounded p-0">
+                                    </div>
+                                    <div class="flex items-center justify-between group">
+                                        <span class="w-2/5 text-[#aaa]">Toon Steps</span>
+                                        <input type="range" min="0" max="1" step="1" value="0" oninput="updateShaderParam('toon', this.value)" class="unity-slider w-3/5">
+                                    </div>
+                                    <p class="text-[10px] text-[#888] break-keep leading-tight">Toon Steps를 0으로 맞추면 그림자 경계가 날카로워져 만화 같은 느낌을 줍니다.</p>
+                                </div>
+                            </div>
+
+                            <!-- Foldout: Outline (Shared) -->
+                            <div class="unity-foldout open" id="panel-outline">
+                                <div class="flex items-center gap-1 bg-[#444] px-2 py-1.5 font-bold text-[#eee] border-t border-[#4a4a4a] border-b border-[#2a2a2a] cursor-pointer hover:bg-[#4a4a4a]" onclick="this.parentElement.classList.toggle('open')">
+                                    <i data-lucide="chevron-right" class="w-3 h-3 arrow transition-transform"></i> Outline (외곽선)
+                                </div>
+                                <div class="p-3 space-y-2" style="display: block;">
+                                    <div class="flex items-center justify-between">
+                                        <span class="w-2/5 text-[#aaa]">Thickness</span>
+                                        <input type="range" min="1.0" max="1.15" step="0.01" value="1.0" oninput="updateShaderParam('outline', this.value)" class="unity-slider w-3/5">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Foldout: MatCap (lilToon specific) -->
+                            <div class="unity-foldout open" id="panel-matcap">
+                                <div class="flex items-center gap-1 bg-[#444] px-2 py-1.5 font-bold text-[#eee] border-t border-[#4a4a4a] border-b border-[#2a2a2a] cursor-pointer hover:bg-[#4a4a4a]" onclick="this.parentElement.classList.toggle('open')">
+                                    <i data-lucide="chevron-right" class="w-3 h-3 arrow transition-transform"></i> MatCap (금속/광택 반사)
+                                </div>
+                                <div class="p-3 space-y-2" style="display: block;">
+                                    <div class="flex items-center justify-between">
+                                        <span class="w-2/5 text-[#aaa]">Blend Mode</span>
+                                        <span class="w-3/5 text-[#eee] bg-[#222] px-2 py-0.5 rounded border border-[#111] text-[10px]">Additive (Add)</span>
+                                    </div>
+                                    <div class="flex items-center justify-between mt-2">
+                                        <span class="w-2/5 text-[#aaa]">Intensity</span>
+                                        <input type="range" min="0" max="1" step="0.01" value="0" oninput="updateShaderParam('matcap', this.value)" class="unity-slider w-3/5">
+                                    </div>
+                                    <p class="text-[10px] text-[#888] mt-1 break-keep leading-tight">주변 환경을 가짜로 반사하여 무거운 연산 없이 플라스틱, 금속, 가죽 질감을 매우 가볍게 구현합니다.</p>
+                                </div>
+                            </div>
+
+                            <!-- Foldout: Emission & Rim (Poiyomi/Shared) -->
+                            <div class="unity-foldout open" id="panel-emission">
+                                <div class="flex items-center gap-1 bg-[#444] px-2 py-1.5 font-bold text-[#eee] border-t border-[#4a4a4a] border-b border-[#2a2a2a] cursor-pointer hover:bg-[#4a4a4a]" onclick="this.parentElement.classList.toggle('open')">
+                                    <i data-lucide="chevron-right" class="w-3 h-3 arrow transition-transform"></i> Emission & Rim (발광 및 역광)
+                                </div>
+                                <div class="p-3 space-y-3" style="display: block;">
+                                    <div class="flex items-center justify-between">
+                                        <span class="w-2/5 text-[#aaa]">[HDR] Emission</span>
+                                        <input type="range" min="0" max="4" step="0.1" value="0" oninput="updateShaderParam('emission', this.value)" class="unity-slider w-3/5">
+                                    </div>
+                                    <div class="flex items-center justify-between">
+                                        <span class="w-2/5 text-[#aaa]">Rim Light</span>
+                                        <input type="range" min="0" max="2" step="0.1" value="0" oninput="updateShaderParam('rim', this.value)" class="unity-slider w-3/5">
+                                    </div>
+                                    <p class="text-[10px] text-[#888] break-keep leading-tight">Rim Light는 모델의 가장자리에 역광을 비추어 배경과 인물을 분리하는 고급 연출 기법입니다.</p>
+                                </div>
+                            </div>
+
+                            <!-- Foldout: Advanced FX (Poiyomi specific) -->
+                            <div class="unity-foldout open" id="panel-fx">
+                                <div class="flex items-center gap-1 bg-[#444] px-2 py-1.5 font-bold text-[#eee] border-t border-[#4a4a4a] border-b border-[#2a2a2a] cursor-pointer hover:bg-[#4a4a4a]" onclick="this.parentElement.classList.toggle('open')">
+                                    <i data-lucide="chevron-right" class="w-3 h-3 arrow transition-transform"></i> Special FX (포이요미 특수효과)
+                                </div>
+                                <div class="p-3 space-y-4" style="display: block;">
+                                    <div>
+                                        <div class="flex items-center justify-between mb-1.5">
+                                            <span class="w-2/5 text-[#aaa]">Dissolve (소멸)</span>
+                                            <input type="range" min="0" max="1" step="0.01" value="0" oninput="updateShaderParam('dissolve', this.value)" class="unity-slider w-3/5">
+                                        </div>
+                                        <p class="text-[10px] text-[#888] leading-tight">노이즈 텍스처를 활용해 홀로그램이 타들어가며 사라지는 디졸브 연출을 구현합니다.</p>
+                                    </div>
+                                    <div class="border-t border-[#444] pt-3">
+                                        <div class="flex items-center justify-between mb-1.5">
+                                            <span class="w-2/5 text-[#aaa]">AudioLink (BPM)</span>
+                                            <input type="range" min="0" max="3" step="0.1" value="0" oninput="updateShaderParam('audio', this.value)" class="unity-slider w-3/5">
+                                        </div>
+                                        <p class="text-[10px] text-[#888] leading-tight">월드에서 재생되는 BGM의 비트를 분석하여 매쉬의 크기와 발광이 실시간으로 박동합니다.</p>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Bottom Padding -->
+                            <div class="h-10"></div>
+                        </div>
+                    </div>
+
+                    <!-- Notice about Complexity -->
+                    <div class="bg-indigo-50/80 border border-indigo-100 p-4 rounded-xl flex gap-3 items-start shadow-sm mt-4">
+                        <div class="bg-indigo-100 p-1.5 rounded text-indigo-600 mt-0.5 shrink-0">
+                            <i data-lucide="cpu" class="w-5 h-5"></i>
+                        </div>
+                        <div>
+                            <strong class="text-sm text-indigo-900 block mb-1">실제로는 수십 가지의 탭과 수백 개의 기능이 존재합니다!</strong>
+                            <p class="text-xs text-indigo-800 leading-relaxed break-keep">
+                                위 인스펙터 뷰어는 학생들의 직관적인 이해를 돕기 위해 <strong>대표적인 핵심 기능만 모아둔 시뮬레이션</strong>입니다. 실제 릴툰과 포이요미 쉐이더에는 부분 마스킹(Mask), 노말 맵(Normal), 글리치(Glitch), 텍스처 스크롤링 등 무궁무진한 연출 파라미터가 포함되어 있습니다.
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Shader Installation Guide -->
+                    <div class="mt-8 border border-slate-300 rounded-xl overflow-hidden shadow-sm">
+                        <div class="bg-slate-100 px-5 py-3 border-b border-slate-300 flex items-center justify-between">
+                            <div class="flex items-center gap-2">
+                                <i data-lucide="download-cloud" class="w-5 h-5 text-slate-700"></i>
+                                <h5 class="font-bold text-slate-800 text-base">쉐이더 다운로드 및 VCC 적용 안내</h5>
+                            </div>
+                        </div>
+                        <div class="p-5 bg-white">
+                            <p class="text-sm text-slate-600 mb-4 leading-relaxed">
+                                과거에는 인터넷에서 파일을 받아 직접 넣었지만, <strong>현재 VRChat 제작의 표준은 VCC(VRChat Creator Companion)를 통한 패키지 자동 관리(VPM) 방식</strong>입니다.
+                            </p>
+                            <div class="grid md:grid-cols-2 gap-5">
+                                <div class="bg-blue-50/50 p-4 rounded-lg border border-blue-100 flex flex-col h-full">
+                                    <div class="flex items-center justify-between mb-3">
+                                        <div class="flex items-center gap-2">
+                                            <div class="bg-slate-800 p-1.5 rounded-md flex items-center justify-center shadow-sm"><img src="https://lilxyzw.github.io/lilToon/images/logo.svg" class="w-4 h-4 object-contain"></div>
+                                            <strong class="text-sm text-blue-900">릴툰 (lilToon)</strong>
+                                        </div>
+                                        <a href="https://liltoon.com/" target="_blank" class="text-[11px] bg-blue-100 text-blue-700 hover:bg-blue-200 px-2 py-1 rounded transition font-bold">공식 문서 <i data-lucide="external-link" class="w-3 h-3 inline"></i></a>
+                                    </div>
+                                    <ol class="text-xs text-slate-600 space-y-2 list-decimal list-inside leading-relaxed flex-grow">
+                                        <li>공식 문서(웹사이트)에 접속합니다.</li>
+                                        <li><strong class="text-blue-700 font-mono bg-blue-100 px-1 py-0.5 rounded">Add to VCC</strong> 버튼을 클릭하여 VCC 앱을 엽니다.</li>
+                                        <li>VCC의 <span class="font-bold">Manage Project</span> 창 우측 목록에 추가된 <code>lilToon</code> 옆의 <strong class="text-emerald-600">(+) 버튼</strong>을 눌러 프로젝트에 설치합니다.</li>
+                                    </ol>
+                                </div>
+                                <div class="bg-purple-50/50 p-4 rounded-lg border border-purple-100 flex flex-col h-full">
+                                    <div class="flex items-center justify-between mb-3">
+                                        <div class="flex items-center gap-2">
+                                            <img src="https://www.poiyomi.com/img/logo.svg" class="w-5 h-5 object-contain">
+                                            <strong class="text-sm text-purple-900">포이요미 (Poiyomi)</strong>
+                                        </div>
+                                        <a href="https://www.poiyomi.com/" target="_blank" class="text-[11px] bg-purple-100 text-purple-700 hover:bg-purple-200 px-2 py-1 rounded transition font-bold">공식 문서 <i data-lucide="external-link" class="w-3 h-3 inline"></i></a>
+                                    </div>
+                                    <ol class="text-xs text-slate-600 space-y-2 list-decimal list-inside leading-relaxed flex-grow">
+                                        <li>포이요미 공식 깃허브 <span class="font-bold">Releases</span> 탭에 접속합니다.</li>
+                                        <li>가장 최근의 무료 버전 <strong>`.unitypackage` 파일</strong>을 다운로드합니다.</li>
+                                        <li>실행 중인 유니티 하단의 Project 창 빈 공간으로 <strong>다운받은 파일을 드래그 앤 드롭</strong>하여 임포트(Import) 합니다.</li>
+                                    </ol>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Practical Shader Application Guide (Step-by-Step) -->
+                <div class="mt-10 bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm">
+                    <div class="bg-slate-50 px-5 py-4 border-b border-slate-200 flex items-center gap-3">
+                        <div class="bg-indigo-600 text-white p-1.5 rounded-lg shadow-sm">
+                            <i data-lucide="mouse-pointer-click" class="w-5 h-5"></i>
+                        </div>
+                        <h5 class="font-bold text-slate-800 text-lg">🛠️ 실전: 유니티 쉐이더 적용 4단계 완벽 가이드</h5>
+                    </div>
+                    
+                    <div class="p-6">
+                        <p class="text-sm text-slate-600 mb-6 leading-relaxed">
+                            블렌더에서 가져온 모델링(.fbx)과 이미지 파일(.png)이 준비되었다면, 아래 순서대로 클릭하여 유니티에서 질감을 완성하세요.
+                        </p>
+
+                        <div class="space-y-4">
+                            <!-- Step 1 -->
+                            <div class="flex items-stretch gap-4">
+                                <div class="flex flex-col items-center">
+                                    <div class="w-8 h-8 rounded-full bg-slate-100 border border-slate-300 text-slate-600 flex items-center justify-center font-bold text-sm z-10">1</div>
+                                    <div class="w-px h-full bg-slate-200 mt-2"></div>
+                                </div>
+                                <div class="pb-6 w-full">
+                                    <h6 class="font-bold text-slate-800 text-base mb-2">머티리얼(Material) 생성 및 모델에 입히기</h6>
+                                    <div class="bg-slate-50 p-4 rounded-lg border border-slate-100 text-sm text-slate-600 leading-relaxed">
+                                        <p class="mb-2">프로젝트(Project) 창에서 <strong>우클릭 > Create > Material</strong>을 눌러 새 머티리얼을 생성합니다. (예: <code>Mat_Desk</code>)</p>
+                                        <p class="text-indigo-600 font-medium"><i data-lucide="corner-down-right" class="w-4 h-4 inline mr-1 -mt-0.5"></i>생성한 머티리얼을 씬(Scene) 뷰에 있는 3D 오브젝트 위로 드래그 앤 드롭하여 덮어씌웁니다.</p>
+                                        
+                                        <!-- Step 1 UI Mockup -->
+                                        <div class="mt-4 flex items-start justify-center sm:justify-start gap-4 bg-slate-100 p-5 rounded-xl border border-slate-200 shadow-inner overflow-x-auto w-full min-h-[200px]">
+                                            <!-- Context Menu -->
+                                            <div class="bg-[#282828] border border-[#111] w-40 rounded shadow-xl font-sans text-[#cccccc] text-[11px] py-1 shrink-0 relative z-20">
+                                                <div class="px-4 py-1 hover:bg-[#383838] cursor-default flex items-center gap-2"><i data-lucide="folder-plus" class="w-3 h-3 text-[#aaa]"></i> Folder</div>
+                                                <div class="px-4 py-1 hover:bg-[#383838] cursor-default flex items-center gap-2"><i data-lucide="file-code" class="w-3 h-3 text-[#aaa]"></i> C# Script</div>
+                                                <div class="h-px bg-[#444] my-1 mx-2"></div>
+                                                <div class="px-4 py-1 bg-[#383838] cursor-default flex justify-between items-center text-white">
+                                                    Create <i data-lucide="chevron-right" class="w-3 h-3"></i>
+                                                </div>
+                                                <!-- Sub Menu -->
+                                                <div class="absolute left-[98%] top-[50px] bg-[#282828] border border-[#111] w-36 rounded shadow-xl py-1">
+                                                    <div class="px-4 py-1 hover:bg-[#383838] cursor-default text-[#aaa]">Scene</div>
+                                                    <div class="px-4 py-1 hover:bg-[#383838] cursor-default text-[#aaa]">Prefab</div>
+                                                    <div class="bg-[#2c5d87] px-4 py-1 cursor-default text-white flex items-center gap-2 shadow-inner">
+                                                        <div class="w-3 h-3 rounded-full bg-slate-400 border border-slate-600"></div> Material
+                                                        <i data-lucide="mouse-pointer-2" class="w-4 h-4 text-emerald-400 absolute right-2 animate-pulse"></i>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <!-- Empty Space for Submenu Overflow to prevent clipping on mobile -->
+                                            <div class="w-36 shrink-0"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Step 2 -->
+                            <div class="flex items-stretch gap-4">
+                                <div class="flex flex-col items-center">
+                                    <div class="w-8 h-8 rounded-full bg-indigo-100 border border-indigo-300 text-indigo-700 flex items-center justify-center font-bold text-sm z-10">2</div>
+                                    <div class="w-px h-full bg-slate-200 mt-2"></div>
+                                </div>
+                                <div class="pb-6 w-full">
+                                    <h6 class="font-bold text-slate-800 text-base mb-2">기본 Standard에서 전용 쉐이더로 변경하기</h6>
+                                    <div class="bg-indigo-50/50 p-4 rounded-lg border border-indigo-100 text-sm text-slate-600 leading-relaxed">
+                                        <p class="mb-2">방금 만든 머티리얼을 클릭하고, 우측 <strong>인스펙터(Inspector) 창 맨 위</strong>를 봅니다.</p>
+                                        <div class="flex items-center gap-2 mb-2 bg-white p-2 rounded border border-slate-200 w-fit">
+                                            <span class="text-slate-400 font-mono text-xs">Shader</span>
+                                            <span class="bg-slate-100 px-2 py-0.5 rounded text-xs line-through text-slate-400">Standard</span>
+                                            <i data-lucide="arrow-right" class="w-3 h-3 text-indigo-400"></i>
+                                            <strong class="text-indigo-700 text-xs bg-indigo-100 px-2 py-0.5 rounded">lilToon</strong> <span class="text-xs text-slate-400">또는</span> <strong class="text-purple-700 text-xs bg-purple-100 px-2 py-0.5 rounded">.poiyomi / Toon</strong>
+                                        </div>
+                                        
+                                        <!-- Step 2 UI Mockup -->
+                                        <div class="mt-4 flex items-start justify-center sm:justify-start gap-4 bg-indigo-50 p-5 rounded-xl border border-indigo-200 shadow-inner w-full min-h-[220px]">
+                                            <div class="bg-[#383838] border border-[#222] rounded-md shadow-lg font-sans w-full max-w-[280px]">
+                                                <div class="p-3 border-b border-[#222] bg-[#3e3e42] rounded-t-md relative">
+                                                    <div class="flex items-center gap-2 mb-3">
+                                                        <div class="w-8 h-8 bg-[#222] rounded flex items-center justify-center border border-[#111] shadow-inner">
+                                                            <div class="w-5 h-5 rounded-full bg-slate-400"></div>
+                                                        </div>
+                                                        <div>
+                                                            <div class="font-bold text-[#eee] text-sm leading-tight">Mat_Desk</div>
+                                                            <div class="text-[#888] text-[10px]">Material</div>
+                                                        </div>
+                                                    </div>
+                                                    <div class="flex items-center gap-2 relative z-10">
+                                                        <span class="text-[#aaa] text-[11px] w-12">Shader</span>
+                                                        <div class="flex-1 bg-[#222] border border-[#4a90e2] text-[#eee] text-[11px] px-2 py-1 rounded flex justify-between items-center shadow-[0_0_0_1px_rgba(74,144,226,0.3)]">
+                                                            <span>Standard</span>
+                                                            <i data-lucide="chevron-down" class="w-3 h-3 text-[#aaa]"></i>
+                                                        </div>
+                                                    </div>
+                                                    <!-- Dropdown List Overlay -->
+                                                    <div class="absolute top-[85px] right-3 w-[190px] bg-[#282828] border border-[#111] rounded shadow-2xl py-1 z-20 text-[#cccccc] text-[11px]">
+                                                        <div class="px-3 py-1 hover:bg-[#383838] cursor-default flex justify-between items-center">Standard <i data-lucide="check" class="w-3 h-3 text-[#aaa]"></i></div>
+                                                        <div class="px-3 py-1 hover:bg-[#383838] cursor-default">Unlit</div>
+                                                        <div class="px-3 py-1 hover:bg-[#383838] cursor-default flex justify-between">FX <i data-lucide="chevron-right" class="w-3 h-3"></i></div>
+                                                        <div class="h-px bg-[#444] my-1 mx-2"></div>
+                                                        <div class="px-3 py-1 bg-[#2c5d87] text-white cursor-default relative font-bold flex justify-between items-center shadow-inner">
+                                                            lilToon
+                                                            <i data-lucide="mouse-pointer-2" class="w-4 h-4 text-emerald-400 absolute right-2 top-1 animate-pulse"></i>
+                                                        </div>
+                                                        <div class="px-3 py-1 hover:bg-[#383838] cursor-default">.poiyomi</div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Step 3 -->
+                            <div class="flex items-stretch gap-4">
+                                <div class="flex flex-col items-center">
+                                    <div class="w-8 h-8 rounded-full bg-emerald-100 border border-emerald-300 text-emerald-700 flex items-center justify-center font-bold text-sm z-10">3</div>
+                                    <div class="w-px h-full bg-slate-200 mt-2"></div>
+                                </div>
+                                <div class="pb-6 w-full">
+                                    <h6 class="font-bold text-slate-800 text-base mb-2">컬러 텍스처(PNG) 이미지 꽂아넣기</h6>
+                                    <div class="bg-emerald-50/50 p-4 rounded-lg border border-emerald-100 text-sm text-slate-600 leading-relaxed">
+                                        <p class="mb-2">인스펙터 창에서 <strong>'Main Color(릴툰)'</strong> 또는 <strong>'Color & Normals(포이요미)'</strong> 탭을 펼치세요.</p>
+                                        <p>블렌더에서 구워 온 <strong>기본 색상 이미지(.PNG)</strong>를 프로젝트 창에서 끌어다가, 해당 탭 안의 <strong>작은 네모 칸(Texture Slot)</strong>에 연결합니다.</p>
+                                        
+                                        <!-- 시각적 UI 모형 추가 (고도화된 유니티 인스펙터 UI) -->
+                                        <div class="mt-4 flex items-start justify-center sm:justify-start gap-3 sm:gap-5 bg-slate-50 p-5 rounded-xl border border-slate-200 shadow-inner overflow-x-auto w-full">
+                                            
+                                            <!-- File in Project Window -->
+                                            <div class="bg-[#383838] border border-[#222] rounded-md p-2 shadow-lg flex flex-col items-center shrink-0 w-[72px]">
+                                                <div class="w-12 h-12 bg-[#222] border border-[#1a1a1a] rounded flex items-center justify-center mb-1.5 shadow-inner relative overflow-hidden">
+                                                    <i data-lucide="image" class="w-6 h-6 text-blue-400 relative z-10"></i>
+                                                    <!-- 가짜 이미지 배경 효과 -->
+                                                    <div class="absolute inset-0 opacity-20" style="background-image: linear-gradient(45deg, #3b82f6 25%, transparent 25%), linear-gradient(-45deg, #3b82f6 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #3b82f6 75%), linear-gradient(-45deg, transparent 75%, #3b82f6 75%); background-size: 8px 8px; background-position: 0 0, 0 4px, 4px -4px, -4px 0px;"></div>
+                                                </div>
+                                                <span class="text-[#cccccc] text-[10px] font-sans truncate w-full text-center tracking-tight">Color_Map</span>
+                                            </div>
+                                    
+                                            <!-- Dragging Arrow -->
+                                            <div class="flex flex-col items-center shrink-0 relative">
+                                                <i data-lucide="mouse-pointer-2" class="w-5 h-5 text-emerald-500 absolute -top-5 left-1 animate-bounce"></i>
+                                                <div class="w-12 sm:w-16 h-0.5 bg-emerald-400 relative">
+                                                    <div class="absolute right-0 top-1/2 -translate-y-1/2 w-0 h-0 border-y-[5px] border-y-transparent border-l-[7px] border-l-emerald-400"></div>
+                                                </div>
+                                                <span class="text-[10px] font-bold text-emerald-600 mt-2 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200 shadow-sm">Drag & Drop</span>
+                                            </div>
+                                    
+                                            <!-- Unity Inspector Target -->
+                                            <div class="bg-[#383838] border border-[#222] rounded-md shadow-lg font-sans select-none shrink-0 w-[220px]">
+                                                <!-- Inspector Header -->
+                                                <div class="px-2 py-1.5 bg-[#444] border-b border-[#222] text-[#eee] text-[11px] font-bold flex items-center gap-1.5 rounded-t-md">
+                                                    <i data-lucide="chevron-down" class="w-3 h-3 text-[#aaa]"></i> Main Colors
+                                                </div>
+                                                <!-- Inspector Body -->
+                                                <div class="p-3">
+                                                    <div class="flex items-start">
+                                                        <!-- Property Name -->
+                                                        <span class="text-[#cccccc] text-[11px] w-[60px] pt-1 shrink-0 leading-tight">Color</span>
+                                                        
+                                                        <!-- Drop Target Area -->
+                                                        <div class="flex gap-1.5 flex-1">
+                                                            <!-- Texture Slot Wrapper (Target for Highlight) -->
+                                                            <div class="relative shrink-0">
+                                                                <!-- Drop Highlight Effect (Dashed Border) -->
+                                                                <div class="absolute -inset-1 border-2 border-dashed border-emerald-500 rounded bg-emerald-500/15 animate-pulse z-0 pointer-events-none"></div>
+                                                                
+                                                                <!-- Texture Slot (Empty) -->
+                                                                <div class="w-[42px] h-[42px] bg-[#282828] border border-[#111] rounded-[2px] flex flex-col items-center justify-end pb-0.5 relative z-10 shadow-inner">
+                                                                    <span class="text-[#888] text-[8px] transform scale-90 whitespace-nowrap">None (Tex)</span>
+                                                                </div>
+                                                            </div>
+                                                            
+                                                            <!-- Color Picker Box -->
+                                                            <div class="flex-1 h-[18px] bg-white border border-[#111] rounded-[2px] relative z-10 shadow-sm cursor-pointer hover:bg-gray-200"></div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Step 4 -->
+                            <div class="flex items-stretch gap-4">
+                                <div class="flex flex-col items-center">
+                                    <div class="w-8 h-8 rounded-full bg-amber-100 border border-amber-300 text-amber-700 flex items-center justify-center font-bold text-sm z-10">4</div>
+                                </div>
+                                <div class="w-full">
+                                    <h6 class="font-bold text-slate-800 text-base mb-2">발광(Emission) 등 세부 속성 활성화</h6>
+                                    <div class="bg-amber-50/50 p-4 rounded-lg border border-amber-100 text-sm text-slate-600 leading-relaxed">
+                                        <p class="mb-2">빛이 나야 하는 모델이라면 <strong>'Emission(발광)'</strong> 탭을 찾아서 먼저 <strong>체크박스(Enable)를 켭니다.</strong></p>
+                                        <ul class="space-y-2">
+                                            <li class="flex items-start gap-2"><i data-lucide="check" class="w-4 h-4 text-amber-500 mt-0.5 shrink-0"></i> <span>발광 텍스처를 연결하고, 색상표의 <strong>[HDR]</strong> 설정창을 열어 Intensity(강도) 수치를 높입니다.</span></li>
+                                        </ul>
+                                        
+                                        <!-- Step 4 UI Mockup -->
+                                        <div class="mt-4 flex items-start justify-center sm:justify-start gap-4 bg-amber-50 p-5 rounded-xl border border-amber-200 shadow-inner w-full">
+                                            <div class="bg-[#383838] border border-[#222] rounded-md shadow-lg font-sans w-full max-w-[280px]">
+                                                <!-- Foldout Header -->
+                                                <div class="flex items-center gap-1.5 bg-[#444] px-2 py-1.5 font-bold text-[#eee] border-b border-[#222] text-[11px] rounded-t-md shadow-sm">
+                                                    <div class="w-3.5 h-3.5 bg-[#1e1e1e] border border-[#111] rounded-[2px] flex items-center justify-center shadow-inner relative">
+                                                        <i data-lucide="check" class="w-3 h-3 text-white"></i>
+                                                    </div>
+                                                    <i data-lucide="chevron-down" class="w-3 h-3 text-[#aaa]"></i> Emission
+                                                </div>
+                                                <!-- Foldout Content -->
+                                                <div class="p-3">
+                                                    <div class="flex items-start mb-2">
+                                                        <span class="text-[#cccccc] text-[11px] w-[80px] pt-1 shrink-0 leading-tight">Color</span>
+                                                        <div class="flex gap-1.5 flex-1 items-center">
+                                                            <!-- Texture Slot (Filled) -->
+                                                            <div class="w-[32px] h-[32px] bg-[#282828] border border-[#111] rounded-[2px] flex items-center justify-center relative shadow-inner overflow-hidden shrink-0">
+                                                                <div class="w-full h-full bg-cyan-400 opacity-50"></div>
+                                                            </div>
+                                                            <!-- HDR Color Picker -->
+                                                            <div class="flex-1 h-[18px] bg-cyan-400 border border-[#111] rounded-[2px] relative shadow-[0_0_10px_rgba(34,211,238,0.6)] cursor-pointer">
+                                                                <div class="absolute -top-4 -right-1 text-[8px] font-bold text-white bg-black/60 px-1 rounded backdrop-blur-sm scale-90">HDR</div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <!-- Intensity Slider -->
+                                                    <div class="flex items-center justify-between mt-3">
+                                                        <span class="w-[80px] text-[#aaa] text-[11px]">Intensity</span>
+                                                        <div class="flex-1 flex items-center gap-2">
+                                                            <input type="range" min="0" max="4" value="2.5" class="unity-slider flex-1 pointer-events-none">
+                                                            <span class="bg-[#222] border border-[#111] text-[#eee] text-[10px] px-1.5 py-0.5 rounded shadow-inner w-8 text-center">2.5</span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- STEP 2: 서브 팀 및 패키지 -->
+        <div class="step-wrapper bg-white rounded-xl shadow-sm border border-slate-200">
+            <button onclick="toggleStep('step2')" class="relative z-10 w-full px-6 py-5 flex items-center justify-between bg-white hover:bg-slate-50 transition-colors text-left group rounded-t-xl rounded-b-xl">
+                <div class="flex items-center gap-4">
+                    <span class="flex items-center justify-center w-10 h-10 rounded-full bg-slate-100 text-slate-500 font-bold text-lg group-hover:bg-indigo-100 group-hover:text-indigo-600 transition-colors" id="badge-step2">2</span>
+                    <div>
+                        <h2 class="text-xl font-bold text-slate-800 group-hover:text-indigo-700 transition-colors">팀 분할과 '포장이사' (Unity Package)</h2>
+                        <p class="text-xs text-slate-500 mt-1 font-medium">시간 약속의 스트레스를 줄이는 구역별 작업 및 병합 방법</p>
+                    </div>
+                </div>
+                <i data-lucide="chevron-down" class="text-slate-400 transition-transform duration-300" id="icon-step2"></i>
+            </button>
+            <div id="step2" class="step-content px-6 py-6 border-t border-slate-100 rounded-b-xl">
+                
+                <!-- Sub Team -->
+                <div class="flex flex-col md:flex-row gap-6 mb-8">
+                    <div class="flex-1">
+                        <h4 class="font-bold text-slate-800 text-sm mb-2 flex items-center gap-2">
+                            <i data-lucide="split-square-horizontal" class="w-4 h-4 text-indigo-500"></i> 대규모 조 서브 팀 분할
+                        </h4>
+                        <p class="text-sm text-slate-600 leading-relaxed mb-4">
+                            전체 인원이 시간을 맞추기 어렵다면 <strong>2~3명씩 서브 팀(Sub-team)</strong>을 나누고, 전체 도면에서 <strong>구역(Zone)</strong>을 분할하여 병렬 작업을 진행하세요.<br>
+                            <span class="text-xs text-slate-500 mt-1 block">(예: A팀은 스폰 광장 제작, B팀은 메인 신전 제작)</span>
+                        </p>
+                    </div>
+                    <div class="flex-1 bg-amber-50 p-4 rounded-xl border border-amber-200">
+                        <h4 class="font-bold text-amber-800 text-sm mb-2 flex items-center gap-2">
+                            <i data-lucide="trees" class="w-4 h-4"></i> 반복 에셋 배포 규칙
+                        </h4>
+                        <p class="text-xs text-amber-700 leading-relaxed">
+                            맵 전체에 공통으로 들어가는 <strong>나무, 가로등, 쓰레기통</strong> 등을 각자 만들면 스타일이 어긋납니다. 한 명이 대표로 만들고 유니티 패키지로 추출해 조원들에게 배포하세요.
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Unity Package Definition -->
+                <div class="bg-indigo-50 border border-indigo-200 p-5 rounded-xl mb-8 flex gap-4 shadow-sm items-start">
+                    <div class="bg-white p-2.5 rounded-lg shadow-sm text-indigo-600 shrink-0 mt-0.5">
+                        <i data-lucide="file-archive" class="w-6 h-6"></i>
+                    </div>
+                    <div>
+                        <h4 class="font-bold text-indigo-900 text-base mb-1.5">유니티 패키지(.unitypackage)란?</h4>
+                        <p class="text-sm text-indigo-800 leading-relaxed break-keep">
+                            단순히 파일을 압축하는 일반 ZIP 파일과 다릅니다. 3D 모델(FBX), 텍스처 이미지(PNG), 그리고 이들이 유니티 내에서 연결된 <strong>머티리얼과 프리팹(Prefab)의 '연결 상태(Dependencies)'까지 통째로 보존하여 묶어주는 유니티 전용 압축 포맷</strong>입니다. 이사 갈 때 가구를 분해하지 않고 랩으로 둘러싸서 형태 그대로 옮기는 것과 같습니다.
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Export / Import Steps -->
+                <h4 class="font-bold text-slate-800 text-base mb-4 border-b border-slate-100 pb-2 flex items-center gap-2"><i data-lucide="truck" class="w-5 h-5 text-indigo-500"></i> 실전: 패키지 내보내기(Export)와 가져오기(Import)</h4>
+
+                <div class="grid md:grid-cols-2 gap-6 mb-8">
+                    <!-- Export -->
+                    <div class="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm flex flex-col">
+                        <div class="bg-slate-50 px-4 py-3 border-b border-slate-200 flex items-center gap-2">
+                            <div class="bg-slate-200 p-1.5 rounded text-slate-600"><i data-lucide="package-minus" class="w-4 h-4"></i></div>
+                            <h5 class="font-bold text-slate-800">보내는 사람 (Export)</h5>
+                        </div>
+                        <div class="p-5 flex-grow">
+                            <ol class="space-y-5 text-sm text-slate-600 relative before:absolute before:inset-y-0 before:left-[11px] before:w-px before:bg-slate-200">
+                                <li class="relative pl-8">
+                                    <div class="absolute left-0 w-6 h-6 rounded-full bg-white border-2 border-slate-300 flex items-center justify-center font-bold text-[10px] text-slate-500">1</div>
+                                    <strong class="text-slate-800 block mb-1">최상위 폴더 우클릭</strong>
+                                    <p class="text-xs leading-relaxed">자신의 작업물이 모두 담긴 <strong>고유한 이름의 최상위 폴더</strong>를 우클릭하고 메뉴에서 <code class="bg-slate-100 px-1 py-0.5 rounded text-pink-600 font-mono font-bold">Export Package...</code>를 클릭합니다.</p>
+                                </li>
+                                <li class="relative pl-8">
+                                    <div class="absolute left-0 w-6 h-6 rounded-full bg-white border-2 border-slate-300 flex items-center justify-center font-bold text-[10px] text-slate-500">2</div>
+                                    <strong class="text-slate-800 block mb-1">의존성 체크 확인</strong>
+                                    <p class="text-xs leading-relaxed mb-3">팝업창이 뜨면 좌측 하단의 <strong>Include dependencies</strong>가 체크되어 있는지 확인합니다. (이 옵션이 켜져 있어야 연결된 텍스처와 재질이 끊어지지 않습니다.)</p>
+                                    
+                                    <!-- Unity UI Mockup -->
+                                    <div class="bg-[#383838] border border-[#222] rounded-md p-3 w-fit shadow-md font-sans select-none flex flex-col gap-3">
+                                        <div class="flex items-center gap-2 px-1">
+                                            <!-- Checkbox -->
+                                            <div class="w-3.5 h-3.5 bg-[#1e1e1e] border border-[#111] rounded-[2px] flex items-center justify-center shadow-inner relative cursor-pointer group">
+                                                <i data-lucide="check" class="w-3 h-3 text-[#cccccc] group-hover:text-white transition-colors"></i>
+                                            </div>
+                                            <span class="text-[#cccccc] text-[11px] cursor-pointer hover:text-white transition-colors tracking-wide">Include dependencies</span>
+                                        </div>
+                                        <!-- Export Button -->
+                                        <div class="flex justify-end pt-2 border-t border-[#444]">
+                                            <div class="bg-[#585858] hover:bg-[#686868] text-[#eeeeee] text-[11px] px-5 py-1.5 rounded-[3px] border border-[#333] cursor-pointer shadow-sm transition-colors tracking-wide font-medium">Export</div>
+                                        </div>
+                                    </div>
+                                </li>
+                                <li class="relative pl-8">
+                                    <div class="absolute left-0 w-6 h-6 rounded-full bg-white border-2 border-slate-300 flex items-center justify-center font-bold text-[10px] text-slate-500">3</div>
+                                    <strong class="text-slate-800 block mb-1">저장 및 공유</strong>
+                                    <p class="text-xs leading-relaxed">저장된 <code>.unitypackage</code> 파일을 팀 디스코드나 카톡으로 씬 조립 담당자에게 전송합니다.</p>
+                                </li>
+                            </ol>
+                        </div>
+                    </div>
+
+                    <!-- Import -->
+                    <div class="bg-indigo-50/50 border border-indigo-200 rounded-xl overflow-hidden shadow-sm flex flex-col">
+                        <div class="bg-indigo-100 px-4 py-3 border-b border-indigo-200 flex items-center gap-2">
+                            <div class="bg-indigo-600 p-1.5 rounded text-white"><i data-lucide="package-plus" class="w-4 h-4"></i></div>
+                            <h5 class="font-bold text-indigo-900">조립 담당자 (Import)</h5>
+                        </div>
+                        <div class="p-5 flex-grow">
+                            <ol class="space-y-5 text-sm text-indigo-800 relative before:absolute before:inset-y-0 before:left-[11px] before:w-px before:bg-indigo-200">
+                                <li class="relative pl-8">
+                                    <div class="absolute left-0 w-6 h-6 rounded-full bg-indigo-50 border-2 border-indigo-300 flex items-center justify-center font-bold text-[10px] text-indigo-600">1</div>
+                                    <strong class="text-indigo-900 block mb-1">드래그 앤 드롭</strong>
+                                    <p class="text-xs leading-relaxed">전달받은 <code>.unitypackage</code> 파일을 실행 중인 유니티 하단의 <strong>Project 창 빈 공간으로 드래그</strong>하여 넣거나 더블클릭합니다.</p>
+                                </li>
+                                <li class="relative pl-8">
+                                    <div class="absolute left-0 w-6 h-6 rounded-full bg-indigo-50 border-2 border-indigo-300 flex items-center justify-center font-bold text-[10px] text-indigo-600">2</div>
+                                    <strong class="text-indigo-900 block mb-1">파일 덮어쓰기 경고 검토</strong>
+                                    <p class="text-xs leading-relaxed bg-rose-50 text-rose-700 p-2 rounded border border-rose-100 mt-1 break-keep">
+                                        Import 창이 뜰 때, 파일명 옆에 <strong>노란색 경고 아이콘(⚠️)</strong>이 떠 있다면 내 프로젝트의 기존 파일을 덮어씌워서 날려버린다는 뜻입니다! 충돌이 발생하면 Import를 취소하고 폴더명을 수정하라고 지시하세요.
+                                    </p>
+                                </li>
+                                <li class="relative pl-8">
+                                    <div class="absolute left-0 w-6 h-6 rounded-full bg-indigo-50 border-2 border-indigo-300 flex items-center justify-center font-bold text-[10px] text-indigo-600">3</div>
+                                    <strong class="text-indigo-900 block mb-1">임포트 완료 및 배치</strong>
+                                    <p class="text-xs leading-relaxed"><code class="bg-indigo-100 border border-indigo-200 px-1 py-0.5 rounded text-indigo-900 font-bold">Import</code> 버튼을 누르면 상대방이 작업했던 폴더와 프리팹이 고스란히 들어옵니다. 프리팹을 씬에 올려 조립합니다.</p>
+                                </li>
+                            </ol>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Folder rules (Expanded & Detailed) -->
+                <div class="mt-8 bg-rose-50 p-5 rounded-xl border border-rose-200 shadow-sm">
+                    <div class="flex items-center gap-2 mb-3 border-b border-rose-200 pb-3">
+                        <i data-lucide="alert-octagon" class="w-5 h-5 text-rose-600"></i>
+                        <h4 class="font-bold text-rose-900 text-base">폴더 및 경로 정리 시 절대 주의사항 (Overwrite 대참사 방지)</h4>
+                    </div>
+                    
+                    <p class="text-sm text-rose-800 leading-relaxed mb-4">
+                        모든 팀원이 아무 생각 없이 기본 <code>Assets/Models/</code> 폴더를 동일하게 사용하고 패키지를 합치면, <strong>나중에 임포트한 사람의 파일이 이전 사람의 파일을 덮어씌워 날려버리는 대참사</strong>가 발생합니다. 남이 만든 메인 신전이 내 나무 모델링으로 교체되는 비극을 막으려면 아래 구조를 <strong>반드시</strong> 지켜야 합니다.
+                    </p>
+
+                    <!-- Good vs Bad Visual -->
+                    <div class="grid md:grid-cols-2 gap-4 mb-5">
+                        <!-- Bad Example -->
+                        <div class="bg-white p-4 rounded-lg border border-slate-200">
+                            <div class="flex items-center gap-2 mb-2 text-rose-600 font-bold text-sm">
+                                <i data-lucide="x-circle" class="w-4 h-4"></i> 파멸의 구조 (절대 금지)
+                            </div>
+                            <div class="font-mono text-xs text-slate-600 space-y-1.5 bg-slate-50 p-3 rounded">
+                                <div class="flex items-center gap-1.5"><i data-lucide="folder-open" class="w-3.5 h-3.5 text-slate-400"></i> Assets</div>
+                                <div class="flex items-center gap-1.5 ml-4"><i data-lucide="folder" class="w-3.5 h-3.5 text-amber-400"></i> Models <span class="text-rose-500 font-sans text-[10px] font-bold">&larr; 팀원 B와 경로 충돌!</span></div>
+                                <div class="flex items-center gap-1.5 ml-8"><i data-lucide="file-box" class="w-3.5 h-3.5 text-slate-400"></i> tree.fbx</div>
+                                <div class="flex items-center gap-1.5 ml-4"><i data-lucide="folder" class="w-3.5 h-3.5 text-amber-400"></i> Materials <span class="text-rose-500 font-sans text-[10px] font-bold">&larr; 덮어쓰기 위험!</span></div>
+                                <div class="flex items-center gap-1.5 ml-8"><i data-lucide="file" class="w-3.5 h-3.5 text-slate-400"></i> mat.mat</div>
+                            </div>
+                        </div>
+
+                        <!-- Good Example -->
+                        <div class="bg-white p-4 rounded-lg border border-indigo-200 ring-1 ring-indigo-50">
+                            <div class="flex items-center gap-2 mb-2 text-emerald-600 font-bold text-sm">
+                                <i data-lucide="check-circle" class="w-4 h-4"></i> 올바른 '포장이사' 구조
+                            </div>
+                            <div class="font-mono text-xs text-slate-700 space-y-1.5 bg-indigo-50/50 p-3 rounded">
+                                <div class="flex items-center gap-1.5"><i data-lucide="folder-open" class="w-3.5 h-3.5 text-slate-400"></i> Assets</div>
+                                <div class="flex items-center gap-1.5 ml-4 font-bold text-indigo-700 bg-indigo-100 px-1.5 py-0.5 rounded w-fit"><i data-lucide="folder-key" class="w-3.5 h-3.5"></i> _TeamA_Plaza</div>
+                                <div class="flex items-center gap-1.5 ml-8"><i data-lucide="folder" class="w-3.5 h-3.5 text-amber-400"></i> Models</div>
+                                <div class="flex items-center gap-1.5 ml-12 text-slate-500"><i data-lucide="file-box" class="w-3.5 h-3.5"></i> Plaza_Tree.fbx</div>
+                                <div class="flex items-center gap-1.5 ml-8"><i data-lucide="folder" class="w-3.5 h-3.5 text-amber-400"></i> Materials</div>
+                                <div class="flex items-center gap-1.5 ml-12 text-slate-500"><i data-lucide="file" class="w-3.5 h-3.5"></i> Mat_PlazaWood.mat</div>
+                                <div class="flex items-center gap-1.5 ml-8"><i data-lucide="folder" class="w-3.5 h-3.5 text-amber-400"></i> Prefabs</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 4 Golden Rules -->
+                    <div class="grid sm:grid-cols-2 gap-3">
+                        <div class="bg-white p-3 rounded-lg flex gap-3 items-start border border-rose-100">
+                            <div class="bg-rose-100 text-rose-700 w-5 h-5 rounded-full flex items-center justify-center font-bold text-[10px] shrink-0 mt-0.5">1</div>
+                            <div>
+                                <strong class="text-xs text-rose-900 block mb-1">최상위 폴더명 고유화</strong>
+                                <p class="text-[11px] text-rose-700 leading-relaxed">자신의 작업물은 반드시 본인이 생성한 고유한 이름의 최상위 폴더 안에만 넣으세요. (이름 앞에 <code>_</code>를 붙이면 상단에 정렬됩니다.)</p>
+                            </div>
+                        </div>
+                        <div class="bg-white p-3 rounded-lg flex gap-3 items-start border border-rose-100">
+                            <div class="bg-rose-100 text-rose-700 w-5 h-5 rounded-full flex items-center justify-center font-bold text-[10px] shrink-0 mt-0.5">2</div>
+                            <div>
+                                <strong class="text-xs text-rose-900 block mb-1">내부 서브 폴더 분류</strong>
+                                <p class="text-[11px] text-rose-700 leading-relaxed">고유 폴더 안에서도 파일을 늘어놓지 말고 <code>Models</code>, <code>Materials</code>, <code>Textures</code>, <code>Prefabs</code>로 방을 나누세요.</p>
+                            </div>
+                        </div>
+                        <div class="bg-white p-3 rounded-lg flex gap-3 items-start border border-rose-100">
+                            <div class="bg-rose-100 text-rose-700 w-5 h-5 rounded-full flex items-center justify-center font-bold text-[10px] shrink-0 mt-0.5">3</div>
+                            <div>
+                                <strong class="text-xs text-rose-900 block mb-1">프리팹(Prefab) 완성 후 내보내기</strong>
+                                <p class="text-[11px] text-rose-700 leading-relaxed">FBX만 보내면 재질이 풀립니다. 유니티 씬에 올려 쉐이더와 스크립트까지 완벽히 세팅한 후 <code>Prefab</code>으로 만들어 폴더째 내보내세요.</p>
+                            </div>
+                        </div>
+                        <div class="bg-white p-3 rounded-lg flex gap-3 items-start border border-rose-100">
+                            <div class="bg-rose-100 text-rose-700 w-5 h-5 rounded-full flex items-center justify-center font-bold text-[10px] shrink-0 mt-0.5">4</div>
+                            <div>
+                                <strong class="text-xs text-rose-900 block mb-1">한글 및 띄어쓰기 절대 금지</strong>
+                                <p class="text-[11px] text-rose-700 leading-relaxed">유니티와 외부 쉐이더는 경로에 <strong>한글이나 공백</strong>이 있으면 에러를 뱉습니다. 반드시 영문, 숫자, 언더바(<code>_</code>)만 사용하세요.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Continuous Assembly & Backup (Version Control) -->
+                    <div class="mt-6 bg-slate-900 rounded-xl p-5 shadow-lg relative overflow-hidden border border-slate-800">
+                        <div class="absolute top-0 right-0 p-4 opacity-10 text-6xl text-white pointer-events-none"><img src="https://cdn.simpleicons.org/unity/FFFFFF" class="w-20 h-20"></div>
+                        <div class="relative z-10">
+                            <div class="flex items-center gap-2 mb-3">
+                                <span class="bg-rose-500 text-white text-[10px] font-bold px-2 py-0.5 rounded animate-pulse">CRITICAL</span>
+                                <h4 class="font-bold text-white text-base">대참사 방지: 지속적인 씬 조립과 압축 백업(버전 관리)</h4>
+                            </div>
+                            <p class="text-sm text-slate-300 leading-relaxed mb-4 break-keep">
+                                씬 조립을 마감 직전에 한 번에 몰아서 하려다가는 에러와 충돌로 프로젝트가 산산조각 날 수 있습니다. <strong>특정 주차를 기다리지 말고, 매주 수업 시간이나 공강 시간에 지정된 '메인 PC'에 모여 수시로 패키지를 합치고 테스트하세요.</strong>
+                            </p>
+                            <div class="bg-black/50 p-4 rounded-lg border border-slate-700 text-sm text-slate-200">
+                                <strong class="text-emerald-400 block mb-2 flex items-center gap-1.5"><i data-lucide="archive" class="w-4 h-4"></i> 가장 확실한 수동 버전 관리법</strong>
+                                <p class="text-xs text-slate-400 leading-relaxed mb-2">Git이나 Plastic SCM 같은 전문 버전 관리 툴 사용이 익숙하지 않다면, 원시적이지만 가장 확실한 방법을 습관화하세요.</p>
+                                <ol class="list-decimal list-inside text-xs text-slate-300 space-y-1.5">
+                                    <li>팀원의 패키지를 <code class="text-pink-400">Import</code> 하기 직전에 <strong>반드시 유니티를 완전히 종료</strong>합니다.</li>
+                                    <li>자신의 유니티 <strong>프로젝트 폴더 전체를 통째로 <code>.zip</code> 압축</strong>합니다.</li>
+                                    <li>압축 파일명에 날짜와 상태를 명시하여 구글 드라이브나 외장하드에 백업합니다. <br><span class="inline-block mt-1 bg-slate-800 px-2 py-1 rounded text-slate-400 font-mono">예: TeamProject_0513_Before_Plaza_Import.zip</span></li>
+                                    <li>임포트 중 파일이 덮어씌워지거나 에러가 나서 씬이 망가졌다면? 당황하지 말고 <strong>압축만 풀어서 5분 전 상태로 즉시 복구</strong>합니다.</li>
+                                </ol>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- STEP 3: VRC 상호작용 기획 및 로직 보드 -->
+        <div class="step-wrapper bg-white rounded-xl shadow-sm border border-slate-200 mb-5">
+            <button onclick="toggleStep('step3')" class="relative z-10 w-full px-6 py-5 flex items-center justify-between bg-white hover:bg-slate-50 transition-colors text-left group rounded-t-xl rounded-b-xl">
+                <div class="flex items-center gap-4">
+                    <span class="flex items-center justify-center w-10 h-10 rounded-full bg-slate-100 text-slate-500 font-bold text-lg group-hover:bg-indigo-100 group-hover:text-indigo-600 transition-colors" id="badge-step3">3</span>
+                    <div>
+                        <h2 class="text-xl font-bold text-slate-800 group-hover:text-indigo-700 transition-colors">VRC 상호작용 기획 및 로직 보드 작성</h2>
+                        <p class="text-xs text-slate-500 mt-1 font-medium">실제 씬 조립 전, VRChat의 특성을 이해하고 구역별 필요 기능을 계획합니다.</p>
+                    </div>
+                </div>
+                <i data-lucide="chevron-down" class="text-slate-400 transition-transform duration-300" id="icon-step3"></i>
+            </button>
+            <div id="step3" class="step-content px-6 py-6 border-t border-slate-100 rounded-b-xl">
+                
+                <div class="bg-amber-50 border border-amber-200 p-4 rounded-lg mb-6 flex items-start gap-3 shadow-sm">
+                    <i data-lucide="info" class="w-5 h-5 text-amber-600 mt-0.5 shrink-0"></i>
+                    <div>
+                        <h4 class="font-bold text-amber-900 text-sm mb-1.5">씬 조립은 특정 날짜가 아닌 '상시'로 진행합니다!</h4>
+                        <p class="text-xs text-amber-800 leading-relaxed font-medium break-keep">
+                            앞서 안내한 대로 물리적인 씬 조립은 메인 PC에서 공강 시간 등을 활용해 꾸준히 병합을 진행해야 합니다. 이번 수업 시간의 메인 미션은 각자가 만든 구역을 합치기 전, 해당 구역에 <strong>어떤 상호작용(Logic)이 필요한지 리스트업하고 VRC 구현 가능성을 타진하는 '로직 보드' 작성 단계</strong>입니다.
+                        </p>
+                    </div>
+                </div>
+
+                <!-- VRChat Logic Explanation -->
+                <h4 class="font-bold text-slate-800 text-base mb-4 border-b border-slate-100 pb-2 flex items-center gap-2">
+                    <i data-lucide="cpu" class="w-5 h-5 text-indigo-500"></i> VRChat 전용 스크립팅: 우동(Udon)의 가상 머신 구조
+                </h4>
+                
+                <div class="bg-slate-800 p-5 rounded-xl mb-6 shadow-inner border border-slate-700 text-slate-300 relative overflow-hidden">
+                    <!-- Background Grid -->
+                    <div class="absolute inset-0 opacity-10" style="background-image: radial-gradient(#94a3b8 1px, transparent 1px); background-size: 16px 16px;"></div>
+                    
+                    <div class="relative z-10">
+                        <h5 class="font-bold text-white text-sm mb-2 flex items-center gap-2">
+                            <i data-lucide="shield-alert" class="w-4 h-4 text-amber-400"></i> 왜 C# 스크립트 대신 자체 가상 머신(Udon VM)을 쓸까?
+                        </h5>
+                        <p class="text-xs text-slate-300 leading-relaxed mb-4 break-keep">
+                            일반적인 유니티 C# 코드는 컴퓨터의 파일 시스템(폴더)에 직접 접근하거나 시스템을 조작할 수 있습니다. 만약 누군가 악성 코드를 넣은 월드를 만들면 접속한 유저의 PC가 해킹당할 수 있죠. 이를 막기 위해 VRChat은 <strong>코드가 월드 밖으로 빠져나가지 못하게 가두는 '샌드박스(Sandbox)' 형태의 격리된 실행 환경인 Udon VM(Virtual Machine)</strong>을 구축했습니다.
+                        </p>
+                        
+                        <!-- Compiler Flow UI -->
+                        <div class="flex flex-col sm:flex-row items-center justify-between bg-slate-900 rounded-lg p-4 text-[11px] font-mono border border-slate-700 gap-2 sm:gap-0 shadow-lg">
+                            <div class="flex flex-col items-center w-full sm:w-1/3">
+                                <span class="bg-emerald-500/20 text-emerald-400 px-2 py-0.5 rounded font-bold mb-1.5 border border-emerald-500/30">1. 개발자 작성</span>
+                                <span class="text-slate-400">Udon Graph / U#</span>
+                            </div>
+                            <i data-lucide="arrow-right" class="w-4 h-4 text-slate-500 hidden sm:block rotate-90 sm:rotate-0"></i>
+                            <div class="flex flex-col items-center w-full sm:w-1/3">
+                                <span class="bg-blue-500/20 text-blue-400 px-2 py-0.5 rounded font-bold mb-1.5 border border-blue-500/30">2. Udon Compiler</span>
+                                <span class="text-slate-400">VRC 전용 안전 코드로 번역</span>
+                            </div>
+                            <i data-lucide="arrow-right" class="w-4 h-4 text-slate-500 hidden sm:block rotate-90 sm:rotate-0"></i>
+                            <div class="flex flex-col items-center w-full sm:w-1/3">
+                                <span class="bg-purple-500/20 text-purple-400 px-2 py-0.5 rounded font-bold mb-1.5 border border-purple-500/30">3. VRChat Client</span>
+                                <span class="text-slate-400">VM(가상머신) 위에서 실행</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <p class="text-sm text-slate-600 mb-5 leading-relaxed">
+                    이 Udon 컴파일러가 알아들을 수 있도록 우리가 로직을 작성해서 넘겨주는 방식은 크게 두 가지로 나뉩니다.
+                </p>
+
+                <div class="grid md:grid-cols-2 gap-5 mb-8">
+                    <!-- Udon Graph -->
+                    <div class="bg-white border border-slate-200 rounded-xl p-5 shadow-sm">
+                        <div class="flex items-center gap-2 mb-3 border-b border-slate-100 pb-2">
+                            <div class="bg-blue-100 p-1.5 rounded text-blue-600"><i data-lucide="git-commit" class="w-4 h-4"></i></div>
+                            <h5 class="font-bold text-slate-800 text-sm">1. 노드 기반: Udon Graph (우동 그래프)</h5>
+                        </div>
+                        <p class="text-xs text-slate-600 leading-relaxed mb-3 h-[60px]">블렌더의 쉐이더 노드나 언리얼 엔진의 블루프린트처럼 <strong>시각적인 노드를 선으로 연결하여 로직을 구성</strong>하는 방식입니다. VRChat SDK가 기본으로 제공합니다.</p>
+                        <ul class="text-[11px] text-slate-500 space-y-1.5 bg-slate-50 p-3 rounded">
+                            <li class="flex items-start gap-1.5"><i data-lucide="plus-circle" class="w-3.5 h-3.5 text-emerald-500 mt-0.5 shrink-0"></i> <span>코딩을 전혀 모르는 기획자나 아티스트도 직관적인 접근 및 수정 가능</span></li>
+                            <li class="flex items-start gap-1.5"><i data-lucide="minus-circle" class="w-3.5 h-3.5 text-rose-500 mt-0.5 shrink-0"></i> <span>기능이 조금만 복잡해져도 선이 미로처럼 꼬이는 일명 '스파게티 노드' 현상 발생</span></li>
+                        </ul>
+                    </div>
+
+                    <!-- UdonSharp (U#) -->
+                    <div class="bg-white border border-slate-200 rounded-xl p-5 shadow-sm ring-1 ring-indigo-50">
+                        <div class="flex items-center gap-2 mb-3 border-b border-slate-100 pb-2">
+                            <div class="bg-indigo-100 p-1.5 rounded text-indigo-600"><i data-lucide="file-code-2" class="w-4 h-4"></i></div>
+                            <h5 class="font-bold text-slate-800 text-sm flex items-center gap-2">2. 스크립트 기반: UdonSharp (U#) <span class="bg-indigo-500 text-white text-[9px] px-1.5 py-0.5 rounded">실무 표준</span></h5>
+                        </div>
+                        <p class="text-xs text-slate-600 leading-relaxed mb-3 h-[60px]">개발자들이 원래 쓰던 <strong>C# 코드를 텍스트로 작성하면, 이를 Udon 언어로 자동 번역해 주는 강력한 컴파일러 툴</strong>입니다.</p>
+                        <ul class="text-[11px] text-slate-500 space-y-1.5 bg-indigo-50/50 p-3 rounded border border-indigo-50">
+                            <li class="flex items-start gap-1.5"><i data-lucide="check-circle-2" class="w-3.5 h-3.5 text-indigo-500 mt-0.5 shrink-0"></i> <span>에셋 스토어나 BOOTH에서 다운받는 <strong>대부분의 고품질 기믹(거울 토글, 비디오 플레이어, 미니게임 등)은 모두 이 U#을 기반으로 제작</strong>됩니다.</span></li>
+                            <li class="flex items-start gap-1.5"><i data-lucide="alert-circle" class="w-3.5 h-3.5 text-amber-500 mt-0.5 shrink-0"></i> <span>원활한 사용을 위해 VCC를 통해 프로젝트에 UdonSharp 패키지가 설치되어 있어야 합니다.</span></li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Udon Graph Basic Guide -->
+                <div class="mt-6 mb-10 bg-slate-50 border border-slate-200 rounded-xl overflow-hidden shadow-sm">
+                    <div class="bg-blue-100/50 px-5 py-3 border-b border-blue-100 flex items-center gap-2">
+                        <i data-lucide="network" class="w-5 h-5 text-blue-600"></i>
+                        <h5 class="font-bold text-blue-900 text-sm">코딩 없는 인터랙션 구현: Udon Graph 기초 작성법 및 필수 노드</h5>
+                    </div>
+                    <div class="p-5">
+                        
+                        <!-- Setup Steps -->
+                        <div class="mb-6">
+                            <h6 class="font-bold text-slate-800 text-xs mb-2 flex items-center gap-1.5"><i data-lucide="check-square" class="w-4 h-4 text-emerald-500"></i> 1. Udon Graph 셋업 순서</h6>
+                            <ol class="text-xs text-slate-600 space-y-2 list-decimal list-inside bg-white p-4 rounded-lg border border-slate-200">
+                                <li>프로젝트(Project) 창 빈 공간 우클릭 <i data-lucide="arrow-right" class="w-3 h-3 inline text-slate-400"></i> <strong class="bg-slate-100 border border-slate-200 px-1 rounded">Create > VRChat > Udon > Udon Graph Program Asset</strong> 생성</li>
+                                <li>기능을 넣을 3D 오브젝트(예: 버튼 큐브)를 선택하고 인스펙터에서 <strong class="text-blue-600 bg-blue-50 px-1 rounded border border-blue-100">Add Component > Udon Behaviour</strong> 추가</li>
+                                <li>생성한 Program Asset 파일을 Udon Behaviour 컴포넌트의 <strong>Program Source</strong> 빈칸에 끌어다 놓기</li>
+                                <li><strong class="bg-slate-800 text-white px-1.5 py-0.5 rounded font-mono text-[10px]">Open Udon Graph</strong> 버튼을 눌러 노드 에디터 창 열기</li>
+                            </ol>
+                        </div>
+
+                        <!-- Essential Nodes Visual Dictionary -->
+                        <div>
+                            <h6 class="font-bold text-slate-800 text-sm mb-3 flex items-center gap-2"><i data-lucide="library" class="w-5 h-5 text-blue-500"></i> 2. 실행 흐름(Flow)과 데이터(Data)의 완벽한 이해</h6>
+                            
+                            <!-- Flow vs Data Explanation -->
+                            <div class="grid sm:grid-cols-2 gap-4 mb-5">
+                                <div class="bg-slate-800 p-4 rounded-lg border border-slate-700 flex flex-col h-full shadow-inner">
+                                    <div class="flex items-center gap-2 mb-2">
+                                        <div class="w-0 h-0 border-y-[6px] border-y-transparent border-l-[10px] border-l-white"></div>
+                                        <strong class="text-white text-sm">실행 순서 (Flow 포트)</strong>
+                                    </div>
+                                    <p class="text-xs text-slate-300 leading-relaxed break-keep">
+                                        <strong>"언제 이 행동을 할 것인가?"</strong>를 결정하는 도미노입니다. 하얀색 화살표 선이 연결되지 않은 노드는 아무리 데이터가 완벽하게 채워져 있어도 절대 실행되지 않습니다. (좌에서 우로 흐름)
+                                    </p>
+                                </div>
+                                <div class="bg-slate-800 p-4 rounded-lg border border-slate-700 flex flex-col h-full shadow-inner">
+                                    <div class="flex items-center gap-2 mb-2">
+                                        <div class="w-3 h-3 rounded-full bg-purple-400 border border-slate-900"></div>
+                                        <strong class="text-white text-sm">데이터 (Data 포트)</strong>
+                                    </div>
+                                    <p class="text-xs text-slate-300 leading-relaxed break-keep">
+                                        <strong>"무엇을 재료로 쓸 것인가?"</strong>를 의미합니다. 색상은 데이터의 종류를 뜻합니다. <span class="text-yellow-400">노란색(오브젝트)</span>, <span class="text-purple-400">보라색(참/거짓)</span>, <span class="text-green-400">초록색(좌표)</span> 등 같은 색상끼리만 연결할 수 있습니다.
+                                    </p>
+                                </div>
+                            </div>
+
+                            <h6 class="font-bold text-slate-800 text-xs mb-3 flex items-center gap-1.5"><i data-lucide="star" class="w-4 h-4 text-amber-500"></i> 로직 보드 단골 필수 노드 6대장</h6>
+                            <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                <!-- Node 1: Event Interact -->
+                                <div class="bg-[#282828] border border-[#111] rounded-lg shadow-lg font-sans flex flex-col overflow-hidden">
+                                    <div class="bg-[#8b2b2b] px-3 py-1.5 text-white text-[11px] font-bold shadow-sm">Event Interact</div>
+                                    <div class="p-3 text-[#cccccc] text-[10px] flex justify-between items-center relative">
+                                        <div class="text-[#888] italic">유저가 클릭할 때</div>
+                                        <!-- Flow Out -->
+                                        <div class="flex items-center gap-1">
+                                            <span>Flow</span>
+                                            <div class="w-0 h-0 border-y-[5px] border-y-transparent border-l-[8px] border-l-[#eee]"></div>
+                                        </div>
+                                    </div>
+                                    <div class="bg-[#383838] p-2 text-[10px] text-[#aaa] border-t border-[#222]">
+                                        <strong>시작 조건(Trigger):</strong> 버튼이나 스위치를 클릭(VR 트리거) 시 도미노의 첫 블록을 넘어뜨립니다.
+                                    </div>
+                                </div>
+
+                                <!-- Node 2: GameObject SetActive -->
+                                <div class="bg-[#282828] border border-[#111] rounded-lg shadow-lg font-sans flex flex-col overflow-hidden">
+                                    <div class="bg-[#2b6b4b] px-3 py-1.5 text-white text-[11px] font-bold shadow-sm">GameObject SetActive</div>
+                                    <div class="p-3 text-[#cccccc] text-[10px] flex justify-between relative space-y-1.5">
+                                        <div class="flex flex-col gap-2">
+                                            <!-- Flow In -->
+                                            <div class="flex items-center gap-1">
+                                                <div class="w-0 h-0 border-y-[5px] border-y-transparent border-l-[8px] border-l-[#eee]"></div>
+                                                <span>Flow</span>
+                                            </div>
+                                            <!-- Instance In -->
+                                            <div class="flex items-center gap-1">
+                                                <div class="w-2.5 h-2.5 rounded-full bg-[#eab308] border border-[#111]"></div>
+                                                <span>Instance</span>
+                                            </div>
+                                            <!-- Value In -->
+                                            <div class="flex items-center gap-1">
+                                                <div class="w-2.5 h-2.5 rounded-full bg-[#c084fc] border border-[#111]"></div>
+                                                <span>Value (Bool)</span>
+                                            </div>
+                                        </div>
+                                        <div class="flex flex-col gap-2 items-end">
+                                            <!-- Flow Out -->
+                                            <div class="flex items-center gap-1">
+                                                <span>Flow</span>
+                                                <div class="w-0 h-0 border-y-[5px] border-y-transparent border-l-[8px] border-l-[#eee]"></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="bg-[#383838] p-2 text-[10px] text-[#aaa] border-t border-[#222]">
+                                        <strong>오브젝트 On/Off:</strong> 연결된 대상(거울, 조명, 벽 등)을 눈앞에 나타나게 하거나 사라지게 합니다.
+                                    </div>
+                                </div>
+
+                                <!-- Node 3: Branch -->
+                                <div class="bg-[#282828] border border-[#111] rounded-lg shadow-lg font-sans flex flex-col overflow-hidden">
+                                    <div class="bg-[#444] px-3 py-1.5 text-white text-[11px] font-bold shadow-sm">Branch (If/Else)</div>
+                                    <div class="p-3 text-[#cccccc] text-[10px] flex justify-between relative space-y-1.5">
+                                        <div class="flex flex-col gap-2">
+                                            <!-- Flow In -->
+                                            <div class="flex items-center gap-1">
+                                                <div class="w-0 h-0 border-y-[5px] border-y-transparent border-l-[8px] border-l-[#eee]"></div>
+                                                <span>Flow</span>
+                                            </div>
+                                            <!-- Bool In -->
+                                            <div class="flex items-center gap-1">
+                                                <div class="w-2.5 h-2.5 rounded-full bg-[#c084fc] border border-[#111]"></div>
+                                                <span>Bool</span>
+                                            </div>
+                                        </div>
+                                        <div class="flex flex-col gap-2 items-end">
+                                            <!-- True Flow Out -->
+                                            <div class="flex items-center gap-1">
+                                                <span class="text-[#4ade80]">True</span>
+                                                <div class="w-0 h-0 border-y-[5px] border-y-transparent border-l-[8px] border-l-[#eee]"></div>
+                                            </div>
+                                            <!-- False Flow Out -->
+                                            <div class="flex items-center gap-1">
+                                                <span class="text-[#f87171]">False</span>
+                                                <div class="w-0 h-0 border-y-[5px] border-y-transparent border-l-[8px] border-l-[#eee]"></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="bg-[#383838] p-2 text-[10px] text-[#aaa] border-t border-[#222]">
+                                        <strong>논리 분기:</strong> 변수(Bool)가 참(On)인지 거짓(Off)인지에 따라 실행 흐름을 두 갈래로 나눕니다.
+                                    </div>
+                                </div>
+
+                                <!-- Node 4: AudioSource Play -->
+                                <div class="bg-[#282828] border border-[#111] rounded-lg shadow-lg font-sans flex flex-col overflow-hidden">
+                                    <div class="bg-[#2b4b8b] px-3 py-1.5 text-white text-[11px] font-bold shadow-sm">AudioSource Play</div>
+                                    <div class="p-3 text-[#cccccc] text-[10px] flex justify-between relative space-y-1.5">
+                                        <div class="flex flex-col gap-2">
+                                            <div class="flex items-center gap-1">
+                                                <div class="w-0 h-0 border-y-[5px] border-y-transparent border-l-[8px] border-l-[#eee]"></div>
+                                                <span>Flow</span>
+                                            </div>
+                                            <div class="flex items-center gap-1">
+                                                <div class="w-2.5 h-2.5 rounded-full bg-[#eab308] border border-[#111]"></div>
+                                                <span>Instance</span>
+                                            </div>
+                                        </div>
+                                        <div class="flex flex-col gap-2 items-end">
+                                            <div class="flex items-center gap-1">
+                                                <span>Flow</span>
+                                                <div class="w-0 h-0 border-y-[5px] border-y-transparent border-l-[8px] border-l-[#eee]"></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="bg-[#383838] p-2 text-[10px] text-[#aaa] border-t border-[#222]">
+                                        <strong>사운드 재생:</strong> 연결된 AudioSource 컴포넌트의 음악이나 효과음을 1회 재생합니다.
+                                    </div>
+                                </div>
+
+                                <!-- Node 5: Animator SetTrigger -->
+                                <div class="bg-[#282828] border border-[#111] rounded-lg shadow-lg font-sans flex flex-col overflow-hidden">
+                                    <div class="bg-[#8b5b2b] px-3 py-1.5 text-white text-[11px] font-bold shadow-sm">Animator SetTrigger</div>
+                                    <div class="p-3 text-[#cccccc] text-[10px] flex justify-between relative space-y-1.5">
+                                        <div class="flex flex-col gap-2">
+                                            <div class="flex items-center gap-1">
+                                                <div class="w-0 h-0 border-y-[5px] border-y-transparent border-l-[8px] border-l-[#eee]"></div>
+                                                <span>Flow</span>
+                                            </div>
+                                            <div class="flex items-center gap-1">
+                                                <div class="w-2.5 h-2.5 rounded-full bg-[#eab308] border border-[#111]"></div>
+                                                <span>Instance</span>
+                                            </div>
+                                            <div class="flex items-center gap-1">
+                                                <div class="w-2.5 h-2.5 rounded-full bg-[#60a5fa] border border-[#111]"></div>
+                                                <span>name (String)</span>
+                                            </div>
+                                        </div>
+                                        <div class="flex flex-col gap-2 items-end">
+                                            <div class="flex items-center gap-1">
+                                                <span>Flow</span>
+                                                <div class="w-0 h-0 border-y-[5px] border-y-transparent border-l-[8px] border-l-[#eee]"></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="bg-[#383838] p-2 text-[10px] text-[#aaa] border-t border-[#222]">
+                                        <strong>애니메이션 실행:</strong> 문이 열리거나 몬스터가 움직이는 등 미리 만들어둔 애니메이션을 파란색(이름) 값으로 호출합니다.
+                                    </div>
+                                </div>
+
+                                <!-- Node 6: VRCPlayerApi TeleportTo -->
+                                <div class="bg-[#282828] border border-[#111] rounded-lg shadow-lg font-sans flex flex-col overflow-hidden">
+                                    <div class="bg-[#2b8b8b] px-3 py-1.5 text-white text-[11px] font-bold shadow-sm">VRCPlayerApi TeleportTo</div>
+                                    <div class="p-3 text-[#cccccc] text-[10px] flex justify-between relative space-y-1.5">
+                                        <div class="flex flex-col gap-2">
+                                            <div class="flex items-center gap-1">
+                                                <div class="w-0 h-0 border-y-[5px] border-y-transparent border-l-[8px] border-l-[#eee]"></div>
+                                                <span>Flow</span>
+                                            </div>
+                                            <div class="flex items-center gap-1">
+                                                <div class="w-2.5 h-2.5 rounded-full bg-[#f87171] border border-[#111]"></div>
+                                                <span>Instance (Player)</span>
+                                            </div>
+                                            <div class="flex items-center gap-1">
+                                                <div class="w-2.5 h-2.5 rounded-full bg-[#4ade80] border border-[#111]"></div>
+                                                <span>teleportPos</span>
+                                            </div>
+                                        </div>
+                                        <div class="flex flex-col gap-2 items-end">
+                                            <div class="flex items-center gap-1">
+                                                <span>Flow</span>
+                                                <div class="w-0 h-0 border-y-[5px] border-y-transparent border-l-[8px] border-l-[#eee]"></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="bg-[#383838] p-2 text-[10px] text-[#aaa] border-t border-[#222]">
+                                        <strong>순간이동(포탈):</strong> 트리거를 밟은 플레이어를 초록색(Vector3)으로 지정된 특정 좌표와 방위로 즉시 이동시킵니다.
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- 실전 노드 연결 예시 (Graph Simulation) 추가 -->
+                            <div class="mt-8 bg-slate-800 rounded-xl border border-slate-700 overflow-hidden shadow-sm">
+                                <div class="bg-slate-900 px-4 py-3 border-b border-slate-700 flex items-center gap-2">
+                                    <i data-lucide="git-merge" class="w-4 h-4 text-emerald-400"></i>
+                                    <h6 class="text-white text-sm font-bold">실전 노드 연결 예시: "버튼을 클릭하면 소리가 나며 문이 열림"</h6>
+                                </div>
+                                <div class="overflow-x-auto custom-scrollbar bg-[#1e1e1e] relative">
+                                    <div class="w-[820px] h-[300px] relative">
+                                        <!-- Grid Background -->
+                                        <div class="absolute inset-0 opacity-20 pointer-events-none" style="background-image: linear-gradient(#333 1px, transparent 1px), linear-gradient(90deg, #333 1px, transparent 1px); background-size: 20px 20px;"></div>
+
+                                        <!-- Wires SVG -->
+                                        <svg class="absolute inset-0 w-full h-full pointer-events-none z-0">
+                                            <style>
+                                                .flow-wire { fill: none; stroke: #eeeeee; stroke-width: 3; stroke-linecap: round; }
+                                                .data-wire { fill: none; stroke: #eab308; stroke-width: 2; stroke-dasharray: 4 4; stroke-linecap: round; }
+                                                .string-wire { fill: none; stroke: #60a5fa; stroke-width: 2; stroke-dasharray: 4 4; stroke-linecap: round; }
+                                            </style>
+                                            <!-- Flow Wires (Solid White) -->
+                                            <path d="M 280 79 C 330 79, 330 119, 390 119" class="flow-wire" />
+                                            <path d="M 510 119 C 560 119, 560 159, 620 159" class="flow-wire" />
+
+                                            <!-- Data Wires (Dashed Colors) -->
+                                            <path d="M 110 179 C 200 179, 250 141, 390 141" class="data-wire" />
+                                            <path d="M 110 205 C 300 205, 450 181, 620 181" class="data-wire" />
+                                            <path d="M 110 231 C 300 231, 450 203, 620 203" class="string-wire" />
+                                        </svg>
+
+                                        <!-- Variables Panel -->
+                                        <div class="absolute top-[140px] left-[20px] w-[100px] bg-[#282828] border border-[#111] rounded shadow-lg font-sans z-10">
+                                            <div class="bg-[#444] px-2 h-[22px] flex items-center text-white text-[10px] font-bold rounded-t border-b border-[#222]">Variables</div>
+                                            <div class="p-2 flex flex-col gap-2 text-[10px]">
+                                                <div class="flex items-center justify-between h-[18px]">
+                                                    <span class="text-[#ccc]">DoorSound</span>
+                                                    <div class="w-2.5 h-2.5 rounded-full bg-[#eab308] border border-[#111] relative z-20"></div>
+                                                </div>
+                                                <div class="flex items-center justify-between h-[18px]">
+                                                    <span class="text-[#ccc]">DoorAnim</span>
+                                                    <div class="w-2.5 h-2.5 rounded-full bg-[#eab308] border border-[#111] relative z-20"></div>
+                                                </div>
+                                                <div class="flex items-center justify-between h-[18px]">
+                                                    <span class="text-[#ccc]">"Open"</span>
+                                                    <div class="w-2.5 h-2.5 rounded-full bg-[#60a5fa] border border-[#111] relative z-20"></div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Node 1: Event Interact -->
+                                        <div class="absolute top-[40px] left-[160px] w-[130px] bg-[#282828] border border-[#111] rounded-lg shadow-lg font-sans z-10 flex flex-col overflow-hidden">
+                                            <div class="bg-[#8b2b2b] px-2 h-[22px] flex items-center text-white text-[10px] font-bold">Event Interact</div>
+                                            <div class="p-2 flex flex-col gap-1 text-[10px]">
+                                                <div class="flex items-center justify-end h-[18px] text-[#cccccc]">
+                                                    <div class="flex items-center gap-1">
+                                                        <span>Flow</span>
+                                                        <div class="w-0 h-0 border-y-[4px] border-y-transparent border-l-[6px] border-l-[#eee]"></div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Node 2: AudioSource Play -->
+                                        <div class="absolute top-[80px] left-[380px] w-[140px] bg-[#282828] border border-[#111] rounded-lg shadow-lg font-sans z-10 flex flex-col overflow-hidden">
+                                            <div class="bg-[#2b4b8b] px-2 h-[22px] flex items-center text-white text-[10px] font-bold">AudioSource Play</div>
+                                            <div class="p-2 flex flex-col gap-1 text-[10px]">
+                                                <div class="flex justify-between items-center h-[18px] text-[#cccccc]">
+                                                    <div class="flex items-center gap-1">
+                                                        <div class="w-0 h-0 border-y-[4px] border-y-transparent border-l-[6px] border-l-[#eee]"></div>
+                                                        <span>Flow</span>
+                                                    </div>
+                                                    <div class="flex items-center gap-1">
+                                                        <span>Flow</span>
+                                                        <div class="w-0 h-0 border-y-[4px] border-y-transparent border-l-[6px] border-l-[#eee]"></div>
+                                                    </div>
+                                                </div>
+                                                <div class="flex justify-between items-center h-[18px] text-[#cccccc]">
+                                                    <div class="flex items-center gap-1">
+                                                        <div class="w-2.5 h-2.5 rounded-full bg-[#eab308] border border-[#111]"></div>
+                                                        <span>Instance</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Node 3: Animator SetTrigger -->
+                                        <div class="absolute top-[120px] left-[610px] w-[150px] bg-[#282828] border border-[#111] rounded-lg shadow-lg font-sans z-10 flex flex-col overflow-hidden">
+                                            <div class="bg-[#8b5b2b] px-2 h-[22px] flex items-center text-white text-[10px] font-bold">Animator SetTrigger</div>
+                                            <div class="p-2 flex flex-col gap-1 text-[10px]">
+                                                <div class="flex justify-between items-center h-[18px] text-[#cccccc]">
+                                                    <div class="flex items-center gap-1">
+                                                        <div class="w-0 h-0 border-y-[4px] border-y-transparent border-l-[6px] border-l-[#eee]"></div>
+                                                        <span>Flow</span>
+                                                    </div>
+                                                    <div class="flex items-center gap-1">
+                                                        <span>Flow</span>
+                                                        <div class="w-0 h-0 border-y-[4px] border-y-transparent border-l-[6px] border-l-[#eee]"></div>
+                                                    </div>
+                                                </div>
+                                                <div class="flex justify-between items-center h-[18px] text-[#cccccc]">
+                                                    <div class="flex items-center gap-1">
+                                                        <div class="w-2.5 h-2.5 rounded-full bg-[#eab308] border border-[#111]"></div>
+                                                        <span>Instance</span>
+                                                    </div>
+                                                </div>
+                                                <div class="flex justify-between items-center h-[18px] text-[#cccccc]">
+                                                    <div class="flex items-center gap-1">
+                                                        <div class="w-2.5 h-2.5 rounded-full bg-[#60a5fa] border border-[#111]"></div>
+                                                        <span>name</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="bg-slate-900 p-4 border-t border-slate-700">
+                                    <p class="text-xs text-slate-300 leading-relaxed">
+                                        <strong>💡 분석:</strong> <span class="text-white font-bold bg-white/20 px-1 py-0.5 rounded border border-slate-600">하얀색 실선(Flow)</span>은 실행 순서를 결정합니다. 버튼을 클릭하면(Event Interact) ➔ 소리가 나고(Play) ➔ 애니메이션이 실행(SetTrigger)됩니다.<br>
+                                        <span class="text-amber-400 font-bold bg-amber-400/20 px-1 py-0.5 rounded mt-2 inline-block border border-amber-900">노란색/파란색 점선(Data)</span>은 실행의 대상(재료)입니다. "어떤 소리를 낼지?", "어떤 애니메이션을 실행할지?"에 대한 대상을 좌측 변수(Variables) 패널에서 끌어와 연결해 주어야 비로소 작동합니다.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- NEW: UdonSharp & AI Coding Guide -->
+                        <div class="mt-8 mb-10 bg-indigo-50/30 border border-indigo-100 rounded-xl overflow-hidden shadow-sm">
+                            <div class="bg-indigo-100/50 px-5 py-3 border-b border-indigo-100 flex items-center gap-2">
+                                <i data-lucide="bot" class="w-5 h-5 text-indigo-600"></i>
+                                <h5 class="font-bold text-indigo-900 text-sm">코딩을 몰라도 괜찮아요: AI 기반 UdonSharp (U#) 작성 3단계</h5>
+                            </div>
+                            <div class="p-5">
+                                <ol class="space-y-8 text-sm text-slate-600 relative before:absolute before:inset-y-0 before:left-[11px] before:w-px before:bg-indigo-200">
+                                    
+                                    <!-- STEP A -->
+                                    <li class="relative pl-8">
+                                        <div class="absolute left-0 w-6 h-6 rounded-full bg-white border-2 border-indigo-200 flex items-center justify-center font-bold text-[10px] text-indigo-500 z-10">A</div>
+                                        <strong class="text-slate-800 block mb-1">ChatGPT / Claude에게 프롬프트 요청</strong>
+                                        <p class="text-xs leading-relaxed mb-3">AI에게 코드를 요구할 때는 VRChat 환경에 맞는 <strong>'마법의 키워드'</strong> 두 가지를 반드시 포함해야 합니다.</p>
+                                        
+                                        <div class="bg-slate-800 p-4 rounded-lg font-mono text-xs text-slate-300 shadow-inner mb-3">
+                                            <span class="text-emerald-400">"유저가 큐브(버튼)를 클릭하면 조명이 켜지고 꺼지는 코드를 짜줘.</span><br><br>
+                                            <span class="text-pink-400 font-bold">단, 반드시 UdonSharpBehaviour를 상속받는 VRChat UdonSharp (U#) 코드로 작성해줘.</span><br>
+                                            <span class="text-blue-400 font-bold">조작할 조명 오브젝트는 유니티 인스펙터에서 직접 넣을 수 있게 public 변수로 열어줘."</span>
+                                        </div>
+                                        
+                                        <!-- Keyword Explanation -->
+                                        <div class="bg-indigo-50 border border-indigo-100 p-3 rounded text-[11px] leading-relaxed text-indigo-900">
+                                            <strong class="block mb-1.5"><i data-lucide="key" class="w-3.5 h-3.5 inline"></i> 마법의 프롬프트 키워드 해설</strong>
+                                            <ul class="space-y-1.5 ml-1">
+                                                <li><strong class="text-indigo-700">1. UdonSharp (U#) 코드로 작성해줘:</strong> 일반 유니티 코드는 VRChat에서 100% 에러를 냅니다. VRChat 전용 우동 가상머신(VM)이 이해할 수 있는 전용 문법으로 번역해 달라는 명령어입니다.</li>
+                                                <li><strong class="text-indigo-700">2. public 변수로 열어줘:</strong> 이 명령어가 없으면 AI는 코드 내부에 특정 조명 이름을 하드코딩해버립니다. <code>public</code>으로 열면, 코딩을 전혀 몰라도 유니티 화면(인스펙터)에 조명을 드래그해서 끼워 넣을 수 있는 '빈칸(슬롯)'이 마법처럼 생성됩니다.</li>
+                                            </ul>
+                                        </div>
+                                    </li>
+
+                                    <!-- STEP B -->
+                                    <li class="relative pl-8">
+                                        <div class="absolute left-0 w-6 h-6 rounded-full bg-white border-2 border-indigo-200 flex items-center justify-center font-bold text-[10px] text-indigo-500 z-10">B</div>
+                                        <strong class="text-slate-800 block mb-1">C# 스크립트 생성 및 연결</strong>
+                                        <p class="text-xs leading-relaxed mb-3">프로젝트 창에서 <code>우클릭 > Create > C# Script</code>를 생성하고 AI가 준 코드를 복사/붙여넣기 합니다. 그리고 버튼 역할을 할 큐브에 <strong>Udon Behaviour</strong> 컴포넌트를 추가한 뒤, 방금 만든 코드를 <strong>Program Source</strong> 슬롯에 드래그합니다.</p>
+                                        
+                                        <!-- Mockup B -->
+                                        <div class="mt-4 flex items-center justify-center gap-3 sm:gap-5 bg-slate-50 p-5 rounded-xl border border-slate-200 shadow-inner overflow-x-auto w-full">
+                                            
+                                            <!-- File in Project Window -->
+                                            <div class="bg-[#383838] border border-[#222] rounded-md p-2 shadow-lg flex flex-col items-center shrink-0 w-[72px]">
+                                                <div class="w-12 h-12 bg-[#222] border border-[#1a1a1a] rounded flex items-center justify-center mb-1.5 shadow-inner">
+                                                    <i data-lucide="file-code-2" class="w-6 h-6 text-pink-400"></i>
+                                                </div>
+                                                <span class="text-[#cccccc] text-[10px] font-sans truncate w-full text-center">LightToggle</span>
+                                            </div>
+                                            
+                                            <!-- Drag Arrow -->
+                                            <div class="flex flex-col items-center shrink-0 relative">
+                                                <i data-lucide="mouse-pointer-2" class="w-4 h-4 text-emerald-500 absolute -top-4 left-2 animate-bounce"></i>
+                                                <div class="w-12 h-0.5 bg-emerald-400 relative">
+                                                    <div class="absolute right-0 top-1/2 -translate-y-1/2 w-0 h-0 border-y-[4px] border-y-transparent border-l-[6px] border-l-emerald-400"></div>
+                                                </div>
+                                            </div>
+
+                                            <!-- Inspector Window (Target) -->
+                                            <div class="bg-[#383838] border border-[#222] rounded-md shadow-xl font-sans w-64 shrink-0">
+                                                <div class="px-2 py-1.5 bg-[#444] border-b border-[#222] text-[#eee] text-[11px] font-bold flex items-center justify-between">
+                                                    <div class="flex items-center gap-1.5">
+                                                        <div class="w-3 h-3 bg-[#1e1e1e] rounded-[2px] flex items-center justify-center"><i data-lucide="check" class="w-2 h-2 text-white"></i></div>
+                                                        Udon Behaviour (Script)
+                                                    </div>
+                                                </div>
+                                                <div class="p-3 space-y-2">
+                                                    <div class="flex items-center justify-between group relative">
+                                                        <span class="text-[#aaa] text-[10px] w-20">Program Source</span>
+                                                        <div class="relative flex-1">
+                                                            <!-- Pulse Effect for Target -->
+                                                            <div class="absolute -inset-1 border-2 border-dashed border-emerald-500 rounded bg-emerald-500/15 animate-pulse pointer-events-none"></div>
+                                                            <div class="bg-[#282828] border border-[#111] text-[#888] text-[9px] px-2 py-1 rounded shadow-inner truncate relative z-10">
+                                                                None (Abstract Udon P...)
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <!-- Add Component Button -->
+                                                <div class="p-2 border-t border-[#222] flex justify-center">
+                                                    <div class="bg-[#444] hover:bg-[#555] border border-[#222] text-[#ccc] text-[11px] px-8 py-1 rounded-full cursor-default transition-colors">Add Component</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </li>
+
+                                    <!-- STEP C -->
+                                    <li class="relative pl-8">
+                                        <div class="absolute left-0 w-6 h-6 rounded-full bg-white border-2 border-indigo-200 flex items-center justify-center font-bold text-[10px] text-indigo-500 z-10">C</div>
+                                        <strong class="text-slate-800 block mb-1">인스펙터 슬롯 연결 (가장 중요!)</strong>
+                                        <div class="text-xs leading-relaxed bg-amber-50 p-3 rounded-lg border border-amber-100 text-amber-800 shadow-sm">
+                                            코드에서 <code>public GameObject targetLight;</code> 라고 <strong>public</strong>을 붙여 변수를 선언하면, 유니티 인스펙터 하단에 <strong>'Target Light'라는 빈칸(구멍)</strong>이 생겨납니다. 이 빈칸에 <strong>실제로 끄고 켤 조명 오브젝트를 하이어라키(Hierarchy) 창에서 끌어다 놓아야</strong> 코드가 대상을 인식하고 작동합니다!
+                                        </div>
+
+                                        <!-- Mockup C (The final connection) -->
+                                        <div class="mt-4 bg-slate-100 p-4 sm:p-5 rounded-xl border border-slate-200 shadow-inner flex flex-col sm:flex-row items-center sm:items-start justify-center gap-4 sm:gap-6 min-h-[220px]">
+                                            
+                                            <!-- Hierarchy Source -->
+                                            <div class="bg-[#383838] border border-[#222] rounded-md shadow-lg font-sans w-40 shrink-0">
+                                                <div class="px-2 py-1.5 bg-[#444] border-b border-[#222] text-[#eee] text-[10px] font-bold">Hierarchy</div>
+                                                <div class="p-1 space-y-0.5 text-[11px] text-[#ccc]">
+                                                    <div class="px-2 py-1 hover:bg-[#4a4a4a] cursor-default flex items-center gap-1.5"><i data-lucide="box" class="w-3 h-3"></i> SwitchCube</div>
+                                                    <!-- The item to drag -->
+                                                    <div class="px-2 py-1 bg-[#2c5d87] text-white flex items-center gap-1.5 relative border border-[#4a90e2] shadow-inner">
+                                                        <i data-lucide="lightbulb" class="w-3 h-3 text-yellow-300"></i> MainLight
+                                                        <i data-lucide="mouse-pointer-2" class="w-4 h-4 text-emerald-400 absolute right-1 top-2 animate-bounce"></i>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <!-- Drag Path -->
+                                            <div class="flex items-center shrink-0 my-4 sm:my-0 sm:mt-12 transform rotate-90 sm:rotate-0">
+                                                <div class="w-10 sm:w-12 h-0.5 bg-emerald-400 relative border-dashed border-t-2 border-emerald-400 bg-transparent">
+                                                    <div class="absolute right-0 top-1/2 -translate-y-1/2 w-0 h-0 border-y-[4px] border-y-transparent border-l-[6px] border-l-emerald-400"></div>
+                                                </div>
+                                            </div>
+
+                                            <!-- Inspector Target -->
+                                            <div class="bg-[#383838] border border-[#222] rounded-md shadow-xl font-sans w-56 sm:w-64 shrink-0 relative">
+                                                <div class="px-2 py-1.5 bg-[#444] border-b border-[#222] text-[#eee] text-[11px] font-bold flex items-center gap-1.5">
+                                                    <div class="w-3 h-3 bg-[#1e1e1e] rounded-[2px] flex items-center justify-center"><i data-lucide="check" class="w-2 h-2 text-white"></i></div>
+                                                    Udon Behaviour (Script)
+                                                </div>
+                                                <div class="p-3 space-y-2">
+                                                    <div class="flex items-center justify-between">
+                                                        <span class="text-[#aaa] text-[10px] w-20">Program Source</span>
+                                                        <div class="flex-1 bg-[#222] border border-[#111] text-[#eee] text-[9px] px-1.5 py-1 rounded truncate flex items-center gap-1 shadow-inner"><i data-lucide="file-code-2" class="w-2.5 h-2.5 text-pink-400"></i> LightToggle (Ud...</div>
+                                                    </div>
+                                                    
+                                                    <div class="border-t border-[#444] pt-3 mt-3">
+                                                        <span class="text-[#eee] font-bold text-[10px] block mb-2 bg-[#444] px-1 py-0.5 rounded w-fit">Public Variables</span>
+                                                        <div class="flex items-center justify-between relative group">
+                                                            <!-- The public variable name -->
+                                                            <span class="text-[#ccc] text-[10px] w-20 truncate" title="public GameObject targetLight;">Target Light</span>
+                                                            <!-- The Slot -->
+                                                            <div class="relative flex-1">
+                                                                <div class="absolute -inset-1 border-2 border-dashed border-emerald-500 rounded bg-emerald-500/15 animate-pulse pointer-events-none"></div>
+                                                                <div class="w-full bg-[#282828] border border-[#111] text-[#888] text-[9px] px-2 py-1 rounded relative z-10 shadow-inner truncate">
+                                                                    None (Game Object)
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                        </div>
+                                    </li>
+                                </ol>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <h4 class="font-bold text-slate-800 text-base mb-4 border-b border-slate-100 pb-2 flex items-center gap-2">
+                    <i data-lucide="bar-chart-2" class="w-5 h-5 text-indigo-500"></i> 기획 구현 난이도 및 추천 접근법
+                </h4>
+
+                <div class="grid md:grid-cols-3 gap-4 mb-8">
+                    <!-- Easy (No Code) -->
+                    <div class="bg-emerald-50 border border-emerald-200 rounded-xl p-4 flex flex-col h-full shadow-sm">
+                        <div class="flex items-center gap-2 mb-3">
+                            <div class="bg-emerald-500 text-white w-6 h-6 rounded flex items-center justify-center font-bold text-[10px]">하</div>
+                            <h5 class="font-bold text-emerald-900 text-sm">기본 컴포넌트 활용</h5>
+                        </div>
+                        <p class="text-xs text-emerald-800 leading-relaxed mb-3 flex-grow break-keep">
+                            코딩이 전혀 필요 없는 VRChat 기본 제공 기능입니다. 클릭 몇 번으로 적용할 수 있어 <strong>가장 권장하는 방식</strong>입니다.
+                        </p>
+                        <ul class="space-y-1.5 text-[11px] text-emerald-700 bg-white p-2.5 rounded border border-emerald-100">
+                            <li><strong class="text-emerald-900">VRC Pickup:</strong> 집어 들고 던질 수 있는 물건 (컵, 공 등)</li>
+                            <li><strong class="text-emerald-900">VRC Station:</strong> 앉을 수 있는 의자/소파 설정</li>
+                            <li><strong class="text-emerald-900">VRC Mirror:</strong> 거울 (Global/Local 토글 권장)</li>
+                        </ul>
+                    </div>
+
+                    <!-- Medium (Basic Udon/Anim) -->
+                    <div class="bg-amber-50 border border-amber-200 rounded-xl p-4 flex flex-col h-full shadow-sm">
+                        <div class="flex items-center gap-2 mb-3">
+                            <div class="bg-amber-500 text-white w-6 h-6 rounded flex items-center justify-center font-bold text-[10px]">중</div>
+                            <h5 class="font-bold text-amber-900 text-sm">단순 트리거 & 애니메이션</h5>
+                        </div>
+                        <p class="text-xs text-amber-800 leading-relaxed mb-3 flex-grow break-keep">
+                            스위치나 콜라이더(충돌체)를 이용해 <strong>오브젝트를 끄고 켜거나, 애니메이션을 재생</strong>하는 직관적인 상호작용입니다.
+                        </p>
+                        <ul class="space-y-1.5 text-[11px] text-amber-700 bg-white p-2.5 rounded border border-amber-100">
+                            <li><strong class="text-amber-900">버튼 UI:</strong> BGM 켜기/끄기, 조명 색상 변경</li>
+                            <li><strong class="text-amber-900">자동문:</strong> 가까이 다가가면 열리는 슬라이딩 도어</li>
+                            <li><strong class="text-amber-900">순간이동:</strong> 포탈을 타면 특정 구역으로 이동(Teleport)</li>
+                        </ul>
+                    </div>
+
+                    <!-- Hard (UdonSharp Coding) -->
+                    <div class="bg-rose-50 border border-rose-200 rounded-xl p-4 flex flex-col h-full shadow-sm">
+                        <div class="flex items-center gap-2 mb-3">
+                            <div class="bg-rose-500 text-white w-6 h-6 rounded flex items-center justify-center font-bold text-[10px]">상</div>
+                            <h5 class="font-bold text-rose-900 text-sm">고급 로직 (코딩 필요)</h5>
+                        </div>
+                        <p class="text-xs text-rose-800 leading-relaxed mb-3 flex-grow break-keep">
+                            UdonSharp(U#)을 이용해 직접 코드를 짜야 하는 영역입니다. <strong>초보자는 직접 구현을 피하고, 에셋 스토어나 부스(BOOTH)에서 무료 프리팹을 다운받아 조립하는 것을 강력히 권장합니다.</strong>
+                        </p>
+                        <ul class="space-y-1.5 text-[11px] text-rose-700 bg-white p-2.5 rounded border border-rose-100">
+                            <li><strong class="text-rose-900">글로벌 동기화:</strong> 타이머, 점수판, 미니 게임 로직</li>
+                            <li><strong class="text-rose-900">비디오 플레이어:</strong> 유튜브 URL을 재생하는 스크린</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- FigJam Logic Board -->
+                <div class="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm">
+                    <div class="bg-slate-50 px-5 py-3 border-b border-slate-200 flex items-center gap-2">
+                        <i data-lucide="pen-tool" class="w-5 h-5 text-indigo-600"></i>
+                        <h4 class="font-bold text-slate-800 text-sm">팀 미션: 로직 보드(Logic Board) 작성</h4>
+                    </div>
+                    <div class="p-5">
+                        <p class="text-sm text-slate-600 leading-relaxed mb-4">
+                            우리 조 월드에 들어갈 모든 상호작용(인터랙션)을 피그잼에 리스트업하고, <strong>[트리거(조건)] + [액션(결과)]</strong> 형태로 명확하게 정리하여 담당자를 지정하세요. 이 문서를 바탕으로 강사의 순회 피드백이 진행됩니다.
+                        </p>
+                        <div class="space-y-2 text-xs text-slate-700 bg-indigo-50/50 p-4 rounded-lg border border-indigo-100 font-mono">
+                            <div class="flex items-center gap-2 mb-2 pb-2 border-b border-indigo-200 font-bold text-indigo-900">
+                                <span>조건 (Trigger)</span> <i data-lucide="arrow-right" class="w-3 h-3 text-indigo-400"></i> <span>결과 (Action)</span>
+                            </div>
+                            <div class="flex items-center gap-2"><i data-lucide="mouse-pointer-click" class="w-3 h-3 text-slate-400"></i> <span>[거울 버튼]을 누르면</span> <i data-lucide="arrow-right" class="w-3 h-3 text-indigo-400"></i> <span class="text-indigo-700 bg-white px-1.5 py-0.5 rounded border border-indigo-100">거울 활성화 (Local 권장)</span></div>
+                            <div class="flex items-center gap-2"><i data-lucide="footprints" class="w-3 h-3 text-slate-400"></i> <span>[비밀의 방]에 진입하면</span> <i data-lucide="arrow-right" class="w-3 h-3 text-indigo-400"></i> <span class="text-indigo-700 bg-white px-1.5 py-0.5 rounded border border-indigo-100">조명이 붉게 변함 (Animation)</span></div>
+                            <div class="flex items-center gap-2"><i data-lucide="hand" class="w-3 h-3 text-slate-400"></i> <span>[마법 지팡이]를 집으면</span> <i data-lucide="arrow-right" class="w-3 h-3 text-indigo-400"></i> <span class="text-indigo-700 bg-white px-1.5 py-0.5 rounded border border-indigo-100">손끝에서 파티클 재생 (Pickup)</span></div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- STEP 4: 순회 피드백 및 화이트박싱 점검 (새로 분리된 스텝) -->
+        <div class="step-wrapper bg-indigo-600 rounded-xl shadow-md border border-indigo-700 mb-8">
+            <button onclick="toggleStep('step4')" class="relative z-10 w-full px-6 py-5 flex items-center justify-between bg-indigo-600 hover:bg-indigo-700 transition-colors text-left group rounded-t-xl rounded-b-xl">
+                <div class="flex items-center gap-4">
+                    <span class="flex items-center justify-center w-10 h-10 rounded-full bg-white text-indigo-700 font-bold text-lg shadow" id="badge-step4">4</span>
+                    <div>
+                        <h2 class="text-xl font-bold text-white">조별 순회 피드백 및 현장 컨설팅</h2>
+                        <p class="text-xs text-indigo-200 mt-1 font-medium">작성된 로직 보드와 화이트박싱 결과물을 바탕으로 강사가 직접 검토하고 솔루션을 제공합니다.</p>
+                    </div>
+                </div>
+                <i data-lucide="chevron-down" class="text-indigo-200 transition-transform duration-300" id="icon-step4"></i>
+            </button>
+            <div id="step4" class="step-content px-6 py-6 border-t border-indigo-500 bg-white rounded-b-xl">
+                
+                <p class="text-sm text-slate-600 mb-6 leading-relaxed">
+                    로직 보드 작성이 어느 정도 마무리되었다면, 강사가 각 조를 순회하며 <strong>물리적인 공간 비율(스케일)</strong>과 <strong>기획의 실현 가능성</strong>을 심층 점검합니다. 점검 시 다음 항목들을 준비해 주세요.
+                </p>
+
+                <div class="grid md:grid-cols-3 gap-5">
+                    <!-- Check 1 -->
+                    <div class="bg-indigo-50 border border-indigo-100 p-5 rounded-xl flex flex-col relative overflow-hidden">
+                        <div class="absolute top-0 right-0 p-3 opacity-10"><i data-lucide="ruler" class="w-12 h-12 text-indigo-900"></i></div>
+                        <div class="bg-indigo-600 w-8 h-8 rounded-lg flex items-center justify-center text-white mb-3 shadow-sm relative z-10">
+                            <i data-lucide="ruler" class="w-4 h-4"></i>
+                        </div>
+                        <h4 class="font-bold text-indigo-900 text-sm mb-2 relative z-10">1. 화이트박싱 스케일 점검</h4>
+                        <p class="text-xs text-indigo-800 leading-relaxed flex-grow relative z-10">
+                            유니티에 임시로 배치한 큐브(벽, 바닥, 장애물)들의 크기가 적절한지 점검합니다.
+                        </p>
+                        <div class="bg-white p-2.5 rounded border border-indigo-100 mt-3 text-[11px] text-slate-600">
+                            <i data-lucide="check-circle-2" class="w-3.5 h-3.5 text-emerald-500 inline mr-1"></i> 아바타 기준 더미(Capsule) 배치 필수<br>
+                            <i data-lucide="check-circle-2" class="w-3.5 h-3.5 text-emerald-500 inline mr-1"></i> 통로가 너무 좁거나 넓지 않은지 확인
+                        </div>
+                    </div>
+
+                    <!-- Check 2 -->
+                    <div class="bg-indigo-50 border border-indigo-100 p-5 rounded-xl flex flex-col relative overflow-hidden">
+                        <div class="absolute top-0 right-0 p-3 opacity-10"><i data-lucide="gavel" class="w-12 h-12 text-indigo-900"></i></div>
+                        <div class="bg-indigo-600 w-8 h-8 rounded-lg flex items-center justify-center text-white mb-3 shadow-sm relative z-10">
+                            <i data-lucide="gavel" class="w-4 h-4"></i>
+                        </div>
+                        <h4 class="font-bold text-indigo-900 text-sm mb-2 relative z-10">2. 로직 타당성 검토</h4>
+                        <p class="text-xs text-indigo-800 leading-relaxed flex-grow relative z-10">
+                            피그잼에 작성한 로직 보드를 보고, 학생 수준에서 직접 코딩이 가능한지, 무료 에셋을 활용해야 하는지 방향을 잡아줍니다.
+                        </p>
+                        <div class="bg-white p-2.5 rounded border border-indigo-100 mt-3 text-[11px] text-slate-600">
+                            <i data-lucide="x-circle" class="w-3.5 h-3.5 text-rose-500 inline mr-1"></i> 너무 복잡한 네트워크 동기화 기믹 커트<br>
+                            <i data-lucide="refresh-cw" class="w-3.5 h-3.5 text-blue-500 inline mr-1"></i> 애니메이션 등으로 대체 가능한 대안 제시
+                        </div>
+                    </div>
+
+                    <!-- Check 3 -->
+                    <div class="bg-emerald-50 border border-emerald-100 p-5 rounded-xl flex flex-col relative overflow-hidden">
+                        <div class="absolute top-0 right-0 p-3 opacity-10"><i data-lucide="pill" class="w-12 h-12 text-emerald-900"></i></div>
+                        <div class="bg-emerald-600 w-8 h-8 rounded-lg flex items-center justify-center text-white mb-3 shadow-sm relative z-10">
+                            <i data-lucide="pill" class="w-4 h-4"></i>
+                        </div>
+                        <h4 class="font-bold text-emerald-900 text-sm mb-2 relative z-10">3. 에셋 매칭 및 솔루션 처방</h4>
+                        <p class="text-xs text-emerald-800 leading-relaxed flex-grow relative z-10">
+                            특정 구현을 막막해하는 조에게 검증된 해결책을 현장에서 즉석으로 매칭하여 제공합니다.
+                        </p>
+                        <div class="bg-white p-2.5 rounded border border-emerald-100 mt-3 text-[11px] text-slate-600">
+                            <i data-lucide="link" class="w-3.5 h-3.5 text-emerald-600 inline mr-1"></i> 필요한 BOOTH 무료 프리팹 링크 제공<br>
+                            <i data-lucide="youtube" class="w-3.5 h-3.5 text-rose-600 inline mr-1"></i> 관련된 최적의 유튜브 튜토리얼 안내
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+    </main>
+
+    <script>
+        // 1. Initialize Icons
+        lucide.createIcons();
+
+        // 2. Tooltip Logic
+        function initDynamicTooltips() {
+            const triggers = document.querySelectorAll('.tooltip-trigger');
+            triggers.forEach(trigger => {
+                trigger.addEventListener('mouseenter', () => {
+                    const tooltip = trigger.querySelector('.tooltip-content');
+                    if (!tooltip) return;
+                    tooltip.style.setProperty('--shift-x', '0px');
+                    const rect = tooltip.getBoundingClientRect();
+                    const viewportWidth = window.innerWidth;
+                    const safePadding = 16; 
+                    let shiftAmount = 0;
+                    if (rect.right > viewportWidth - safePadding) shiftAmount = (viewportWidth - safePadding) - rect.right;
+                    else if (rect.left < safePadding) shiftAmount = safePadding - rect.left;
+                    tooltip.style.setProperty('--shift-x', `${shiftAmount}px`);
+                });
+            });
+        }
+        document.addEventListener('DOMContentLoaded', initDynamicTooltips);
+
+        // 3. Unity Inspector & Shader Simulation Logic
+        let shaderScene, shaderCamera, shaderRenderer, shaderControls;
+        let baseMesh, outlineMesh, matcapMesh, wireframeMesh;
+        let ambientLight, dirLight, rimLight, pointLight;
+        let glowSprite;
+        
+        let shaderMats = {};
+        let shaderTextures = {};
+        let shaderState = {
+            mode: 'standard', // standard, liltoon, poiyomi
+            outline: 1.0,
+            toon: 0,
+            matcap: 0,
+            emission: 0,
+            rim: 0,
+            dissolve: 0,
+            audio: 0,
+            shadowColor: '#475569'
+        };
+        let shaderInitialized = false;
+
+        function initShaderThreeJS() {
+            const container = document.getElementById('shader-three-container');
+            
+            // Setup Scene
+            shaderScene = new THREE.Scene();
+            shaderScene.background = new THREE.Color('#2a2a2a'); 
+
+            // Setup Camera
+            shaderCamera = new THREE.PerspectiveCamera(45, container.clientWidth / container.clientHeight, 0.1, 100);
+            shaderCamera.position.set(0, 1.5, 5);
+
+            // Setup Renderer
+            shaderRenderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
+            shaderRenderer.setSize(container.clientWidth, container.clientHeight);
+            shaderRenderer.shadowMap.enabled = true;
+            shaderRenderer.shadowMap.type = THREE.PCFSoftShadowMap;
+            container.appendChild(shaderRenderer.domElement);
+
+            // Setup Controls
+            shaderControls = new THREE.OrbitControls(shaderCamera, shaderRenderer.domElement);
+            shaderControls.enableDamping = true;
+            shaderControls.dampingFactor = 0.05;
+            shaderControls.maxPolarAngle = Math.PI / 2 + 0.1;
+
+            // Generate Procedural Textures
+            // 1. Noise Texture for Dissolve (Cellular / Cloud Style)
+            const nCanvas = document.createElement('canvas'); nCanvas.width = 256; nCanvas.height = 256;
+            const nCtx = nCanvas.getContext('2d');
+            nCtx.fillStyle = '#000'; nCtx.fillRect(0, 0, 256, 256);
+            for(let i=0; i<300; i++) {
+                nCtx.beginPath();
+                nCtx.arc(Math.random()*256, Math.random()*256, Math.random()*12 + 4, 0, Math.PI*2);
+                nCtx.fillStyle = `rgba(255,255,255, ${Math.random()*0.4 + 0.1})`;
+                nCtx.fill();
+            }
+            nCtx.globalAlpha = 0.5;
+            for(let i=0; i<3; i++) {
+                nCtx.drawImage(nCanvas, 2, 2);
+                nCtx.drawImage(nCanvas, -2, -2);
+            }
+            nCtx.globalAlpha = 1.0;
+
+            shaderTextures.noise = new THREE.CanvasTexture(nCanvas);
+            shaderTextures.noise.wrapS = THREE.RepeatWrapping;
+            shaderTextures.noise.wrapT = THREE.RepeatWrapping;
+
+            // 2. Matcap Texture (Gradient Sphere)
+            const mCanvas = document.createElement('canvas'); mCanvas.width = 128; mCanvas.height = 128;
+            const mCtx = mCanvas.getContext('2d');
+            const grd = mCtx.createRadialGradient(64,64,0, 64,64,64);
+            grd.addColorStop(0, '#ffffff');
+            grd.addColorStop(0.4, '#aabbee');
+            grd.addColorStop(1, '#000000');
+            mCtx.fillStyle = grd; mCtx.fillRect(0,0,128,128);
+            shaderTextures.matcap = new THREE.CanvasTexture(mCanvas);
+
+            // 3. Glow Sprite Texture (Fake Bloom)
+            const gCanvas = document.createElement('canvas'); gCanvas.width = 128; gCanvas.height = 128;
+            const gCtx = gCanvas.getContext('2d');
+            const gGrd = gCtx.createRadialGradient(64,64,0, 64,64,64);
+            gGrd.addColorStop(0, 'rgba(16, 185, 129, 1)');
+            gGrd.addColorStop(1, 'rgba(16, 185, 129, 0)');
+            gCtx.fillStyle = gGrd; gCtx.fillRect(0,0,128,128);
+            shaderTextures.glow = new THREE.CanvasTexture(gCanvas);
+
+            // Setup Lighting
+            ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+            shaderScene.add(ambientLight);
+
+            dirLight = new THREE.DirectionalLight(0xffeedd, 0.8);
+            dirLight.position.set(5, 5, 3);
+            dirLight.castShadow = true;
+            shaderScene.add(dirLight);
+
+            rimLight = new THREE.DirectionalLight(0xaabbff, 0.0);
+            rimLight.position.set(0, 0, -5); 
+            shaderScene.add(rimLight);
+
+            pointLight = new THREE.PointLight(0x10b981, 0, 10);
+            pointLight.position.set(0, 0, 0);
+            shaderScene.add(pointLight);
+
+            // Setup Materials
+            // 투명도(transparent)를 false로 해야 alphaTest를 통한 디졸브 컷오프가 완벽히 적용됩니다.
+            shaderMats.standard = new THREE.MeshStandardMaterial({ 
+                color: 0x94a3b8, roughness: 0.6, metalness: 0.1,
+                alphaMap: shaderTextures.noise, alphaTest: 0, transparent: false, side: THREE.DoubleSide
+            });
+            shaderMats.toon = new THREE.MeshToonMaterial({ 
+                color: 0x3b82f6,
+                alphaMap: shaderTextures.noise, alphaTest: 0, transparent: false, side: THREE.DoubleSide
+            });
+            shaderMats.outline = new THREE.MeshBasicMaterial({ color: 0x000000, side: THREE.BackSide });
+            shaderMats.matcap = new THREE.MeshMatcapMaterial({ 
+                matcap: shaderTextures.matcap, 
+                blending: THREE.AdditiveBlending, transparent: true, opacity: 0
+            });
+            shaderMats.wire = new THREE.MeshBasicMaterial({ color: 0xd946ef, wireframe: true, transparent: true, opacity: 0, blending: THREE.AdditiveBlending });
+
+            // Setup Meshes
+            const geometry = new THREE.TorusKnotGeometry(0.6, 0.25, 100, 16);
+
+            baseMesh = new THREE.Mesh(geometry, shaderMats.standard);
+            baseMesh.position.y = 0.8;
+            baseMesh.castShadow = true;
+            shaderScene.add(baseMesh);
+
+            outlineMesh = new THREE.Mesh(geometry, shaderMats.outline);
+            outlineMesh.visible = false;
+            baseMesh.add(outlineMesh);
+
+            matcapMesh = new THREE.Mesh(geometry, shaderMats.matcap);
+            baseMesh.add(matcapMesh);
+
+            wireframeMesh = new THREE.Mesh(geometry, shaderMats.wire);
+            baseMesh.add(wireframeMesh);
+
+            // Floor
+            const floorMat = new THREE.MeshStandardMaterial({ color: 0x383838, roughness: 0.2, metalness: 0.5 });
+            const floor = new THREE.Mesh(new THREE.PlaneGeometry(20, 20), floorMat);
+            floor.rotation.x = -Math.PI / 2;
+            floor.receiveShadow = true;
+            shaderScene.add(floor);
+
+            // Grid
+            const grid = new THREE.GridHelper(20, 20, 0x555555, 0x444444);
+            grid.position.y = 0.01;
+            shaderScene.add(grid);
+
+            // Glow Sprite
+            glowSprite = new THREE.Sprite(new THREE.SpriteMaterial({ map: shaderTextures.glow, transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false }));
+            glowSprite.scale.set(3, 3, 3);
+            baseMesh.add(glowSprite);
+
+            // Frame Rate Counter
+            let lastTime = performance.now();
+            let frames = 0;
+            const fpsEl = document.getElementById('scene-fps');
+
+            function animateShader() {
+                requestAnimationFrame(animateShader);
+                shaderControls.update();
+                
+                baseMesh.rotation.y += 0.005;
+
+                // AudioLink Animation (Strictly isolated to Poiyomi Mode)
+                if (shaderState.mode === 'poiyomi' && shaderState.audio > 0) {
+                    const time = Date.now() * 0.005 * shaderState.audio;
+                    const beat = Math.pow(Math.abs(Math.sin(time)), 4);
+                    
+                    // Pulse scale & wireframe
+                    baseMesh.scale.setScalar(1 + (beat * 0.1));
+                    wireframeMesh.material.opacity = beat * 0.8;
+                    
+                    // Override emission color and intensity dynamically
+                    pointLight.color.setHex(0xd946ef);
+                    pointLight.intensity = (shaderState.emission * 2) + (beat * 5);
+                    glowSprite.material.opacity = (shaderState.emission * 0.4) + (beat * 0.8);
+                    glowSprite.material.color.setHex(0xd946ef);
+                } else {
+                    // Reset physical transformations immediately if mode changes or audio off
+                    baseMesh.scale.setScalar(1);
+                    wireframeMesh.material.opacity = 0;
+                    
+                    // Restore default emission color
+                    pointLight.color.setHex(0x10b981);
+                    glowSprite.material.color.setHex(0xffffff);
+                    
+                    // Apply static emission based on current mode
+                    if(shaderState.mode !== 'standard') {
+                        pointLight.intensity = shaderState.emission * 2;
+                        glowSprite.material.opacity = shaderState.emission * 0.4;
+                    } else {
+                        pointLight.intensity = 0;
+                        glowSprite.material.opacity = 0;
+                    }
+                }
+
+                shaderRenderer.render(shaderScene, shaderCamera);
+
+                // FPS Calc
+                frames++;
+                const now = performance.now();
+                if (now >= lastTime + 1000) {
+                    if(fpsEl) fpsEl.innerText = Math.round((frames * 1000) / (now - lastTime)) + ' FPS';
+                    frames = 0;
+                    lastTime = now;
+                }
+            }
+            animateShader();
+
+            window.addEventListener('resize', () => {
+                if(!document.getElementById('step1').classList.contains('active')) return;
+                shaderCamera.aspect = container.clientWidth / container.clientHeight;
+                shaderCamera.updateProjectionMatrix();
+                shaderRenderer.setSize(container.clientWidth, container.clientHeight);
+            });
+        }
+
+        function changeShaderMode(mode) {
+            shaderState.mode = mode;
+            
+            // 1. UI Panels 숨기기
+            document.getElementById('panel-lighting').style.display = 'none';
+            document.getElementById('panel-matcap').style.display = 'none';
+            document.getElementById('panel-outline').style.display = 'none';
+            document.getElementById('panel-emission').style.display = 'none';
+            document.getElementById('panel-fx').style.display = 'none';
+
+            // 2. 다른 쉐이더의 찌꺼기(Bleeding)를 완벽히 지우기 위한 초기화
+            outlineMesh.visible = false;
+            matcapMesh.visible = false;
+            rimLight.intensity = 0;
+            
+            shaderMats.toon.flatShading = false;
+            shaderMats.toon.needsUpdate = true;
+            
+            // Dissolve 완벽 초기화 (alphaTest를 0으로)
+            shaderMats.standard.alphaTest = 0;
+            shaderMats.toon.alphaTest = 0;
+            shaderMats.standard.needsUpdate = true;
+            shaderMats.toon.needsUpdate = true;
+            
+            ambientLight.color.setHex(0xffffff);
+
+            // 3. 선택된 모드에 맞게 상태 재할당
+            if (mode === 'standard') {
+                baseMesh.material = shaderMats.standard;
+            } 
+            else if (mode === 'liltoon') {
+                baseMesh.material = shaderMats.toon;
+                document.getElementById('panel-lighting').style.display = 'block';
+                document.getElementById('panel-outline').style.display = 'block';
+                document.getElementById('panel-matcap').style.display = 'block';
+                document.getElementById('panel-emission').style.display = 'block';
+                
+                // lilToon 상태 복구
+                outlineMesh.visible = (shaderState.outline > 1.0);
+                if(shaderState.toon === 1) {
+                    shaderMats.toon.flatShading = true;
+                    shaderMats.toon.needsUpdate = true;
+                }
+                ambientLight.color.set(shaderState.shadowColor);
+                
+                matcapMesh.visible = (shaderState.matcap > 0);
+                shaderMats.matcap.opacity = shaderState.matcap;
+                rimLight.intensity = shaderState.rim * 1.5;
+            } 
+            else if (mode === 'poiyomi') {
+                baseMesh.material = shaderMats.standard; 
+                document.getElementById('panel-outline').style.display = 'block';
+                document.getElementById('panel-emission').style.display = 'block';
+                document.getElementById('panel-fx').style.display = 'block';
+                
+                // Poiyomi 상태 복구
+                outlineMesh.visible = (shaderState.outline > 1.0);
+                rimLight.intensity = shaderState.rim * 1.5;
+                
+                // Dissolve 복구
+                shaderMats.standard.alphaTest = shaderState.dissolve;
+                shaderMats.standard.needsUpdate = true;
+            }
+        }
+
+        function updateShaderParam(type, val) {
+            const v = parseFloat(val);
+            switch(type) {
+                case 'shadowColor':
+                    shaderState.shadowColor = val;
+                    if(shaderState.mode === 'liltoon') ambientLight.color.set(val);
+                    break;
+                case 'toon':
+                    shaderState.toon = v;
+                    shaderMats.toon.flatShading = (v === 1);
+                    shaderMats.toon.needsUpdate = true;
+                    break;
+                case 'outline':
+                    shaderState.outline = v;
+                    outlineMesh.scale.setScalar(v);
+                    outlineMesh.visible = (v > 1.0);
+                    break;
+                case 'matcap':
+                    shaderState.matcap = v;
+                    shaderMats.matcap.opacity = v;
+                    matcapMesh.visible = (v > 0 && shaderState.mode === 'liltoon');
+                    break;
+                case 'emission':
+                    shaderState.emission = v;
+                    break;
+                case 'rim':
+                    shaderState.rim = v;
+                    rimLight.intensity = v * 1.5;
+                    break;
+                case 'dissolve':
+                    shaderState.dissolve = v;
+                    shaderMats.standard.alphaTest = v;
+                    shaderMats.standard.needsUpdate = true;
+                    break;
+                case 'audio':
+                    shaderState.audio = v;
+                    break;
+            }
+        }
+
+        // 4. Accordion Toggle Logic
+        function toggleStep(stepId) {
+            const content = document.getElementById(stepId);
+            const icon = document.getElementById('icon-' + stepId);
+            const isActive = content.classList.contains('active');
+            
+            document.querySelectorAll('.step-content').forEach(el => {
+                el.classList.remove('active');
+                const btnIcon = document.getElementById('icon-' + el.id);
+                if(btnIcon) btnIcon.style.transform = 'rotate(0deg)';
+                updateHeaderStyle(el.id, false);
+            });
+            
+            if (!isActive) {
+                content.classList.add('active');
+                if(icon) icon.style.transform = 'rotate(180deg)';
+                updateHeaderStyle(stepId, true);
+
+                // Initialize ThreeJS when step1 is opened for the first time
+                if(stepId === 'step1' && !shaderInitialized) {
+                    setTimeout(() => {
+                        initShaderThreeJS();
+                        changeShaderMode('standard'); // Init layout
+                        shaderInitialized = true;
+                    }, 100); 
+                }
+            }
+        }
+
+        function updateHeaderStyle(stepId, isActive) {
+            const button = document.querySelector(`[onclick="toggleStep('${stepId}')"]`);
+            if(!button) return;
+            const badge = document.getElementById('badge-' + stepId);
+            const title = button.querySelector('h2');
+            
+            // Step 4 uses different color scheme (Indigo background)
+            if (stepId === 'step4') {
+                if (isActive) {
+                    button.classList.remove('rounded-b-xl');
+                } else {
+                    button.classList.add('rounded-b-xl');
+                }
+                return;
+            }
+
+            if (isActive) {
+                button.classList.replace('bg-white', 'bg-indigo-50');
+                button.classList.replace('hover:bg-slate-50', 'hover:bg-indigo-100');
+                button.classList.remove('rounded-b-xl');
+                if(badge) {
+                    badge.classList.replace('bg-slate-100', 'bg-indigo-600');
+                    badge.classList.replace('text-slate-500', 'text-white');
+                    badge.classList.remove('group-hover:bg-indigo-100', 'group-hover:text-indigo-600');
+                }
+                title.classList.replace('text-slate-800', 'text-indigo-900');
+                title.classList.remove('group-hover:text-indigo-700');
+                document.getElementById('icon-' + stepId).classList.replace('text-slate-400', 'text-indigo-600');
+            } else {
+                button.classList.replace('bg-indigo-50', 'bg-white');
+                button.classList.replace('hover:bg-indigo-100', 'hover:bg-slate-50');
+                button.classList.add('rounded-b-xl');
+                if(badge) {
+                    badge.classList.replace('bg-indigo-600', 'bg-slate-100');
+                    badge.classList.replace('text-white', 'text-slate-500');
+                    badge.classList.add('group-hover:bg-indigo-100', 'group-hover:text-indigo-600');
+                }
+                title.classList.replace('text-indigo-900', 'text-slate-800');
+                title.classList.add('group-hover:text-indigo-700');
+                const icon = document.getElementById('icon-' + stepId);
+                if(icon) icon.classList.replace('text-indigo-600', 'text-slate-400');
+            }
+        }
+
+        // Run Initialization
+        document.getElementById('step1').classList.add('active');
+        document.getElementById('icon-step1').style.transform = 'rotate(180deg)';
+        updateHeaderStyle('step1', true);
+        
+        // Init 3D right away since step1 is open
+        setTimeout(() => {
+            initShaderThreeJS();
+            changeShaderMode('standard');
+            shaderInitialized = true;
+        }, 100);
+
+    </script>
+</body>
+</html>
