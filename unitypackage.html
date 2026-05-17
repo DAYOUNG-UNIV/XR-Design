@@ -1,0 +1,1014 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Unity 협업 실전 가이드 (초보자용)</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+KR:wght@400;500;700&display=swap');
+        
+        body { font-family: 'Noto Sans KR', sans-serif; background-color: #1e1e1e; }
+        
+        /* Unity Theme Colors & Utilities */
+        .u-bg-dark { background-color: #282828; }
+        .u-bg-panel { background-color: #383838; }
+        .u-bg-header { background-color: #333333; }
+        .u-border { border-color: #1a1a1a; }
+        .u-text-normal { color: #cccccc; }
+        .u-text-muted { color: #999999; }
+        .u-highlight { background-color: #2c5d87; color: white; }
+        
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 12px; height: 12px; }
+        ::-webkit-scrollbar-track { background: #282828; }
+        ::-webkit-scrollbar-thumb { background: #4a4a4a; border: 3px solid #282828; border-radius: 6px; }
+        ::-webkit-scrollbar-thumb:hover { background: #555; }
+
+        /* Animations */
+        .fade-in { animation: fadeIn 0.3s ease-out forwards; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        
+        .pop-in { animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
+        @keyframes popIn { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+
+        .bounce-point { animation: bouncePoint 1s infinite; }
+        @keyframes bouncePoint {
+            0%, 100% { transform: translate(0, 0); }
+            50% { transform: translate(-10px, -10px); }
+        }
+
+        .pulse-warning { animation: pulseWarning 2s infinite; }
+        @keyframes pulseWarning {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(234, 179, 8, 0.4); }
+            50% { box-shadow: 0 0 0 10px rgba(234, 179, 8, 0); }
+        }
+
+        .shake-danger { animation: shakeDanger 0.5s infinite; }
+        @keyframes shakeDanger {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-2px); }
+            75% { transform: translateX(2px); }
+        }
+
+        /* Tree View Styling */
+        .tree-item { cursor: pointer; user-select: none; }
+        .tree-item:hover { background-color: rgba(255,255,255,0.05); }
+        .tree-item.selected { background-color: #2c5d87; color: white !important; }
+    </style>
+</head>
+<body class="h-screen w-screen overflow-hidden flex flex-col text-gray-300">
+
+    <header class="h-14 u-bg-dark border-b u-border flex items-center justify-between px-4 shrink-0 z-20 shadow-md">
+        <div class="flex items-center gap-3">
+            <i class="fab fa-unity text-2xl text-white"></i>
+            <div>
+                <h1 class="text-base font-bold text-white leading-tight">Unity 협업 실전 가이드</h1>
+                <p class="text-xs text-gray-400 leading-tight">안전한 패키지 전달과 병합 프로세스</p>
+            </div>
+        </div>
+        <button onclick="resetGuide()" class="px-3 py-1.5 text-xs bg-gray-700 hover:bg-gray-600 rounded text-white transition-colors border border-gray-600">
+            <i class="fas fa-home mr-1"></i> 처음(역할 선택)으로
+        </button>
+    </header>
+
+    <div class="flex-1 flex overflow-hidden">
+        
+        <!-- 좌측 가이드 패널 -->
+        <aside class="w-80 lg:w-[400px] u-bg-dark border-r u-border flex flex-col shrink-0 z-10 shadow-2xl relative">
+            <div class="p-6 flex-1 overflow-y-auto" id="guide-content">
+                <!-- JS에서 동적으로 내용 주입 -->
+            </div>
+            <div class="p-5 u-bg-panel border-t u-border" id="guide-controls">
+                <div class="flex justify-between text-xs text-gray-400 mb-2 font-bold">
+                    <span id="step-counter">준비</span>
+                </div>
+                <div class="w-full bg-gray-800 h-2 rounded-full mb-4 shadow-inner">
+                    <div id="progress-bar" class="bg-blue-500 h-2 rounded-full transition-all duration-500" style="width: 0%;"></div>
+                </div>
+                <button id="next-btn" onclick="nextStep()" class="w-full py-3 bg-blue-600 hover:bg-blue-500 text-white text-sm font-bold rounded shadow transition-transform active:scale-95 flex justify-center items-center gap-2">
+                    다음 단계로 <i class="fas fa-arrow-right"></i>
+                </button>
+            </div>
+        </aside>
+
+        <!-- 우측 메인 작업 영역 -->
+        <main class="flex-1 flex flex-col bg-[#1e1e1e] p-1 relative" id="unity-editor-area">
+            
+            <!-- 상단 패널 그룹 (Hierarchy + Scene + Inspector) -->
+            <div class="flex flex-1 min-h-0 gap-1 mb-1">
+                
+                <!-- Hierarchy -->
+                <div class="w-48 xl:w-64 u-bg-panel rounded-sm border u-border flex flex-col shrink-0 shadow">
+                    <div class="h-7 u-bg-header border-b u-border flex items-center px-3 text-xs font-bold text-gray-300">
+                        <i class="fas fa-list mr-2 text-gray-500"></i> Hierarchy
+                    </div>
+                    <div class="flex-1 overflow-y-auto p-1 text-xs" id="hierarchy-content">
+                        <div class="tree-item px-2 py-1 flex items-center text-gray-300"><i class="fas fa-cube text-gray-500 mr-2 w-3"></i> Directional Light</div>
+                        <div class="tree-item px-2 py-1 flex items-center text-gray-300"><i class="fas fa-camera text-gray-500 mr-2 w-3"></i> Main Camera</div>
+                        <!-- Inject later -->
+                    </div>
+                </div>
+
+                <!-- Scene View (Three.js) -->
+                <div class="flex-1 u-bg-panel rounded-sm border u-border flex flex-col relative shadow">
+                    <div class="h-7 u-bg-header border-b u-border flex items-center px-2 gap-2 text-xs font-bold text-gray-300 z-10">
+                        <div class="bg-[#2c5d87] px-4 h-full flex items-center text-white border-b-2 border-white">Scene</div>
+                        <span class="ml-auto text-gray-500 font-normal"><i class="fas fa-mouse text-[10px]"></i> 드래그:회전 / 휠:줌</span>
+                    </div>
+                    <div id="scene-container" class="flex-1 relative overflow-hidden bg-[#222222]">
+                        <!-- Canvas will be injected here -->
+                    </div>
+                    <!-- 씬 뷰 내부 메시지 오버레이 -->
+                    <div id="scene-msg" class="absolute bottom-4 left-1/2 transform -translate-x-1/2 bg-black bg-opacity-70 text-white px-4 py-2 rounded text-sm hidden z-10 text-center font-bold">
+                    </div>
+                </div>
+
+                <!-- Inspector -->
+                <div class="w-56 xl:w-72 u-bg-panel rounded-sm border u-border flex flex-col shrink-0 shadow">
+                    <div class="h-7 u-bg-header border-b u-border flex items-center px-3 text-xs font-bold text-gray-300">
+                        <i class="fas fa-info-circle mr-2 text-gray-500"></i> Inspector
+                    </div>
+                    <div class="flex-1 overflow-y-auto" id="inspector-content">
+                        <div class="p-4 text-center text-gray-500 text-xs mt-10">
+                            오브젝트를 선택하세요
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 하단 Project 창 -->
+            <div class="h-1/3 min-h-[220px] u-bg-panel rounded-sm border u-border flex flex-col shrink-0 relative shadow">
+                <div class="h-7 u-bg-header border-b u-border flex items-center px-2">
+                    <div class="u-bg-panel px-4 h-full flex items-center text-white font-bold text-xs border-t-2 border-[#2c5d87]">
+                        <i class="fas fa-folder text-gray-400 mr-2"></i> Project
+                    </div>
+                    <div class="ml-4 text-xs text-gray-500 flex items-center font-mono bg-[#1e1e1e] px-2 py-0.5 rounded border border-[#333]" id="path-bar">Assets > </div>
+                </div>
+                
+                <div class="flex flex-1 overflow-hidden">
+                    <!-- Folders (Left) -->
+                    <div class="w-48 xl:w-64 border-r u-border u-bg-dark overflow-y-auto py-2 text-xs" id="folder-tree">
+                        <!-- JS로 동적 주입 -->
+                    </div>
+                    
+                    <!-- Files (Right) -->
+                    <div class="flex-1 bg-[#232323] p-3 flex gap-3 flex-wrap content-start overflow-y-auto relative" id="file-list">
+                        <!-- JS로 동적 주입 -->
+                    </div>
+                </div>
+
+                <!-- 패키지 Export 로딩 오버레이 -->
+                <div id="project-overlay" class="absolute inset-0 bg-black bg-opacity-70 hidden flex-col items-center justify-center z-20">
+                    <div class="bg-[#383838] border border-[#1a1a1a] p-5 rounded-lg shadow-2xl flex flex-col items-center gap-4 pop-in">
+                        <i class="fas fa-spinner fa-spin text-4xl text-blue-400 mb-2"></i>
+                        <span class="text-sm text-white font-bold" id="overlay-text">Exporting Package...</span>
+                        <div class="w-48 bg-gray-700 h-1.5 rounded-full overflow-hidden mt-2">
+                            <div class="bg-blue-500 h-full w-full animate-[pulse_1s_ease-in-out_infinite]"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 마우스 포인터 가이드 -->
+            <div id="ui-pointer" class="absolute hidden z-50 pointer-events-none transition-all duration-500 ease-in-out">
+                <i class="fas fa-mouse-pointer text-3xl text-yellow-400 bounce-point drop-shadow-[0_0_8px_rgba(234,179,8,0.8)]" style="-webkit-text-stroke: 1px black;"></i>
+            </div>
+
+            <!-- 커스텀 우클릭 메뉴 -->
+            <div id="unity-context-menu" class="absolute hidden z-[60] w-56 bg-[#2b2b2b] border border-[#1a1a1a] shadow-xl text-[12px] text-gray-300 rounded-sm py-1">
+                <div class="px-6 py-1.5 u-text-normal opacity-50 cursor-not-allowed">Create</div>
+                <div class="px-6 py-1.5 u-text-normal opacity-50 cursor-not-allowed">Show in Explorer</div>
+                <div class="border-t u-border my-1"></div>
+                <div class="px-6 py-2 font-bold text-white hover:bg-[#2c5d87] cursor-pointer flex justify-between items-center group transition-colors" id="btn-export-pkg">
+                    <span>Export Package...</span>
+                    <i class="fas fa-box text-blue-400 group-hover:text-white"></i>
+                </div>
+                <div class="border-t u-border my-1"></div>
+                <div class="px-6 py-1.5 u-text-normal opacity-50 cursor-not-allowed">Delete</div>
+            </div>
+
+            <!-- 패키지 Export 모달 -->
+            <div id="export-modal" class="absolute inset-0 bg-black bg-opacity-60 hidden flex-col items-center justify-center z-[50]">
+                <div class="bg-[#383838] border border-[#1a1a1a] w-[500px] shadow-2xl rounded flex flex-col pop-in">
+                    <div class="p-3 u-bg-header text-white text-xs font-bold border-b u-border flex justify-between items-center">
+                        <span>Exporting package</span>
+                        <i class="fas fa-times cursor-pointer hover:text-gray-300" onclick="closeExportModal()"></i>
+                    </div>
+                    <div class="p-4 bg-[#2b2b2b] text-xs">
+                        <div class="text-gray-400 mb-2">Items to Export</div>
+                        <div class="bg-[#1e1e1e] border border-[#111] h-48 overflow-y-auto py-2 px-3 text-gray-300 font-mono relative shadow-inner">
+                            <div class="flex items-center gap-2 mb-1"><input type="checkbox" checked disabled> <i class="fas fa-folder text-blue-400"></i> _TeamA_Plaza</div>
+                            <div class="flex items-center gap-2 mb-1 pl-6"><input type="checkbox" checked disabled> <i class="fas fa-folder text-gray-400"></i> Models</div>
+                            <div class="flex items-center gap-2 mb-1 pl-12"><input type="checkbox" checked disabled> <i class="fas fa-cube text-gray-400"></i> Plaza_Tree.fbx</div>
+                            
+                            <div id="dep-items" class="transition-opacity duration-300">
+                                <div class="flex items-center gap-2 mb-1 pl-6"><input type="checkbox" checked disabled> <i class="fas fa-folder text-gray-400"></i> Materials</div>
+                                <div class="flex items-center gap-2 mb-1 pl-12"><input type="checkbox" checked disabled> <i class="fas fa-circle text-yellow-600"></i> Mat_Plaza.mat</div>
+                            </div>
+
+                            <div id="deps-warning" class="hidden absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-5/6 text-center bg-red-900 bg-opacity-95 border border-red-500 text-white p-3 rounded shadow-lg">
+                                <i class="fas fa-exclamation-triangle text-3xl mb-2 text-yellow-400"></i><br>
+                                <b>의존성이 끊어졌습니다!</b><br>재질(Material)이 포함되지 않아 상대방 화면에서 모델이 <b>분홍색(에러)</b>으로 표시됩니다.
+                            </div>
+                        </div>
+                        <div class="mt-4 flex items-center gap-2 bg-blue-900 bg-opacity-20 p-2 border border-blue-800 rounded transition-colors" id="deps-container">
+                            <input type="checkbox" id="chk-deps" checked class="w-4 h-4 cursor-pointer accent-blue-500">
+                            <label for="chk-deps" class="text-white font-bold cursor-pointer px-1">Include dependencies</label>
+                        </div>
+                    </div>
+                    <div class="p-3 u-bg-header border-t u-border flex justify-end gap-2">
+                        <button class="px-4 py-1.5 text-xs bg-[#383838] border border-[#1a1a1a] hover:bg-[#444] rounded text-white font-bold" onclick="closeExportModal()">Cancel</button>
+                        <button class="px-5 py-1.5 text-xs bg-blue-600 hover:bg-blue-500 text-white rounded font-bold shadow" onclick="executeExport()">Export...</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 패키지 Import 모달 -->
+            <div id="import-modal" class="absolute inset-0 bg-black bg-opacity-60 hidden flex-col items-center justify-center z-[50]">
+                <div class="bg-[#383838] border border-[#1a1a1a] w-[500px] shadow-2xl rounded flex flex-col pop-in">
+                    <div class="p-3 u-bg-header text-white text-xs font-bold border-b u-border flex justify-between items-center">
+                        <span>Import Unity Package</span>
+                        <i class="fas fa-times cursor-pointer hover:text-gray-300" onclick="closeImportModal()"></i>
+                    </div>
+                    <div class="p-4 bg-[#2b2b2b] text-xs">
+                        <div class="flex justify-between text-gray-400 mb-2">
+                            <span>Items to Import</span>
+                            <span id="import-warning-badge" class="text-yellow-500 font-bold px-2 rounded hidden animate-pulse"><i class="fas fa-exclamation-triangle"></i> Warning: Overwrite</span>
+                        </div>
+                        <div class="bg-[#1e1e1e] border border-[#111] h-48 overflow-y-auto py-1 shadow-inner font-mono" id="import-file-list">
+                            <!-- JS Inject -->
+                        </div>
+                    </div>
+                    <div class="p-3 u-bg-header border-t u-border flex justify-end gap-2">
+                        <button class="px-4 py-1.5 text-xs bg-[#383838] border border-[#1a1a1a] hover:bg-[#444] rounded text-white font-bold" onclick="closeImportModal()">Cancel</button>
+                        <button id="import-execute-btn" class="px-5 py-1.5 text-xs bg-blue-600 hover:bg-blue-500 text-white rounded font-bold shadow" onclick="executeImportFinal()">Import</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Windows Explorer 모사 -->
+            <div id="windows-explorer" class="absolute inset-0 bg-[#202020] z-[70] hidden flex-col font-sans">
+                <!-- Window Title Bar -->
+                <div class="h-8 bg-[#1c1c1c] flex items-center justify-between px-3 text-[11px] text-gray-400 border-b border-[#333]">
+                    <div class="flex items-center gap-2">
+                        <i class="fas fa-folder-open text-[#f3cc62]"></i> File Explorer
+                    </div>
+                    <div class="flex gap-4">
+                        <i class="fas fa-minus hover:text-white cursor-pointer"></i>
+                        <i class="far fa-square hover:text-white cursor-pointer"></i>
+                        <i class="fas fa-times hover:text-white cursor-pointer"></i>
+                    </div>
+                </div>
+                <!-- Address Bar Area -->
+                <div class="h-10 border-b border-[#333] bg-[#202020] flex items-center px-2 gap-3">
+                    <div class="flex gap-3 text-gray-400 text-sm">
+                        <i class="fas fa-arrow-left cursor-not-allowed opacity-30"></i>
+                        <i class="fas fa-arrow-right cursor-not-allowed opacity-30"></i>
+                        <i class="fas fa-arrow-up hover:text-white cursor-pointer"></i>
+                    </div>
+                    <div class="flex-1 bg-[#191919] border border-[#333] rounded px-3 py-1 text-xs text-gray-300 flex items-center shadow-inner">
+                        <i class="fas fa-desktop text-gray-500 mr-2"></i> This PC > Documents > UnityProjects
+                    </div>
+                </div>
+                <!-- Main Content -->
+                <div class="flex-1 flex overflow-hidden">
+                    <div class="w-48 border-r border-[#333] bg-[#191919] p-2 text-xs text-gray-400 flex flex-col gap-1">
+                        <div class="py-1.5 hover:bg-[#2d2d2d] rounded px-2 cursor-pointer flex items-center gap-2"><i class="fas fa-desktop w-4"></i> Desktop</div>
+                        <div class="py-1.5 hover:bg-[#2d2d2d] rounded px-2 cursor-pointer flex items-center gap-2"><i class="fas fa-download w-4"></i> Downloads</div>
+                        <div class="py-1.5 bg-[#2d2d2d] text-white rounded px-2 cursor-pointer flex items-center gap-2"><i class="fas fa-file-alt w-4"></i> Documents</div>
+                    </div>
+                    <div class="flex-1 bg-[#202020] p-5 relative" id="explorer-content">
+                        <div class="flex gap-6 flex-wrap">
+                            <!-- Target Folder -->
+                            <div id="target-project-folder" class="flex flex-col items-center gap-2 cursor-pointer w-24 p-2 hover:bg-[#ffffff10] rounded relative transition-colors">
+                                <i class="fas fa-folder text-5xl text-[#f3cc62] drop-shadow-md"></i>
+                                <span class="text-xs text-white text-center break-words leading-tight">MyTeamProject</span>
+                            </div>
+                            
+                            <!-- Exported Package (Hidden initially) -->
+                            <div id="exported-pkg-file" class="flex flex-col items-center gap-2 cursor-pointer w-28 p-2 hover:bg-[#ffffff10] rounded hidden pop-in">
+                                <i class="fas fa-box text-5xl text-blue-400 drop-shadow-md"></i>
+                                <span class="text-[11px] text-white text-center break-words leading-tight font-mono">_TeamA_Plaza.unitypackage</span>
+                            </div>
+
+                            <!-- Zip result (Hidden initially) -->
+                            <div id="result-zip-file" class="flex flex-col items-center gap-2 cursor-pointer w-28 p-2 hover:bg-[#ffffff10] rounded hidden pop-in">
+                                <i class="fas fa-file-archive text-5xl text-yellow-500 drop-shadow-md"></i>
+                                <span class="text-[11px] text-white text-center break-words leading-tight font-mono">MyTeamProject_Backup.zip</span>
+                            </div>
+                        </div>
+
+                        <!-- Explorer Context Menu -->
+                        <div id="explorer-context-menu" class="absolute hidden z-[80] w-56 bg-[#2b2b2b] border border-[#1a1a1a] shadow-xl text-[12px] text-gray-300 rounded-sm py-1 overflow-hidden">
+                            <div class="px-4 py-1.5 hover:bg-[#3d3d3d] cursor-pointer flex items-center gap-2"><i class="fas fa-cut w-4 text-center"></i> Cut</div>
+                            <div class="px-4 py-1.5 hover:bg-[#3d3d3d] cursor-pointer flex items-center gap-2"><i class="far fa-copy w-4 text-center"></i> Copy</div>
+                            <div class="border-t border-[#444] my-1"></div>
+                            <div class="px-4 py-2 font-bold text-white bg-blue-600 hover:bg-blue-500 cursor-pointer flex items-center gap-2" onclick="executeZipBackup(event)">
+                                <i class="fas fa-file-archive w-4 text-center text-yellow-300"></i> Compress to ZIP file
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Compressing Overlay -->
+                <div id="compressing-overlay" class="absolute inset-0 bg-black bg-opacity-80 hidden flex-col items-center justify-center z-[90]">
+                    <div class="bg-[#202020] border border-[#333] w-[400px] shadow-2xl flex flex-col pop-in rounded overflow-hidden">
+                        <div class="p-2 bg-[#1c1c1c] border-b border-[#333] flex justify-between items-center text-white text-xs">
+                            <span>Compressing...</span>
+                        </div>
+                        <div class="p-6 flex flex-col items-center justify-center gap-4">
+                            <i class="fas fa-file-archive text-5xl text-yellow-500 animate-bounce"></i>
+                            <div class="w-full bg-[#111] h-2 rounded-full overflow-hidden border border-[#333]">
+                                <div class="bg-green-500 h-full w-0 transition-all ease-out" id="compress-progress" style="transition-duration: 800ms;"></div>
+                            </div>
+                            <span class="text-xs text-gray-400 font-mono">Adding: Library/Artifacts...</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+        </main>
+    </div>
+
+    <script>
+        // --- 1. Three.js 설정 ---
+        let scene, camera, renderer, controls;
+        let plazaGroup, badTreeMesh;
+        let errorMaterial;
+
+        function initThreeJS() {
+            const container = document.getElementById('scene-container');
+            
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color('#222222');
+            
+            // Grid
+            const gridHelper = new THREE.GridHelper(10, 10, 0x444444, 0x444444);
+            scene.add(gridHelper);
+
+            // Light
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.7);
+            scene.add(ambientLight);
+            const dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
+            dirLight.position.set(5, 10, 5);
+            scene.add(dirLight);
+
+            // Camera
+            camera = new THREE.PerspectiveCamera(45, container.clientWidth / container.clientHeight, 0.1, 100);
+            camera.position.set(4, 5, 6);
+            camera.lookAt(0, 0, 0);
+
+            // Renderer
+            renderer = new THREE.WebGLRenderer({ antialias: true });
+            renderer.setSize(container.clientWidth, container.clientHeight);
+            container.appendChild(renderer.domElement);
+
+            // Controls
+            controls = new THREE.OrbitControls(camera, renderer.domElement);
+            controls.enableDamping = true;
+            controls.dampingFactor = 0.05;
+
+            // --- Objects ---
+            errorMaterial = new THREE.MeshStandardMaterial({ color: 0xff00ff }); // Magenta Error
+
+            // 1. Plaza Group (Good Tree) - Initially hidden
+            plazaGroup = new THREE.Group();
+            
+            const groundGeo = new THREE.BoxGeometry(4, 0.2, 4);
+            const groundMat = new THREE.MeshStandardMaterial({ color: 0x888888 });
+            const ground = new THREE.Mesh(groundGeo, groundMat);
+            ground.position.y = -0.1;
+            plazaGroup.add(ground);
+            
+            const trunkGeo = new THREE.CylinderGeometry(0.2, 0.2, 1);
+            const trunkMat = new THREE.MeshStandardMaterial({ color: 0x5c4033 });
+            const trunk = new THREE.Mesh(trunkGeo, trunkMat);
+            trunk.position.set(0, 0.5, 0);
+            
+            const leavesGeo = new THREE.ConeGeometry(0.8, 1.5, 8);
+            const leavesMat = new THREE.MeshStandardMaterial({ color: 0x2d5a27 });
+            const leaves = new THREE.Mesh(leavesGeo, leavesMat);
+            leaves.position.set(0, 1.5, 0);
+            
+            plazaGroup.add(trunk);
+            plazaGroup.add(leaves);
+            plazaGroup.visible = false;
+            scene.add(plazaGroup);
+
+            // 2. Bad Tree (Red Error Block) - Initially hidden
+            const badGeo = new THREE.BoxGeometry(1.5, 2, 1.5);
+            const badMat = new THREE.MeshStandardMaterial({ color: 0xff0000 }); 
+            badTreeMesh = new THREE.Mesh(badGeo, badMat);
+            badTreeMesh.position.set(0, 1, 0);
+            badTreeMesh.visible = false;
+            scene.add(badTreeMesh);
+
+            // Animation Loop
+            function animate() {
+                requestAnimationFrame(animate);
+                controls.update();
+                renderer.render(scene, camera);
+            }
+            animate();
+
+            // Handle Resize
+            window.addEventListener('resize', () => {
+                if(container) {
+                    camera.aspect = container.clientWidth / container.clientHeight;
+                    camera.updateProjectionMatrix();
+                    renderer.setSize(container.clientWidth, container.clientHeight);
+                }
+            });
+        }
+
+        function showSceneMsg(msg, isError = false) {
+            const msgEl = document.getElementById('scene-msg');
+            msgEl.innerText = msg;
+            msgEl.classList.remove('hidden');
+            if(isError) {
+                msgEl.classList.remove('bg-black', 'text-white');
+                msgEl.classList.add('bg-red-600', 'text-white');
+            } else {
+                msgEl.classList.remove('bg-red-600');
+                msgEl.classList.add('bg-black', 'text-white');
+            }
+        }
+
+        function hideSceneMsg() {
+            document.getElementById('scene-msg').classList.add('hidden');
+        }
+
+        // --- 2. 가이드 데이터 및 상태 관리 ---
+        let currentTrack = 'intro'; // 'intro', 'export', 'import'
+        let currentStepIndex = 0;
+        let pendingImportType = null; // 'good' or 'bad'
+
+        const exportSteps = [
+            {
+                title: "1. 내 작업물을 담을 고유 폴더 생성",
+                content: `
+                    <p class="text-sm mb-4">내 작업물을 안전하게 포장하려면, 가장 먼저 <strong>남과 절대 겹치지 않는 방(폴더)</strong>을 만들어야 합니다.</p>
+                    <div class="bg-red-900 bg-opacity-20 border border-red-800 p-3 rounded text-xs mb-4 text-gray-300">
+                        <span class="text-red-400 font-bold">절대 금지:</span> 기본 <code class="bg-black px-1 rounded">Models/</code> 폴더를 공유하면, 다른 사람이 짠 모델로 내 파일이 덮어씌워져 날아갑니다.
+                    </div>
+                    <div class="bg-[#2c5d87] p-3 rounded border border-blue-500 text-xs mb-4 text-white">
+                        <span class="font-bold">해결책:</span> <code>_TeamA_Plaza</code> 처럼 고유한 이름의 최상위 폴더를 만들고 그 안에서만 작업하세요.
+                    </div>
+                `,
+                action: () => {
+                    updateProjectView('good');
+                    pointToFolder('_TeamA_Plaza');
+                }
+            },
+            {
+                title: "2. 패키지 내보내기 (Export) 실행",
+                content: `
+                    <p class="text-sm mb-4">이제 이 폴더를 통째로 포장해서 조립 담당자에게 보낼 차례입니다.</p>
+                    <p class="text-sm text-gray-300 mb-4">단순히 3D 모델(FBX)만 보내면 유니티 내에서 세팅한 재질과 프리팹 연결이 끊어집니다. 반드시 <strong>Unity Package</strong>로 내보내야 합니다.</p>
+                    <div class="bg-[#2b2b2b] p-4 rounded border border-yellow-600 text-xs text-yellow-400 font-bold shadow-inner pulse-warning">
+                        직접 해보기: 우측 하단 Project 창에서 <br><code class="text-white text-sm">_TeamA_Plaza</code> 폴더를 <strong>마우스 우클릭</strong> 해보세요!
+                    </div>
+                `,
+                action: () => {
+                    removePointer();
+                    pointToFolder('_TeamA_Plaza');
+                }
+            },
+            {
+                title: "3. 의존성(Dependencies) 확인 필수",
+                content: `
+                    <p class="text-sm mb-4">가장 중요한 <strong>의존성 체크</strong> 단계입니다.</p>
+                    <div class="bg-blue-900 bg-opacity-30 border border-blue-500 p-3 rounded text-xs mb-4 text-gray-300">
+                        직접 해보기: 하단의 <b class="text-white">Include dependencies</b> 체크를 <strong>해제</strong>해 보세요.
+                    </div>
+                    <p class="text-sm text-gray-400 mb-4">옵션을 끄면 모델과 연결된 재질(Material)이 빠지게 되어, <strong>분홍색 에러</strong>가 발생합니다.</p>
+                    <p class="text-sm text-yellow-400 font-bold mb-4"><i class="fas fa-check-square"></i> 반드시 다시 체크를 한 후 우측 하단의 [Export...] 버튼을 누르세요.</p>
+                `,
+                action: () => {
+                    removePointer();
+                }
+            },
+            {
+                title: "4. 완료 및 파일 전달",
+                content: `
+                    <p class="text-sm mb-4">성공적으로 패키지가 생성되었습니다!</p>
+                    <div class="bg-[#2b2b2b] p-3 rounded border border-[#1a1a1a] text-xs mb-4 text-gray-300">
+                        우측 윈도우 탐색기 화면에 <strong>_TeamA_Plaza.unitypackage</strong> 파일이 생성되었습니다.<br><br>
+                        프로젝트 폴더 전체를 압축해서 전송하지 마세요! <strong>오직 이 파일 하나만</strong> 카카오톡이나 디스코드에 올려 전송하면 됩니다.
+                    </div>
+                `,
+                action: () => {
+                    const explorer = document.getElementById('windows-explorer');
+                    explorer.classList.remove('hidden');
+                    explorer.classList.add('flex');
+                    document.getElementById('exported-pkg-file').classList.remove('hidden');
+                    setTimeout(() => pointToElement('exported-pkg-file'), 100);
+                }
+            }
+        ];
+
+        const importSteps = [
+            {
+                title: "1. 조립 전 필수: 유니티 끄고 백업하기",
+                content: `
+                    <p class="text-sm mb-4">다른 팀원의 패키지를 내 프로젝트에 합치기 전, <strong>가장 먼저 해야 할 생명줄 같은 작업</strong>입니다.</p>
+                    <div class="bg-red-900 bg-opacity-20 border border-red-800 p-3 rounded text-xs mb-4">
+                        <strong class="text-red-400 font-bold"><i class="fas fa-exclamation-triangle"></i> 주의:</strong> 유니티가 켜진 상태로 백업하면 파일이 손상됩니다. 반드시 유니티를 종료하고 탐색기에서 백업하세요.
+                    </div>
+                    <p class="text-sm text-yellow-400 font-bold mb-4">직접 해보기:</p>
+                    <ol class="text-sm space-y-2 text-gray-300 list-decimal pl-4 mb-4">
+                        <li>우측 탐색기에서 내 프로젝트 <code class="text-white font-bold">MyTeamProject</code> 폴더를 찾으세요.</li>
+                        <li>폴더 <b>마우스 우클릭</b> 후 <span class="bg-blue-600 px-1 rounded text-white text-[10px]">Compress to ZIP file</span> 을 클릭하세요.</li>
+                    </ol>
+                `,
+                action: () => {
+                    // 유니티 가리고 탐색기 띄우기
+                    const explorer = document.getElementById('windows-explorer');
+                    explorer.classList.remove('hidden');
+                    explorer.classList.add('flex');
+                    document.getElementById('result-zip-file').classList.add('hidden');
+                    setTimeout(() => pointToWindowsFolder(), 100);
+                }
+            },
+            {
+                title: "2. 패키지 Import: 두 가지 운명",
+                content: `
+                    <p class="text-sm mb-4">백업이 완료되었습니다. 이제 안심하고 유니티를 다시 켜서 패키지를 드래그해 가져옵니다(Import).</p>
+                    <p class="text-sm text-gray-300 mb-4">상대방이 어떻게 폴더를 구성했느냐에 따라 <strong>대참사</strong>가 일어날 수도, <strong>성공</strong>할 수도 있습니다.</p>
+                    
+                    <div class="flex flex-col gap-3">
+                        <button onclick="simulateImport('bad')" class="w-full py-2.5 bg-red-700 hover:bg-red-600 text-white text-sm font-bold rounded shadow transition-transform active:scale-95 flex items-center justify-center gap-2 border border-red-900">
+                            <i class="fas fa-skull text-black"></i> 잘못된 구조(덮어쓰기) 가져오기
+                        </button>
+                        <button onclick="simulateImport('good')" class="w-full py-2.5 bg-green-700 hover:bg-green-600 text-white text-sm font-bold rounded shadow transition-transform active:scale-95 flex items-center justify-center gap-2 border border-green-900">
+                            <i class="fas fa-check-circle text-white"></i> 올바른 고유 폴더 구조 가져오기
+                        </button>
+                    </div>
+                `,
+                action: () => {
+                    // 유니티 복귀
+                    const explorer = document.getElementById('windows-explorer');
+                    explorer.classList.add('hidden');
+                    explorer.classList.remove('flex');
+                    updateProjectView('bad'); // 기본 베이스
+                    plazaGroup.visible = false;
+                    badTreeMesh.visible = false;
+                    hideSceneMsg();
+                }
+            },
+            {
+                title: "3. 결과 확인",
+                content: `
+                    <div id="result-msg-area">
+                        <!-- JS에서 동적 주입 -->
+                    </div>
+                `,
+                action: () => {
+                    const resultArea = document.getElementById('result-msg-area');
+                    if (pendingImportType === 'bad') {
+                        resultArea.innerHTML = `
+                            <div class="bg-red-900 bg-opacity-30 border border-red-500 p-4 rounded text-xs mb-4 text-white font-bold fade-in">
+                                <i class="fas fa-exclamation-triangle text-xl text-yellow-400 mb-2"></i><br>
+                                덮어쓰기 경고를 무시했더니 내 씬의 나무가 파괴되고 상대방의 빨간 박스로 교체되었습니다!
+                            </div>
+                            <p class="text-sm text-gray-300 mb-4">하지만 우리는 1단계에서 탐색기 압축 백업(ZIP)을 해두었기 때문에 <strong>압축만 풀면 1분 만에 완벽히 복구</strong>할 수 있습니다. 백업이 없었다면 며칠 치 작업이 날아갔을 것입니다.</p>
+                        `;
+                    } else {
+                        resultArea.innerHTML = `
+                            <div class="bg-green-900 bg-opacity-30 border border-green-500 p-4 rounded text-xs mb-4 text-white font-bold fade-in">
+                                <i class="fas fa-check-circle text-xl text-green-400 mb-2"></i><br>
+                                상대방이 고유 폴더(_TeamA_Plaza)를 사용하여 충돌 없이 안전하게 광장 오브젝트가 씬에 배치되었습니다!
+                            </div>
+                            <p class="text-sm text-gray-300">이처럼 <strong>고유 폴더 구조</strong>와 <strong>사전 백업</strong>은 유니티 협업에서 선택이 아닌 필수입니다.</p>
+                        `;
+                    }
+                }
+            }
+        ];
+
+        function startTrack(track) {
+            currentTrack = track;
+            currentStepIndex = 0;
+            
+            // 초기화
+            removePointer();
+            closeImportModal();
+            closeExportModal();
+            document.getElementById('windows-explorer').classList.add('hidden');
+            plazaGroup.visible = false;
+            badTreeMesh.visible = false;
+            hideSceneMsg();
+            document.getElementById('hierarchy-content').innerHTML = `
+                <div class="tree-item px-2 py-1 flex items-center text-gray-300"><i class="fas fa-cube text-gray-500 mr-2 w-3"></i> Directional Light</div>
+                <div class="tree-item px-2 py-1 flex items-center text-gray-300"><i class="fas fa-camera text-gray-500 mr-2 w-3"></i> Main Camera</div>
+            `;
+
+            updateGuideContent();
+        }
+
+        function resetGuide() {
+            currentTrack = 'intro';
+            document.getElementById('guide-controls').style.display = 'none';
+            document.getElementById('windows-explorer').classList.add('hidden');
+            
+            const contentDiv = document.getElementById('guide-content');
+            contentDiv.innerHTML = `
+                <h2 class="text-2xl font-bold text-white mb-6 text-center">유니티 협업 역할 선택</h2>
+                <p class="text-sm text-gray-300 text-center mb-8">안전한 병합 프로세스를 배우기 위해<br>어떤 역할로 실습하시겠습니까?</p>
+                
+                <div class="flex flex-col gap-4">
+                    <button onclick="startTrack('export')" class="w-full p-4 bg-gray-800 hover:bg-gray-700 border border-gray-600 rounded-lg text-left transition-all hover:border-blue-500 group">
+                        <div class="flex items-center gap-4">
+                            <div class="w-12 h-12 bg-blue-900 bg-opacity-50 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform">
+                                <i class="fas fa-box-open text-blue-400 text-xl"></i>
+                            </div>
+                            <div>
+                                <h3 class="text-white font-bold mb-1">내보내기 (팀원)</h3>
+                                <p class="text-xs text-gray-400">내 작업물을 패키지로 안전하게 포장하기</p>
+                            </div>
+                        </div>
+                    </button>
+
+                    <button onclick="startTrack('import')" class="w-full p-4 bg-gray-800 hover:bg-gray-700 border border-gray-600 rounded-lg text-left transition-all hover:border-green-500 group">
+                        <div class="flex items-center gap-4">
+                            <div class="w-12 h-12 bg-green-900 bg-opacity-50 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform">
+                                <i class="fas fa-download text-green-400 text-xl"></i>
+                            </div>
+                            <div>
+                                <h3 class="text-white font-bold mb-1">가져오기 (씬 조립 담당)</h3>
+                                <p class="text-xs text-gray-400">파일을 합치기 전 백업하고 안전하게 Import하기</p>
+                            </div>
+                        </div>
+                    </button>
+                </div>
+            `;
+            updateProjectView('empty');
+        }
+
+        function updateGuideContent() {
+            if (currentTrack === 'intro') return;
+
+            document.getElementById('guide-controls').style.display = 'block';
+            const steps = currentTrack === 'export' ? exportSteps : importSteps;
+            const step = steps[currentStepIndex];
+            
+            const contentDiv = document.getElementById('guide-content');
+            contentDiv.innerHTML = `
+                <div class="mb-2"><span class="bg-blue-600 text-white text-[10px] font-bold px-2 py-0.5 rounded tracking-wide uppercase">${currentTrack.toUpperCase()} TRACK</span></div>
+                <h2 class="text-xl font-bold text-white mb-4">${step.title}</h2>
+                <div class="fade-in leading-relaxed">${step.content}</div>
+            `;
+            
+            document.getElementById('step-counter').innerText = `Step ${currentStepIndex + 1} / ${steps.length}`;
+            document.getElementById('progress-bar').style.width = `${((currentStepIndex + 1) / steps.length) * 100}%`;
+            
+            const nextBtn = document.getElementById('next-btn');
+            
+            // 버튼 제어
+            if (currentStepIndex === steps.length - 1) {
+                nextBtn.style.display = 'none'; // 마지막 단계
+            } else {
+                nextBtn.style.display = 'flex';
+                // 특정 액션 대기 중일 때는 버튼 숨김
+                if (currentTrack === 'export' && (currentStepIndex === 1 || currentStepIndex === 2)) {
+                    nextBtn.style.display = 'none'; // 우클릭, Export 버튼 대기
+                } else if (currentTrack === 'import' && (currentStepIndex === 0 || currentStepIndex === 1)) {
+                    nextBtn.style.display = 'none'; // 탐색기 압축 대기, Import 선택 대기
+                }
+            }
+
+            if(step.action) step.action();
+        }
+
+        function nextStep() {
+            const steps = currentTrack === 'export' ? exportSteps : importSteps;
+            if (currentStepIndex < steps.length - 1) {
+                currentStepIndex++;
+                updateGuideContent();
+            }
+        }
+
+        function updateProjectView(state) {
+            const tree = document.getElementById('folder-tree');
+            const fileList = document.getElementById('file-list');
+            if(!tree || !fileList) return;
+            
+            fileList.innerHTML = ''; 
+
+            if (state === 'empty') {
+                tree.innerHTML = `
+                    <div class="tree-item px-3 py-1 flex items-center text-gray-300 font-bold" onclick="showFiles('empty')">
+                        <i class="fas fa-caret-down text-gray-500 mr-2 w-3"></i> <i class="fas fa-folder text-gray-400 mr-2"></i> Assets
+                    </div>
+                `;
+                showFiles('empty');
+            } 
+            else if (state === 'bad') {
+                tree.innerHTML = `
+                    <div class="tree-item px-3 py-1 flex items-center text-gray-300 font-bold">
+                        <i class="fas fa-caret-down text-gray-500 mr-2 w-3"></i> <i class="fas fa-folder text-gray-400 mr-2"></i> Assets
+                    </div>
+                    <div class="tree-item px-3 py-1 pl-8 flex items-center text-gray-300" onclick="showFiles('bad_models')">
+                        <i class="fas fa-caret-right text-transparent mr-2 w-3"></i> <i class="fas fa-folder text-gray-400 mr-2"></i> Models
+                    </div>
+                    <div class="tree-item px-3 py-1 pl-8 flex items-center text-gray-300" onclick="showFiles('empty')">
+                        <i class="fas fa-caret-right text-transparent mr-2 w-3"></i> <i class="fas fa-folder text-gray-400 mr-2"></i> Materials
+                    </div>
+                `;
+                showFiles('bad_models');
+            }
+            else if (state === 'good') {
+                tree.innerHTML = `
+                    <div class="tree-item px-3 py-1 flex items-center text-gray-300 font-bold">
+                        <i class="fas fa-caret-down text-gray-500 mr-2 w-3"></i> <i class="fas fa-folder text-gray-400 mr-2"></i> Assets
+                    </div>
+                    <div class="tree-item px-3 py-1.5 pl-8 flex items-center text-white font-bold bg-[#2c5d87]" id="folder-teama" onclick="showFiles('good_root')" data-folder="target">
+                        <i class="fas fa-caret-down text-gray-300 mr-2 w-3"></i> <i class="fas fa-folder text-blue-300 mr-2"></i> _TeamA_Plaza
+                    </div>
+                    <div class="tree-item px-3 py-1 pl-12 flex items-center text-gray-300" onclick="showFiles('good_models')">
+                        <i class="fas fa-caret-right text-transparent mr-2 w-3"></i> <i class="fas fa-folder text-gray-400 mr-2"></i> Models
+                    </div>
+                    <div class="tree-item px-3 py-1 pl-12 flex items-center text-gray-300" onclick="showFiles('empty')">
+                        <i class="fas fa-caret-right text-transparent mr-2 w-3"></i> <i class="fas fa-folder text-gray-400 mr-2"></i> Materials
+                    </div>
+                    <div class="tree-item px-3 py-1 pl-12 flex items-center text-gray-300" onclick="showFiles('good_prefabs')">
+                        <i class="fas fa-caret-right text-transparent mr-2 w-3"></i> <i class="fas fa-folder text-gray-400 mr-2"></i> Prefabs
+                    </div>
+                `;
+                showFiles('good_root');
+            }
+        }
+
+        function showFiles(folderId) {
+            const fileList = document.getElementById('file-list');
+            const pathBar = document.getElementById('path-bar');
+            if(!fileList || !pathBar) return;
+            
+            const fileIcon = (name, type) => {
+                let iconClass = 'fa-file';
+                let iconColor = 'text-gray-300';
+                if(type === 'folder') { iconClass = 'fa-folder'; iconColor = 'text-gray-400'; }
+                if(type === 'prefab') { iconClass = 'fa-boxes'; iconColor = 'text-blue-400'; }
+                if(type === 'mat') { iconClass = 'fa-circle'; iconColor = 'text-yellow-600'; }
+                if(type === 'err') { iconClass = 'fa-file-excel'; iconColor = 'text-red-500'; }
+                
+                return `
+                <div class="flex flex-col items-center p-2 hover:bg-[#383838] rounded cursor-pointer w-20 text-center">
+                    <i class="fas ${iconClass} text-4xl mb-2 ${iconColor} drop-shadow-md"></i>
+                    <span class="text-[10px] text-gray-300 break-all leading-tight">${name}</span>
+                </div>`;
+            };
+
+            if(folderId === 'empty') {
+                fileList.innerHTML = `<div class="w-full text-center mt-10 text-gray-500 text-xs italic">폴더가 비어있습니다.</div>`;
+                pathBar.innerText = "Assets > ";
+            } 
+            else if (folderId === 'bad_models') {
+                fileList.innerHTML = fileIcon('my_tree.fbx', 'file') + fileIcon('bench.fbx', 'file');
+                pathBar.innerText = "Assets > Models";
+            }
+            else if (folderId === 'bad_models_after') {
+                fileList.innerHTML = fileIcon('my_tree.fbx', 'err') + fileIcon('bench.fbx', 'file');
+                pathBar.innerText = "Assets > Models (Overwritten!)";
+            }
+            else if (folderId === 'good_root') {
+                fileList.innerHTML = fileIcon('Models', 'folder') + fileIcon('Materials', 'folder') + fileIcon('Prefabs', 'folder');
+                pathBar.innerText = "Assets > _TeamA_Plaza";
+            }
+            else if (folderId === 'good_models') {
+                fileList.innerHTML = fileIcon('Plaza_Tree.fbx', 'file') + fileIcon('Plaza_Bench.fbx', 'file');
+                pathBar.innerText = "Assets > _TeamA_Plaza > Models";
+            }
+            else if (folderId === 'good_prefabs') {
+                fileList.innerHTML = fileIcon('Plaza_Main.prefab', 'prefab');
+                pathBar.innerText = "Assets > _TeamA_Plaza > Prefabs";
+            }
+        }
+
+        // 우클릭 컨텍스트 메뉴 이벤트 위임
+        document.getElementById('folder-tree').addEventListener('contextmenu', function(e) {
+            e.preventDefault();
+            if (currentTrack === 'export' && currentStepIndex === 1) {
+                const target = e.target.closest('[data-folder="target"]');
+                if (target) {
+                    removePointer(); 
+                    const menu = document.getElementById('unity-context-menu');
+                    menu.style.display = 'block';
+                    const editorArea = document.getElementById('unity-editor-area').getBoundingClientRect();
+                    menu.style.left = (e.clientX - editorArea.left) + 'px';
+                    menu.style.top = (e.clientY - editorArea.top) + 'px';
+                }
+            }
+        });
+
+        document.getElementById('target-project-folder').addEventListener('contextmenu', function(e) {
+            e.preventDefault();
+            if (currentTrack === 'import' && currentStepIndex === 0) {
+                removePointer(); 
+                const menu = document.getElementById('explorer-context-menu');
+                menu.style.display = 'block';
+                const explorerContent = document.getElementById('explorer-content').getBoundingClientRect();
+                menu.style.left = (e.clientX - explorerContent.left) + 'px';
+                menu.style.top = (e.clientY - explorerContent.top) + 'px';
+            }
+        });
+
+        // 바탕 클릭 시 메뉴 닫기
+        document.addEventListener('click', function(e) {
+            const unityMenu = document.getElementById('unity-context-menu');
+            if(unityMenu) unityMenu.style.display = 'none';
+            const expMenu = document.getElementById('explorer-context-menu');
+            if(expMenu) expMenu.style.display = 'none';
+        });
+
+        // 백업 압축 실행
+        function executeZipBackup(e) {
+            e.stopPropagation();
+            document.getElementById('explorer-context-menu').style.display = 'none';
+            
+            const overlay = document.getElementById('compressing-overlay');
+            const progress = document.getElementById('compress-progress');
+            overlay.classList.remove('hidden');
+            overlay.classList.add('flex');
+            
+            setTimeout(() => { progress.style.width = '30%'; }, 100);
+            setTimeout(() => { progress.style.width = '75%'; }, 600);
+            setTimeout(() => { progress.style.width = '100%'; }, 1000);
+            
+            setTimeout(() => {
+                overlay.classList.add('hidden');
+                overlay.classList.remove('flex');
+                progress.style.width = '0%'; 
+                document.getElementById('result-zip-file').classList.remove('hidden');
+                
+                setTimeout(() => {
+                    if (currentTrack === 'import' && currentStepIndex === 0) nextStep();
+                }, 1500);
+            }, 1400);
+        }
+
+        // Export 체크박스 로직
+        document.getElementById('chk-deps').addEventListener('change', function(e) {
+            const depItems = document.getElementById('dep-items');
+            const depsWarning = document.getElementById('deps-warning');
+            const container = document.getElementById('deps-container');
+            
+            if (e.target.checked) {
+                depItems.style.opacity = '1';
+                depsWarning.classList.add('hidden');
+                container.classList.replace('bg-red-900', 'bg-blue-900');
+                container.classList.replace('border-red-500', 'border-blue-800');
+            } else {
+                depItems.style.opacity = '0.3';
+                depsWarning.classList.remove('hidden');
+                container.classList.replace('bg-blue-900', 'bg-red-900');
+                container.classList.replace('border-blue-800', 'border-red-500');
+            }
+        });
+
+        function closeExportModal() { document.getElementById('export-modal').style.display = 'none'; }
+        
+        document.getElementById('btn-export-pkg').addEventListener('click', function(e) {
+            e.stopPropagation();
+            document.getElementById('unity-context-menu').style.display = 'none';
+            if (currentTrack === 'export' && currentStepIndex === 1) {
+                nextStep(); 
+                document.getElementById('export-modal').style.display = 'flex';
+                document.getElementById('deps-container').classList.add('pulse-warning');
+            }
+        });
+
+        function executeExport() {
+            if(!document.getElementById('chk-deps').checked) {
+                // UI로 경고 메시지 대체
+                document.getElementById('deps-container').classList.add('shake-danger');
+                setTimeout(() => document.getElementById('deps-container').classList.remove('shake-danger'), 500);
+                return;
+            }
+            document.getElementById('deps-container').classList.remove('pulse-warning');
+            document.getElementById('export-modal').style.display = 'none';
+            
+            const overlay = document.getElementById('project-overlay');
+            const overlayText = document.getElementById('overlay-text');
+            overlay.style.display = 'flex';
+            overlayText.innerText = "Exporting '_TeamA_Plaza.unitypackage'...";
+            
+            setTimeout(() => {
+                overlayText.innerHTML = "<i class='fas fa-check text-green-400 mr-2'></i> Export 완료!";
+                setTimeout(() => {
+                    overlay.style.display = 'none';
+                    if (currentTrack === 'export' && currentStepIndex === 2) nextStep();
+                }, 1000);
+            }, 1500);
+        }
+
+        function closeImportModal() { document.getElementById('import-modal').style.display = 'none'; }
+
+        function simulateImport(type) {
+            pendingImportType = type;
+            const modal = document.getElementById('import-modal');
+            const list = document.getElementById('import-file-list');
+            const badge = document.getElementById('import-warning-badge');
+            const btn = document.getElementById('import-execute-btn');
+            
+            modal.style.display = 'flex';
+
+            if (type === 'bad') {
+                badge.style.display = 'block';
+                btn.className = "px-5 py-1.5 text-xs bg-red-700 hover:bg-red-600 text-white rounded font-bold shadow shake-danger";
+                btn.innerText = "Import (위험!)";
+                list.innerHTML = `
+                    <div class="px-2 py-1 flex items-center text-gray-300"><i class="fas fa-folder text-gray-400 mr-2"></i> Assets</div>
+                    <div class="px-2 py-1 pl-6 flex items-center text-gray-300"><i class="fas fa-folder text-gray-400 mr-2"></i> Models</div>
+                    <div class="px-2 py-1.5 pl-10 flex items-center bg-red-900 bg-opacity-60 text-red-400 border border-red-500 my-1 font-bold">
+                        <i class="fas fa-exclamation-triangle mr-2 text-yellow-400"></i> <i class="fas fa-file mr-2 text-gray-300"></i> my_tree.fbx (Will Overwrite!)
+                    </div>
+                `;
+            } else {
+                badge.style.display = 'none';
+                btn.className = "px-5 py-1.5 text-xs bg-green-600 hover:bg-green-500 text-white rounded font-bold shadow";
+                btn.innerText = "Import";
+                list.innerHTML = `
+                    <div class="px-2 py-1 flex items-center text-gray-300"><i class="fas fa-folder text-gray-400 mr-2"></i> Assets</div>
+                    <div class="px-2 py-1 pl-6 flex items-center text-green-400 font-bold bg-green-900 bg-opacity-20"><i class="fas fa-folder text-green-400 mr-2"></i> _TeamA_Plaza (New)</div>
+                    <div class="px-2 py-1 pl-10 flex items-center text-gray-300"><i class="fas fa-folder text-gray-400 mr-2"></i> Models</div>
+                    <div class="px-2 py-1 pl-14 flex items-center text-gray-300"><i class="fas fa-file mr-2 text-gray-300"></i> Plaza_Tree.fbx</div>
+                `;
+            }
+        }
+
+        function executeImportFinal() {
+            closeImportModal();
+            
+            if (pendingImportType === 'bad') {
+                updateProjectView('bad');
+                showFiles('bad_models_after');
+                plazaGroup.visible = false;
+                badTreeMesh.visible = true;
+                showSceneMsg('내 나무가 빨간색 상자로 덮어씌워졌습니다!', true);
+            } else {
+                updateProjectView('good');
+                plazaGroup.visible = true;
+                badTreeMesh.visible = false;
+                showSceneMsg('고유 폴더를 통해 에셋이 안전하게 병합되었습니다.');
+                
+                document.getElementById('hierarchy-content').innerHTML += `
+                    <div class="tree-item px-2 py-1 flex items-center text-blue-400 font-bold bg-[#2c5d87] bg-opacity-50"><i class="fas fa-boxes mr-2 w-3"></i> Plaza_Main</div>
+                `;
+            }
+
+            if (currentTrack === 'import' && currentStepIndex === 1) nextStep();
+        }
+
+        // --- 5. 유틸리티 함수 ---
+        function removePointer() {
+            const pointer = document.getElementById('ui-pointer');
+            if (pointer) pointer.style.display = 'none';
+        }
+
+        function pointToFolder(folderName) {
+            const treeItems = document.querySelectorAll('.tree-item');
+            treeItems.forEach(item => {
+                if (item.innerText.includes(folderName)) {
+                    if (!item.id) item.id = 'temp-folder-' + Math.random().toString(36).substring(2, 9);
+                    pointToElement(item.id);
+                }
+            });
+        }
+
+        function pointToWindowsFolder() {
+            pointToElement('target-project-folder');
+        }
+
+        function pointToElement(id) {
+            const el = document.getElementById(id);
+            if(el) {
+                const rect = el.getBoundingClientRect();
+                let containerRect = el.closest('#windows-explorer') 
+                    ? document.getElementById('windows-explorer').getBoundingClientRect() 
+                    : document.getElementById('unity-editor-area').getBoundingClientRect();
+                
+                const pointer = document.getElementById('ui-pointer');
+                pointer.style.display = 'block';
+                pointer.style.left = (rect.left - containerRect.left + 50) + 'px';
+                pointer.style.top = (rect.top - containerRect.top + 20) + 'px';
+                
+                el.classList.add('pulse-warning');
+                setTimeout(() => el.classList.remove('pulse-warning'), 3000);
+            }
+        }
+
+        window.onload = function() {
+            initThreeJS();
+            resetGuide();
+        };
+
+    </script>
+</body>
+</html>
