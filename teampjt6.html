@@ -1,0 +1,668 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>기말 프로젝트 최종 폴리싱 및 퍼블리싱</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.8/dist/web/static/pretendard.css" rel="stylesheet" />
+    <script src="https://unpkg.com/lucide@latest"></script>
+    
+    <style>
+        body {
+            font-family: 'Pretendard', sans-serif;
+            background-color: #f8fafc;
+            background-image: radial-gradient(#cbd5e1 1px, transparent 1px);
+            background-size: 20px 20px;
+        }
+        
+        .step-content {
+            display: none;
+            animation: fadeIn 0.4s ease-out forwards;
+            opacity: 0;
+            transform: translateY(-5px);
+            position: relative;
+            z-index: 20;
+        }
+        .step-content.active { display: block; }
+        
+        @keyframes fadeIn {
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .step-wrapper {
+            position: relative;
+            z-index: 1;
+            transition: z-index 0s;
+        }
+        .step-wrapper:hover { z-index: 40; }
+
+        /* Custom Scrollbar for inner elements */
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: #f1f5f9; border-radius: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+        /* Animation for Build Process */
+        @keyframes loadingBar {
+            0% { width: 0%; }
+            50% { width: 70%; }
+            100% { width: 100%; }
+        }
+        .animate-loading {
+            animation: loadingBar 3s ease-in-out infinite;
+        }
+        
+        .pulse-border {
+            animation: pulse-border 2s infinite;
+        }
+        @keyframes pulse-border {
+            0% { box-shadow: 0 0 0 0 rgba(74, 222, 128, 0.4); }
+            70% { box-shadow: 0 0 0 6px rgba(74, 222, 128, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(74, 222, 128, 0); }
+        }
+    </style>
+</head>
+<body class="text-slate-800 antialiased min-h-screen pb-24">
+
+    <header class="bg-white shadow-sm border-b border-slate-200 sticky top-0 z-50">
+        <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-5">
+            <div class="flex items-center justify-between">
+                <div>
+                    <div class="flex items-center gap-2 mb-1">
+                        <span class="bg-indigo-100 text-indigo-700 text-xs font-bold px-2 py-0.5 rounded">13주차</span>
+                        <span class="text-sm text-slate-500 font-medium">기말 프로젝트 마감</span>
+                    </div>
+                    <h1 class="text-2xl font-bold text-slate-900 flex items-center gap-2">
+                        <i data-lucide="rocket" class="text-indigo-600"></i>
+                        최종 폴리싱(최적화) 및 VRChat 퍼블리싱
+                    </h1>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 mt-8 space-y-5">
+        
+        <!-- Intro Notice -->
+        <div class="bg-indigo-50 border border-indigo-200 rounded-xl p-5 flex items-start gap-4 shadow-sm">
+            <div class="bg-indigo-600 p-2 rounded-lg shrink-0 mt-0.5 shadow">
+                <i data-lucide="flag" class="text-white w-5 h-5"></i>
+            </div>
+            <div>
+                <h3 class="font-bold text-indigo-900 text-lg mb-1">마지막 스퍼트: "아무리 예뻐도 렉이 걸리면 실패한 월드입니다."</h3>
+                <p class="text-indigo-800 text-sm leading-relaxed">
+                    조별 씬 조립과 기본 인터랙션 구현이 끝났다면, 이제는 <strong>성능(프레임 방어)</strong>과 <strong>디테일</strong>을 잡을 차례입니다.<br>
+                    오늘은 충돌체 및 오디오 <strong>최적화(Optimization)</strong>, 무거운 조명을 구워내는 <strong>라이트맵 베이킹(Light Baking)</strong>, 화면의 감성을 완성하는 <strong>포스트 프로세싱(Post Processing)</strong>, 그리고 대망의 <strong>SDK Build & Publish</strong> 과정을 진행합니다.
+                </p>
+            </div>
+        </div>
+
+        <!-- STEP 1: 최적화 -->
+        <div class="step-wrapper bg-white rounded-xl shadow-sm border border-slate-200">
+            <button onclick="toggleStep('step1')" class="relative z-10 w-full px-6 py-5 flex items-center justify-between bg-white hover:bg-slate-50 transition-colors text-left group rounded-t-xl rounded-b-xl">
+                <div class="flex items-center gap-4">
+                    <span class="flex items-center justify-center w-10 h-10 rounded-full bg-slate-100 text-slate-500 font-bold text-lg group-hover:bg-indigo-100 group-hover:text-indigo-600 transition-colors" id="badge-step1">1</span>
+                    <div>
+                        <h2 class="text-xl font-bold text-slate-800 group-hover:text-indigo-700 transition-colors">필수 최적화 (Optimization) 가이드</h2>
+                        <p class="text-xs text-slate-500 mt-1 font-medium">프레임 드랍(렉)의 주범들을 찾아내고 수정합시다.</p>
+                    </div>
+                </div>
+                <i data-lucide="chevron-down" class="text-slate-400 transition-transform duration-300" id="icon-step1"></i>
+            </button>
+            <div id="step1" class="step-content px-6 py-6 border-t border-slate-100 rounded-b-xl">
+                
+                <p class="text-sm text-slate-600 mb-6 leading-relaxed">
+                    친구들을 초대했는데 화면이 뚝뚝 끊긴다면 아무리 멋진 맵이라도 즐길 수 없습니다. 월드 업로드 전 아래 3가지는 <strong>반드시 점검</strong>해야 합니다.
+                </p>
+
+                <div class="space-y-6">
+                    <!-- Optimization 1: Colliders -->
+                    <div class="border border-slate-200 rounded-xl overflow-hidden shadow-sm">
+                        <div class="bg-rose-50 border-b border-rose-100 px-4 py-3 flex items-center gap-2">
+                            <i data-lucide="box-select" class="w-5 h-5 text-rose-600"></i>
+                            <h4 class="font-bold text-rose-900 text-sm">1. 충돌체(Collider) 단순화 - Mesh Collider 남용 금지</h4>
+                        </div>
+                        <div class="p-5 bg-white grid md:grid-cols-2 gap-6">
+                            <div>
+                                <p class="text-[13px] text-slate-600 leading-relaxed mb-4">
+                                    유저가 벽을 통과하지 못하게 하거나, 물건을 잡기 위해 넣는 <strong>Collider</strong>. 모델링 형태를 그대로 따라가는 <code>Mesh Collider</code>는 연산량이 어마어마하게 높습니다. 복잡한 소품(의자, 조각상 등)은 반드시 <code>Box Collider</code>나 <code>Sphere Collider</code> 여러 개로 대충 감싸야 합니다.
+                                </p>
+                                <ul class="text-[11px] text-slate-500 space-y-2 list-disc list-inside">
+                                    <li>바닥이나 평평한 벽: <code>Box Collider</code> 사용</li>
+                                    <li>기둥이나 나무통: <code>Capsule Collider</code> 사용</li>
+                                    <li>복잡한 가구: 빈 GameObject를 만들고 Box Collider를 여러 개 이어 붙여서 투명한 장벽 만들기</li>
+                                </ul>
+                            </div>
+                            <!-- Visual Graphic -->
+                            <div class="bg-slate-50 p-4 rounded-lg flex items-center justify-center gap-6">
+                                <div class="text-center">
+                                    <div class="w-24 h-24 relative mx-auto mb-2 bg-[#282828] rounded border border-rose-500 shadow-[0_0_15px_rgba(244,63,94,0.3)] flex items-center justify-center">
+                                        <!-- Mesh Collider (Bad) SVG -->
+                                        <svg viewBox="0 0 100 100" class="w-16 h-16">
+                                            <polygon points="50,10 90,30 80,80 50,90 20,80 10,30" fill="none" stroke="#f43f5e" stroke-width="1.5" stroke-dasharray="2 2" />
+                                            <polygon points="50,10 50,50 90,30" fill="none" stroke="#f43f5e" stroke-width="1" />
+                                            <polygon points="50,10 20,80 50,50" fill="none" stroke="#f43f5e" stroke-width="1" />
+                                            <polygon points="10,30 80,80 50,50" fill="none" stroke="#f43f5e" stroke-width="1" />
+                                            <circle cx="50" cy="50" r="2" fill="#f43f5e" />
+                                        </svg>
+                                        <i data-lucide="x" class="absolute -top-2 -right-2 text-white bg-rose-500 rounded-full w-5 h-5 p-0.5"></i>
+                                    </div>
+                                    <span class="text-[11px] font-bold text-rose-600">Mesh Collider (무거움)</span>
+                                </div>
+                                <i data-lucide="arrow-right" class="w-5 h-5 text-slate-300"></i>
+                                <div class="text-center">
+                                    <div class="w-24 h-24 relative mx-auto mb-2 bg-[#282828] rounded border border-emerald-500 shadow-[0_0_15px_rgba(16,185,129,0.3)] flex items-center justify-center">
+                                        <!-- Box Collider (Good) SVG -->
+                                        <svg viewBox="0 0 100 100" class="w-16 h-16">
+                                            <polygon points="50,15 85,30 85,75 50,90 15,75 15,30" fill="none" stroke="#475569" stroke-width="1" />
+                                            <rect x="20" y="20" width="60" height="60" fill="none" stroke="#10b981" stroke-width="2" stroke-dasharray="4 4" />
+                                        </svg>
+                                        <i data-lucide="check" class="absolute -top-2 -right-2 text-white bg-emerald-500 rounded-full w-5 h-5 p-0.5"></i>
+                                    </div>
+                                    <span class="text-[11px] font-bold text-emerald-600">Box Collider (가벼움)</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Optimization 2: Audio & Mirrors -->
+                    <div class="grid md:grid-cols-2 gap-6">
+                        <div class="border border-slate-200 rounded-xl overflow-hidden shadow-sm flex flex-col">
+                            <div class="bg-amber-50 border-b border-amber-100 px-4 py-2.5 flex items-center gap-2">
+                                <i data-lucide="volume-2" class="w-4 h-4 text-amber-600"></i>
+                                <h4 class="font-bold text-amber-900 text-sm">2. 3D 오디오 범위 설정</h4>
+                            </div>
+                            <div class="p-4 bg-white flex-grow">
+                                <p class="text-xs text-slate-600 leading-relaxed mb-3">
+                                    모든 BGM과 효과음이 맵 전체에 들리게 설정(2D)하면 소리가 겹쳐 소음 공해가 됩니다.
+                                </p>
+                                <div class="bg-slate-800 p-3 rounded-lg text-[11px] text-slate-300 font-sans shadow-inner border border-slate-700">
+                                    <strong class="text-emerald-400 block mb-2 border-b border-slate-600 pb-1">Audio Source 컴포넌트 세팅</strong>
+                                    <div class="flex justify-between items-center mb-1">
+                                        <span>Spatial Blend</span>
+                                        <span class="bg-[#111] px-2 py-0.5 rounded text-white font-mono">1.0 (3D)</span>
+                                    </div>
+                                    <div class="flex justify-between items-center">
+                                        <span>Max Distance</span>
+                                        <span class="bg-[#111] px-2 py-0.5 rounded text-white font-mono">10 ~ 15</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="border border-slate-200 rounded-xl overflow-hidden shadow-sm flex flex-col">
+                            <div class="bg-blue-50 border-b border-blue-100 px-4 py-2.5 flex items-center gap-2">
+                                <i data-lucide="monitor" class="w-4 h-4 text-blue-600"></i>
+                                <h4 class="font-bold text-blue-900 text-sm">3. 거울(Mirror)은 기본 Off</h4>
+                            </div>
+                            <div class="p-4 bg-white flex-grow">
+                                <p class="text-xs text-slate-600 leading-relaxed mb-3">
+                                    거울은 씬을 두 번 그리기 때문에 렉의 1순위 원인입니다. 거울은 항상 <strong>기본 비활성화(SetActive False)</strong> 상태로 두고, <strong>로컬(Local) 버튼</strong>으로 유저가 원할 때만 켜게 만드세요.
+                                </p>
+                                <div class="flex items-center gap-2 bg-blue-50/50 p-2 rounded text-[11px] border border-blue-100 text-blue-800">
+                                    <i data-lucide="toggle-left" class="w-4 h-4"></i> Udon Graph의 UI 버튼 토글 로직 활용!
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- STEP 2: Light Baking -->
+        <div class="step-wrapper bg-white rounded-xl shadow-sm border border-slate-200">
+            <button onclick="toggleStep('step2')" class="relative z-10 w-full px-6 py-5 flex items-center justify-between bg-white hover:bg-slate-50 transition-colors text-left group rounded-t-xl rounded-b-xl">
+                <div class="flex items-center gap-4">
+                    <span class="flex items-center justify-center w-10 h-10 rounded-full bg-slate-100 text-slate-500 font-bold text-lg group-hover:bg-indigo-100 group-hover:text-indigo-600 transition-colors" id="badge-step2">2</span>
+                    <div>
+                        <h2 class="text-xl font-bold text-slate-800 group-hover:text-indigo-700 transition-colors">마법의 조명 굽기: 라이트 베이킹 (Light Baking)</h2>
+                        <p class="text-xs text-slate-500 mt-1 font-medium">컴퓨터 연산 없이 극상의 그림자와 조명을 유지하는 방법</p>
+                    </div>
+                </div>
+                <i data-lucide="chevron-down" class="text-slate-400 transition-transform duration-300" id="icon-step2"></i>
+            </button>
+            <div id="step2" class="step-content px-6 py-6 border-t border-slate-100 rounded-b-xl">
+                
+                <div class="bg-slate-800 rounded-xl p-5 shadow-lg border border-slate-700 text-slate-300 mb-8 flex flex-col md:flex-row gap-5 items-center">
+                    <div class="flex-1">
+                        <h4 class="font-bold text-white text-base mb-2 flex items-center gap-2">
+                            <i data-lucide="sun" class="w-5 h-5 text-amber-400"></i> 라이트 베이킹이란?
+                        </h4>
+                        <p class="text-[13px] leading-relaxed break-keep">
+                            VR 환경에서 수십 개의 조명(가로등, 실내등)이 실시간으로 실시간 그림자를 계산하면 컴퓨터가 터집니다. <strong>'베이킹(Baking)'</strong>은 조명과 그림자, 빛 반사를 미리 계산하여 <strong>가구와 벽의 텍스처(표면 이미지)에 아예 그림을 그려서(구워서) 합쳐버리는 기술</strong>입니다. 연산량이 "0"에 가까워지면서 퀄리티는 폭발적으로 상승합니다.
+                        </p>
+                    </div>
+                    <!-- Realtime vs Baked Diagram -->
+                    <div class="w-full md:w-64 shrink-0 flex gap-2">
+                        <div class="flex-1 bg-[#1a1a1a] rounded border border-slate-600 p-2 text-center relative overflow-hidden">
+                            <div class="text-[10px] text-amber-500 font-bold mb-2">실시간 (Realtime)</div>
+                            <div class="w-10 h-10 mx-auto bg-slate-400 rounded-sm mb-2 shadow-[2px_2px_0px_#111]"></div>
+                            <div class="text-[9px] text-rose-400">FPS: 30 🔻</div>
+                        </div>
+                        <div class="flex-1 bg-[#1a1a1a] rounded border border-emerald-500 p-2 text-center relative overflow-hidden shadow-[0_0_15px_rgba(16,185,129,0.2)]">
+                            <div class="text-[10px] text-emerald-400 font-bold mb-2">구움 (Baked)</div>
+                            <div class="w-10 h-10 mx-auto bg-slate-400 rounded-sm mb-2 shadow-[2px_2px_0px_#111] relative">
+                                <!-- Fake soft shadow/ambient occlusion -->
+                                <div class="absolute inset-0 bg-gradient-to-br from-transparent to-black/50"></div>
+                            </div>
+                            <div class="text-[9px] text-emerald-400">FPS: 90 🚀</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Baking Step by Step -->
+                <h5 class="font-bold text-slate-800 text-sm mb-4 border-b border-slate-100 pb-2 flex items-center gap-2">
+                    <i data-lucide="check-square" class="w-4 h-4 text-indigo-500"></i> 라이트 베이킹 순서
+                </h5>
+
+                <div class="grid md:grid-cols-3 gap-4">
+                    <!-- Step 1 -->
+                    <div class="bg-white border border-slate-200 p-4 rounded-xl shadow-sm">
+                        <div class="flex items-center gap-2 mb-2">
+                            <div class="bg-indigo-100 text-indigo-700 w-5 h-5 rounded-full flex items-center justify-center font-bold text-[10px]">1</div>
+                            <strong class="text-sm text-slate-800">Static 체크</strong>
+                        </div>
+                        <p class="text-[11px] text-slate-600 leading-relaxed mb-3">
+                            움직이지 않는 모든 배경, 벽, 가구 오브젝트들을 선택하고 Inspector 창 우측 상단의 <strong>Static</strong>을 체크합니다. (체크 안 하면 안 구워짐)
+                        </p>
+                        <!-- Inspector UI Mockup -->
+                        <div class="bg-[#383838] p-2 rounded border border-[#222] flex justify-between items-center text-white">
+                            <span class="text-[10px] flex items-center gap-1"><i data-lucide="box" class="w-3 h-3 text-[#aaa]"></i> Wall_01</span>
+                            <div class="flex items-center gap-1 bg-[#222] border border-[#111] px-1.5 py-0.5 rounded shadow-inner cursor-default">
+                                <div class="w-2.5 h-2.5 bg-blue-500 rounded-sm flex items-center justify-center"><i data-lucide="check" class="w-2 h-2 text-white"></i></div>
+                                <span class="text-[9px] font-bold text-[#eee]">Static</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Step 2 -->
+                    <div class="bg-white border border-slate-200 p-4 rounded-xl shadow-sm">
+                        <div class="flex items-center gap-2 mb-2">
+                            <div class="bg-indigo-100 text-indigo-700 w-5 h-5 rounded-full flex items-center justify-center font-bold text-[10px]">2</div>
+                            <strong class="text-sm text-slate-800">조명 모드 변경</strong>
+                        </div>
+                        <p class="text-[11px] text-slate-600 leading-relaxed mb-3">
+                            씬 안의 조명(Directional Light, Point Light)을 선택하고 Mode를 <strong>Realtime</strong>에서 <strong>Baked</strong>로 변경합니다.
+                        </p>
+                        <div class="bg-[#383838] p-2 rounded border border-[#222] text-white">
+                            <div class="flex justify-between items-center mb-1">
+                                <span class="text-[10px] text-[#aaa]">Mode</span>
+                                <div class="bg-[#222] border border-[#111] px-1.5 py-0.5 rounded text-[9px] w-14 text-center cursor-default">Baked ▾</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Step 3 -->
+                    <div class="bg-white border border-slate-200 p-4 rounded-xl shadow-sm">
+                        <div class="flex items-center gap-2 mb-2">
+                            <div class="bg-indigo-100 text-indigo-700 w-5 h-5 rounded-full flex items-center justify-center font-bold text-[10px]">3</div>
+                            <strong class="text-sm text-slate-800">Generate Lighting</strong>
+                        </div>
+                        <p class="text-[11px] text-slate-600 leading-relaxed mb-3">
+                            상단 메뉴 <code>Window > Rendering > Lighting</code> 창을 열고, 우측 하단의 <strong>Generate Lighting</strong> 버튼을 누릅니다. (컴퓨터 사양에 따라 수십 분 소요)
+                        </p>
+                        <div class="bg-[#444] text-[#eee] p-1.5 rounded border border-[#222] text-center text-[10px] font-bold cursor-pointer hover:bg-[#555] transition-colors shadow-sm">
+                            Generate Lighting
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-4 bg-amber-50 border border-amber-200 p-3 rounded-lg text-xs text-amber-800 flex items-start gap-2">
+                    <i data-lucide="alert-triangle" class="w-4 h-4 shrink-0 mt-0.5 text-amber-600"></i>
+                    <p>
+                        베이킹을 시작하기 전, 오브젝트가 너무 많다면 라이트맵 해상도(Lightmap Resolution)를 10~20 정도로 낮춰서 먼저 테스트 굽기를 진행하세요. 굽는 도중에는 컴퓨터가 심하게 버벅일 수 있습니다.
+                    </p>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- STEP 3: 포스트 프로세싱 -->
+        <div class="step-wrapper bg-white rounded-xl shadow-sm border border-slate-200">
+            <button onclick="toggleStep('step3')" class="relative z-10 w-full px-6 py-5 flex items-center justify-between bg-white hover:bg-slate-50 transition-colors text-left group rounded-t-xl rounded-b-xl">
+                <div class="flex items-center gap-4">
+                    <span class="flex items-center justify-center w-10 h-10 rounded-full bg-slate-100 text-slate-500 font-bold text-lg group-hover:bg-indigo-100 group-hover:text-indigo-600 transition-colors" id="badge-step3">3</span>
+                    <div>
+                        <h2 class="text-xl font-bold text-slate-800 group-hover:text-indigo-700 transition-colors">분위기를 완성하는 마법: 포스트 프로세싱 (Post Processing)</h2>
+                        <p class="text-xs text-slate-500 mt-1 font-medium">게임 화면에 인스타그램 필터를 씌워 영화 같은 색감과 빛 번짐 만들기</p>
+                    </div>
+                </div>
+                <i data-lucide="chevron-down" class="text-slate-400 transition-transform duration-300" id="icon-step3"></i>
+            </button>
+            <div id="step3" class="step-content px-6 py-6 border-t border-slate-100 rounded-b-xl">
+                
+                <p class="text-sm text-slate-600 mb-6 leading-relaxed">
+                    월드의 조명(Baking)과 재질(Shader) 세팅이 끝났다면, 마지막으로 카메라 렌즈에 필터를 끼워 화면 전체의 색감과 시각 효과를 보정하는 <strong>포스트 프로세싱(Post Processing)</strong>을 적용합니다. VRChat 월드의 '감성'을 결정짓는 가장 핵심적인 단계입니다.
+                </p>
+
+                <div class="grid md:grid-cols-3 gap-5 mb-8">
+                    <!-- Bloom -->
+                    <div class="bg-indigo-50 border border-indigo-100 p-4 rounded-xl shadow-sm flex flex-col">
+                        <div class="flex items-center gap-2 mb-3">
+                            <i data-lucide="sun-dim" class="w-5 h-5 text-indigo-600"></i>
+                            <h4 class="font-bold text-indigo-900 text-sm">블룸 (Bloom)</h4>
+                        </div>
+                        <p class="text-xs text-indigo-800 leading-relaxed mb-3 flex-grow break-keep">
+                            밝은 빛이 렌즈 주변으로 뽀샤시하게 퍼지는 빛 번짐 효과입니다. 야경의 네온사인, 사이버펑크 월드, 마법 발광체(Emission)를 표현할 때 <strong>절대 빠질 수 없는 필수 필터</strong>입니다.
+                        </p>
+                        <div class="w-full h-24 bg-[#1a1a1a] rounded-lg border border-indigo-200 relative overflow-hidden flex items-center justify-center shadow-inner">
+                            <!-- Bloom Visualization -->
+                            <div class="w-6 h-6 bg-pink-400 rounded-full shadow-[0_0_25px_15px_rgba(236,72,153,0.7)] animate-pulse"></div>
+                        </div>
+                    </div>
+
+                    <!-- Color Grading -->
+                    <div class="bg-blue-50 border border-blue-100 p-4 rounded-xl shadow-sm flex flex-col">
+                        <div class="flex items-center gap-2 mb-3">
+                            <i data-lucide="palette" class="w-5 h-5 text-blue-600"></i>
+                            <h4 class="font-bold text-blue-900 text-sm">컬러 그레이딩 (Color Grading)</h4>
+                        </div>
+                        <p class="text-xs text-blue-800 leading-relaxed mb-3 flex-grow break-keep">
+                            화면 전체의 대비(Contrast), 채도(Saturation), 색온도를 조절합니다. Tonemapping 모드를 <strong>ACES</strong>로 설정하면 실사 영화처럼 고급스럽고 묵직한 색감을 즉시 얻을 수 있습니다.
+                        </p>
+                        <div class="w-full h-24 rounded-lg border border-blue-200 relative overflow-hidden flex shadow-inner">
+                            <!-- Color Grading Visualization -->
+                            <div class="flex-1 bg-slate-400 grayscale flex items-center justify-center border-r border-white/20"><span class="text-[9px] font-bold text-white/80 bg-black/40 px-1.5 py-0.5 rounded">Before</span></div>
+                            <div class="flex-1 bg-blue-500 flex items-center justify-center saturate-150 contrast-125"><span class="text-[9px] font-bold text-white/90 bg-black/40 px-1.5 py-0.5 rounded">After (ACES)</span></div>
+                        </div>
+                    </div>
+
+                    <!-- Vignette -->
+                    <div class="bg-slate-50 border border-slate-200 p-4 rounded-xl shadow-sm flex flex-col">
+                        <div class="flex items-center gap-2 mb-3">
+                            <i data-lucide="focus" class="w-5 h-5 text-slate-700"></i>
+                            <h4 class="font-bold text-slate-800 text-sm">비네팅 (Vignette)</h4>
+                        </div>
+                        <p class="text-xs text-slate-600 leading-relaxed mb-3 flex-grow break-keep">
+                            화면의 가장자리 모서리를 어둡게 눌러주어 시선을 화면 중앙으로 집중시키는 효과입니다. 공포 월드나 아늑한 실내 분위기를 연출할 때 매우 효과적입니다.
+                        </p>
+                        <div class="w-full h-24 bg-slate-300 rounded-lg border border-slate-300 relative overflow-hidden flex items-center justify-center shadow-inner">
+                            <!-- Vignette Visualization -->
+                            <div class="absolute inset-0 pointer-events-none" style="background: radial-gradient(circle, transparent 40%, rgba(0,0,0,0.85) 120%);"></div>
+                            <span class="text-white font-bold text-xs relative z-10 bg-black/30 px-2 py-1 rounded">Center Focus</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Setup Guide -->
+                <div class="bg-slate-800 rounded-xl p-5 shadow-lg border border-slate-700 text-slate-300">
+                    <h5 class="font-bold text-white text-sm mb-4 flex items-center gap-2">
+                        <i data-lucide="settings-2" class="w-5 h-5 text-emerald-400"></i> VRChat 전용 포스트 프로세싱 세팅법
+                    </h5>
+                    <ol class="space-y-4 text-xs text-slate-300 list-decimal list-inside bg-slate-900/50 p-4 rounded-lg border border-slate-700/50">
+                        <li>하이어라키(Hierarchy) 빈 공간 우클릭 > <code class="bg-slate-700 px-1 py-0.5 rounded text-white">3D Object > Post-process Volume</code> 생성</li>
+                        <li>생성된 Volume 오브젝트의 인스펙터에서 <strong>Is Global</strong>을 <strong class="text-emerald-400 bg-emerald-900/30 px-1 rounded">체크(켜기)</strong> 합니다. (맵 전체 적용)</li>
+                        <li><strong>Profile</strong> 항목 우측의 <button class="bg-slate-600 px-2 py-0.5 rounded text-white text-[10px] shadow-sm">New</button> 버튼을 눌러 새 프로필을 생성합니다.</li>
+                        <li><strong>Add effect...</strong> 버튼을 눌러 <code>Unity > Bloom</code>이나 <code>Color Grading</code> 등을 추가하고 수치를 입맛에 맞게 조절합니다.</li>
+                        <li class="text-rose-300 font-bold bg-rose-900/30 p-3 rounded-lg mt-3 flex items-start gap-2 border border-rose-800/50">
+                            <i data-lucide="alert-circle" class="w-4 h-4 mt-0.5 shrink-0"></i> 
+                            <div>
+                                <span class="block text-rose-400 text-sm mb-0.5">핵심 주의사항: Layer 설정</span>
+                                VRChat에서는 해당 Volume 오브젝트의 Inspector 상단 <strong>Layer</strong>가 반드시 <code class="bg-rose-950 px-1 py-0.5 rounded text-white">PostProcessing</code>으로 설정되어 있어야만 인게임에서 플레이어 카메라에 효과가 보입니다!
+                            </div>
+                        </li>
+                    </ol>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- STEP 4: VRChat SDK Upload -->
+        <div class="step-wrapper bg-white rounded-xl shadow-sm border border-slate-200">
+            <button onclick="toggleStep('step4')" class="relative z-10 w-full px-6 py-5 flex items-center justify-between bg-white hover:bg-slate-50 transition-colors text-left group rounded-t-xl rounded-b-xl">
+                <div class="flex items-center gap-4">
+                    <span class="flex items-center justify-center w-10 h-10 rounded-full bg-slate-100 text-slate-500 font-bold text-lg group-hover:bg-indigo-100 group-hover:text-indigo-600 transition-colors" id="badge-step4">4</span>
+                    <div>
+                        <h2 class="text-xl font-bold text-slate-800 group-hover:text-indigo-700 transition-colors">대망의 월드 업로드: Build & Publish</h2>
+                        <p class="text-xs text-slate-500 mt-1 font-medium">VRChat SDK 컨트롤 패널 사용법 및 에러 해결</p>
+                    </div>
+                </div>
+                <i data-lucide="chevron-down" class="text-slate-400 transition-transform duration-300" id="icon-step4"></i>
+            </button>
+            <div id="step4" class="step-content px-6 py-6 border-t border-slate-100 rounded-b-xl">
+                
+                <p class="text-sm text-slate-600 mb-6 leading-relaxed">
+                    모든 씬 조립과 최적화가 끝났습니다. 이제 VRChat 서버에 우리 조의 월드를 업로드할 시간입니다. 상단 메뉴에서 <strong>VRChat SDK > Show Control Panel</strong>을 엽니다.
+                </p>
+
+                <!-- SDK Control Panel Interactive UI Mockup -->
+                <div class="max-w-2xl mx-auto bg-[#1e1e1e] border border-[#111] rounded-lg shadow-2xl overflow-hidden font-sans text-white relative">
+                    <!-- Window Header -->
+                    <div class="bg-[#2d2d30] px-3 py-1.5 border-b border-[#111] flex items-center justify-between text-[11px]">
+                        <div class="flex items-center gap-2">
+                            <div class="w-3 h-3 bg-red-500 rounded-full"></div>
+                            <div class="w-3 h-3 bg-yellow-500 rounded-full"></div>
+                            <div class="w-3 h-3 bg-green-500 rounded-full"></div>
+                        </div>
+                        <span class="font-bold text-[#ccc]">VRChat SDK - Builder</span>
+                        <div class="w-12"></div>
+                    </div>
+                    
+                    <!-- Tabs -->
+                    <div class="flex bg-[#252526] border-b border-[#3f3f46] text-[12px] font-bold">
+                        <div class="px-4 py-2 text-[#888] cursor-pointer hover:bg-[#333]">Authentication</div>
+                        <div class="px-4 py-2 border-b-2 border-[#0ea5e9] text-[#0ea5e9] bg-[#1e1e1e]">Builder</div>
+                        <div class="px-4 py-2 text-[#888] cursor-pointer hover:bg-[#333]">Settings</div>
+                    </div>
+
+                    <!-- Main Content of Builder -->
+                    <div class="p-4 h-[320px] overflow-y-auto custom-scrollbar">
+                        
+                        <!-- World Info -->
+                        <div class="mb-4 pb-4 border-b border-[#333]">
+                            <div class="text-[14px] font-bold mb-1">World Name: <span class="font-normal text-[#ccc]">Final_Project_TeamA</span></div>
+                            <div class="text-[11px] text-[#888]">Capacity: 16 | File Size: -- MB</div>
+                        </div>
+
+                        <!-- Check List / Validations -->
+                        <div class="mb-4">
+                            <h6 class="text-[12px] font-bold text-[#aaa] mb-2 uppercase tracking-wider">Validations (에러 확인)</h6>
+                            
+                            <!-- Error 1 -->
+                            <div class="bg-[#381111] border border-[#6b2222] p-2 rounded mb-2 flex items-start gap-2">
+                                <i data-lucide="x-octagon" class="w-4 h-4 text-rose-500 shrink-0 mt-0.5"></i>
+                                <div class="flex-1">
+                                    <p class="text-[11px] text-rose-200">A VRC_SceneDescriptor is required.</p>
+                                    <p class="text-[9px] text-[#aaa] mt-0.5">씬에 스폰 위치를 정해주는 VRCWorld 프리팹이 없습니다.</p>
+                                </div>
+                                <button class="bg-[#444] hover:bg-[#555] text-white text-[9px] px-2 py-1 rounded border border-[#222]">Auto Fix</button>
+                            </div>
+
+                            <!-- Warning 1 -->
+                            <div class="bg-[#332a11] border border-[#5c4a1b] p-2 rounded mb-2 flex items-start gap-2">
+                                <i data-lucide="alert-triangle" class="w-4 h-4 text-amber-500 shrink-0 mt-0.5"></i>
+                                <div class="flex-1">
+                                    <p class="text-[11px] text-amber-200">This scene has many realtime lights.</p>
+                                    <p class="text-[9px] text-[#aaa] mt-0.5">실시간 조명이 너무 많아 렉이 걸릴 수 있습니다. (Baking 권장)</p>
+                                </div>
+                            </div>
+
+                            <!-- Success 1 -->
+                            <div class="p-1 flex items-center gap-2">
+                                <i data-lucide="check-circle" class="w-3.5 h-3.5 text-emerald-500"></i>
+                                <p class="text-[11px] text-[#ccc]">Audio sources are set up correctly.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Bottom Build Area -->
+                    <div class="bg-[#2d2d30] p-4 border-t border-[#111]">
+                        <div class="flex justify-between items-center mb-3">
+                            <span class="text-[11px] text-[#aaa]">Ready to Build? 에러(빨간색)가 있으면 업로드할 수 없습니다.</span>
+                        </div>
+                        <div class="flex gap-2">
+                            <button class="flex-1 bg-[#3a3a3a] hover:bg-[#4a4a4a] text-white py-2 rounded text-[12px] font-bold border border-[#222] transition-colors">
+                                Build & Test (오프라인 테스트)
+                            </button>
+                            <button class="flex-1 bg-[#0ea5e9] hover:bg-[#0284c7] text-white py-2 rounded text-[12px] font-bold border border-[#0284c7] shadow-lg transition-colors pulse-border flex justify-center items-center gap-1.5" onclick="alert('서버 업로드를 시작합니다! (실제로는 유니티에서 실행하세요)')">
+                                <i data-lucide="cloud-upload" class="w-4 h-4"></i> Build & Publish for Windows
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-6 grid md:grid-cols-2 gap-4">
+                    <div class="bg-blue-50 p-4 rounded-xl border border-blue-100">
+                        <strong class="text-blue-900 text-sm block mb-1 flex items-center gap-1.5"><i data-lucide="hammer" class="w-4 h-4"></i> Auto Fix 활용하기</strong>
+                        <p class="text-xs text-blue-800 leading-relaxed">
+                            SDK 빌더에서 뜨는 대부분의 설정 에러(충돌 레이어, 스크립트 세팅 등)는 우측의 <code>Auto Fix</code> 버튼을 누르면 유니티가 알아서 올바른 값으로 수정해 줍니다. 당황하지 말고 Auto Fix를 먼저 눌러보세요.
+                        </p>
+                    </div>
+                    <div class="bg-indigo-50 p-4 rounded-xl border border-indigo-100">
+                        <strong class="text-indigo-900 text-sm block mb-1 flex items-center gap-1.5"><i data-lucide="gamepad-2" class="w-4 h-4"></i> Build & Test 필수</strong>
+                        <p class="text-xs text-indigo-800 leading-relaxed">
+                            서버에 올리기 전 <code>Build & Test</code> 버튼을 누르면 서버 접속 없이 내 컴퓨터 안에서 VRChat이 켜지며 바로 맵을 테스트할 수 있습니다. 업로드 시간을 절약하기 위해 반드시 거쳐야 하는 단계입니다.
+                        </p>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- STEP 5: 기말 상호 피드백 준비 -->
+        <div class="step-wrapper bg-indigo-600 rounded-xl shadow-md border border-indigo-700 mb-8">
+            <button onclick="toggleStep('step5')" class="relative z-10 w-full px-6 py-5 flex items-center justify-between bg-indigo-600 hover:bg-indigo-700 transition-colors text-left group rounded-t-xl rounded-b-xl">
+                <div class="flex items-center gap-4">
+                    <span class="flex items-center justify-center w-10 h-10 rounded-full bg-white text-indigo-700 font-bold text-lg shadow" id="badge-step5">5</span>
+                    <div>
+                        <h2 class="text-xl font-bold text-white">최종 검토 및 기말 상호 피드백 준비 체크리스트</h2>
+                        <p class="text-xs text-indigo-200 mt-1 font-medium">서로의 월드에 방문하여 원활한 피드백을 주고받기 위한 마무리</p>
+                    </div>
+                </div>
+                <i data-lucide="chevron-down" class="text-indigo-200 transition-transform duration-300" id="icon-step5"></i>
+            </button>
+            <div id="step5" class="step-content px-6 py-6 border-t border-indigo-500 bg-white rounded-b-xl">
+                
+                <p class="text-sm text-slate-600 mb-6 leading-relaxed">
+                    다음 주 기말 상호 피드백 시간에는 모든 조원과 교수님이 <strong>각 조의 VRChat 월드에 직접 인게임 접속</strong>하여 자유롭게 맵을 둘러보고 크리틱을 진행합니다. 다수의 방문자를 맞이할 완벽한 준비가 되었는지 아래 항목들을 최종 점검하세요.
+                </p>
+
+                <div class="grid sm:grid-cols-2 gap-4">
+                    <label class="flex items-start gap-3 p-4 bg-slate-50 border border-slate-200 rounded-xl cursor-pointer hover:bg-slate-100 transition-colors">
+                        <input type="checkbox" class="w-5 h-5 mt-0.5 text-indigo-600 rounded border-gray-300 focus:ring-indigo-500">
+                        <div>
+                            <strong class="text-sm text-slate-800 block mb-0.5">VRCWorld 스폰 지점 셋팅</strong>
+                            <p class="text-xs text-slate-500">유저들이 처음 접속했을 때 바닥 아래로 떨어지지 않도록 VRCWorld(파란색 아이콘) 프리팹이 땅 위에 잘 떠 있는지, 월드의 기획 의도를 가장 잘 보여줄 수 있는 방향을 바라보고 있는지 확인했나요?</p>
+                        </div>
+                    </label>
+
+                    <label class="flex items-start gap-3 p-4 bg-slate-50 border border-slate-200 rounded-xl cursor-pointer hover:bg-slate-100 transition-colors">
+                        <input type="checkbox" class="w-5 h-5 mt-0.5 text-indigo-600 rounded border-gray-300 focus:ring-indigo-500">
+                        <div>
+                            <strong class="text-sm text-slate-800 block mb-0.5">리스폰(Respawn) 높이 설정</strong>
+                            <p class="text-xs text-slate-500">맵 밖으로 떨어지거나 틈새에 끼었을 때 영원히 추락하지 않고 다시 스폰 지점으로 안전하게 돌아올 수 있도록 <code>Y Kill Height</code> 수치를 적절히 설정했나요?</p>
+                        </div>
+                    </label>
+
+                    <label class="flex items-start gap-3 p-4 bg-slate-50 border border-slate-200 rounded-xl cursor-pointer hover:bg-slate-100 transition-colors">
+                        <input type="checkbox" class="w-5 h-5 mt-0.5 text-indigo-600 rounded border-gray-300 focus:ring-indigo-500">
+                        <div>
+                            <strong class="text-sm text-slate-800 block mb-0.5">피드백용 거울(Mirror) 및 집결 공간</strong>
+                            <p class="text-xs text-slate-500">조장이 다른 조원들과 교수님을 모아놓고 월드에 대한 설명을 진행하거나, 피드백을 나눌 수 있는 쾌적한 집결 광장과 거울(On/Off 토글)이 준비되어 있나요?</p>
+                        </div>
+                    </label>
+
+                    <label class="flex items-start gap-3 p-4 bg-slate-50 border border-slate-200 rounded-xl cursor-pointer hover:bg-slate-100 transition-colors">
+                        <input type="checkbox" class="w-5 h-5 mt-0.5 text-indigo-600 rounded border-gray-300 focus:ring-indigo-500">
+                        <div>
+                            <strong class="text-sm text-slate-800 block mb-0.5">Private 인스턴스 초대 테스트</strong>
+                            <p class="text-xs text-slate-500">조장이 업로드한 월드를 <code>Invite+</code> 또는 <code>Friends+</code> 인스턴스로 개설하여, 교수님과 다른 조의 학우들을 무사히 초대하고 접속시킬 수 있는지 모의 테스트를 완료했나요?</p>
+                        </div>
+                    </label>
+                </div>
+
+                <div class="mt-8 text-center bg-indigo-50 py-4 rounded-xl border border-indigo-100">
+                    <p class="text-indigo-900 font-bold mb-1">수고하셨습니다!</p>
+                    <p class="text-xs text-indigo-700">이번 학기 동안 3D 모델링부터 유니티, 그리고 VRChat 로직 구현까지 어려운 과정을 잘 따라와 주었습니다.<br>성공적인 기말 상호 피드백 시간을 기대합니다.</p>
+                </div>
+
+            </div>
+        </div>
+
+    </main>
+
+    <script>
+        // Initialize Icons
+        lucide.createIcons();
+
+        // Accordion Toggle Logic
+        function toggleStep(stepId) {
+            const content = document.getElementById(stepId);
+            const icon = document.getElementById('icon-' + stepId);
+            const isActive = content.classList.contains('active');
+            
+            // Close all
+            document.querySelectorAll('.step-content').forEach(el => {
+                el.classList.remove('active');
+                const btnIcon = document.getElementById('icon-' + el.id);
+                if(btnIcon) btnIcon.style.transform = 'rotate(0deg)';
+                updateHeaderStyle(el.id, false);
+            });
+            
+            // Open clicked
+            if (!isActive) {
+                content.classList.add('active');
+                if(icon) icon.style.transform = 'rotate(180deg)';
+                updateHeaderStyle(stepId, true);
+            }
+        }
+
+        function updateHeaderStyle(stepId, isActive) {
+            const button = document.querySelector(`[onclick="toggleStep('${stepId}')"]`);
+            if(!button) return;
+            const badge = document.getElementById('badge-' + stepId);
+            const title = button.querySelector('h2');
+            
+            // Step 5 uses different color scheme (Indigo background)
+            if (stepId === 'step5') {
+                if (isActive) {
+                    button.classList.remove('rounded-b-xl');
+                } else {
+                    button.classList.add('rounded-b-xl');
+                }
+                return;
+            }
+
+            // Steps 1 to 4 styles
+            if (isActive) {
+                button.classList.replace('bg-white', 'bg-indigo-50');
+                button.classList.replace('hover:bg-slate-50', 'hover:bg-indigo-100');
+                button.classList.remove('rounded-b-xl');
+                if(badge) {
+                    badge.classList.replace('bg-slate-100', 'bg-indigo-600');
+                    badge.classList.replace('text-slate-500', 'text-white');
+                    badge.classList.remove('group-hover:bg-indigo-100', 'group-hover:text-indigo-600');
+                }
+                title.classList.replace('text-slate-800', 'text-indigo-900');
+                title.classList.remove('group-hover:text-indigo-700');
+                const icon = document.getElementById('icon-' + stepId);
+                if(icon) icon.classList.replace('text-slate-400', 'text-indigo-600');
+            } else {
+                button.classList.replace('bg-indigo-50', 'bg-white');
+                button.classList.replace('hover:bg-indigo-100', 'hover:bg-slate-50');
+                button.classList.add('rounded-b-xl');
+                if(badge) {
+                    badge.classList.replace('bg-indigo-600', 'bg-slate-100');
+                    badge.classList.replace('text-white', 'text-slate-500');
+                    badge.classList.add('group-hover:bg-indigo-100', 'group-hover:text-indigo-600');
+                }
+                title.classList.replace('text-indigo-900', 'text-slate-800');
+                title.classList.add('group-hover:text-indigo-700');
+                const icon = document.getElementById('icon-' + stepId);
+                if(icon) icon.classList.replace('text-indigo-600', 'text-slate-400');
+            }
+        }
+
+        // Run Initialization
+        document.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('step1').classList.add('active');
+            document.getElementById('icon-step1').style.transform = 'rotate(180deg)';
+            updateHeaderStyle('step1', true);
+        });
+
+    </script>
+</body>
+</html>
