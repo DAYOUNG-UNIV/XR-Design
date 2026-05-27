@@ -1,0 +1,994 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>블렌더 UV Unwrap 자습서</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.8/dist/web/static/pretendard.css" rel="stylesheet" />
+    <script src="https://unpkg.com/lucide@latest"></script>
+    
+    <!-- Three.js for Interactive UV Viewer -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+
+    <style>
+        body {
+            font-family: 'Pretendard', sans-serif;
+            background-color: #f8fafc;
+            background-image: radial-gradient(#cbd5e1 1px, transparent 1px);
+            background-size: 20px 20px;
+        }
+        
+        .step-content {
+            display: none;
+            animation: fadeIn 0.4s ease-out forwards;
+            opacity: 0;
+            transform: translateY(-5px);
+            position: relative;
+            z-index: 20;
+        }
+        .step-content.active { display: block; }
+        
+        @keyframes fadeIn {
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .step-wrapper {
+            position: relative;
+            z-index: 1;
+            transition: z-index 0s;
+        }
+        .step-wrapper:hover { z-index: 40; }
+
+        /* Tooltip CSS */
+        .tooltip-trigger {
+            position: relative;
+            display: inline-block;
+            border-bottom: 1.5px dashed #f97316;
+            cursor: help;
+            font-weight: 600;
+        }
+        .tooltip-content {
+            visibility: hidden;
+            opacity: 0;
+            position: absolute;
+            bottom: calc(100% + 8px);
+            left: 50%;
+            transform: translateX(calc(-50% + var(--shift-x, 0px)));
+            background-color: #1e293b;
+            color: #f8fafc;
+            text-align: center;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            font-weight: 400;
+            line-height: 1.4;
+            width: max-content;
+            max-width: 240px;
+            z-index: 50;
+            transition: opacity 0.2s ease-in-out;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            pointer-events: none;
+            word-break: keep-all;
+        }
+        .tooltip-content::after {
+            content: "";
+            position: absolute;
+            top: 100%;
+            left: calc(50% - var(--shift-x, 0px));
+            margin-left: -6px;
+            border-width: 6px;
+            border-style: solid;
+            border-color: #1e293b transparent transparent transparent;
+        }
+        .tooltip-trigger:hover .tooltip-content {
+            visibility: visible;
+            opacity: 1;
+        }
+
+        /* Grid background for UV map representation */
+        .uv-grid-bg {
+            background-image: 
+                linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px),
+                linear-gradient(rgba(255,255,255,0.05) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255,255,255,0.05) 1px, transparent 1px);
+            background-size: 100px 100px, 100px 100px, 20px 20px, 20px 20px;
+            background-position: -1px -1px, -1px -1px, -1px -1px, -1px -1px;
+        }
+        
+        #step1-3d-container canvas { border-radius: 8px; }
+        
+        .task-box {
+            background: #ffffff;
+            border-left: 4px solid #f97316;
+            padding: 1rem 1.25rem;
+            border-radius: 0.5rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+            margin-bottom: 1rem;
+        }
+    </style>
+</head>
+<body class="text-slate-800 antialiased min-h-screen pb-24">
+
+    <header class="bg-white shadow-sm border-b border-slate-200 sticky top-0 z-50">
+        <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-5">
+            <div class="flex items-center justify-between">
+                <div>
+                    <div class="flex items-center gap-2 mb-1">
+                        <span class="bg-orange-100 text-orange-700 text-xs font-bold px-2 py-0.5 rounded">실습 자습서</span>
+                        <span class="text-sm text-slate-500 font-medium">유니티 연동을 위한 에셋 파이프라인</span>
+                    </div>
+                    <h1 class="text-2xl font-bold text-slate-900 flex items-center gap-2">
+                        <i data-lucide="scissors" class="text-orange-500"></i>
+                        Blender UV Unwrap (전개도 펼치기) 마스터하기
+                    </h1>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 mt-8 space-y-5">
+        
+        <div class="bg-slate-800 rounded-xl p-6 text-white shadow-lg flex flex-col md:flex-row gap-6 items-center">
+            <div class="flex-1">
+                <h3 class="font-bold text-orange-400 text-xl mb-3 flex items-center gap-2"><i data-lucide="target" class="w-5 h-5"></i> 학습 목표: UV 매핑이란?</h3>
+                <p class="text-sm text-slate-300 leading-relaxed mb-4">
+                    블렌더에서 만든 3D 모델을 Unity나 Unreal Engine으로 가져가면 처음에는 색이 없는 찰흙 덩어리로 보입니다. 여기에 텍스처(이미지)를 입히려면 <strong>입체적인 3D 표면을 가위로 잘라 평평한 2D 평면으로 펼쳐야</strong> 합니다. (택배 상자를 펼치는 것과 같습니다.) <br><br>
+                    공간의 좌표를 X, Y, Z로 부르듯, 텍스처 전용 2D 좌표를 <strong>U와 V</strong>라고 부르기 때문에 이 과정을 'UV 매핑' 또는 'UV 언랩(Unwrap)'이라고 합니다.
+                </p>
+            </div>
+            <div class="w-full md:w-1/3 bg-slate-700/50 p-4 rounded-lg border border-slate-600">
+                <strong class="text-orange-300 text-sm block mb-2"><i data-lucide="check-square" class="w-4 h-4 inline"></i> 실습 준비: 기본 도형 배치</strong>
+                <ol class="text-xs text-slate-300 space-y-2 list-decimal list-inside">
+                    <li>블렌더를 켜면 중앙에 기본 <strong>큐브(Cube)</strong>가 있습니다.</li>
+                    <li><kbd class="bg-slate-800 px-1.5 py-0.5 rounded border border-slate-600 font-mono">Shift + A</kbd>를 눌러 <strong>실린더(Cylinder)</strong>와 <strong>UV 구체(UV Sphere)</strong>를 각각 추가합니다.</li>
+                    <li>도형들이 겹치지 않게 <kbd class="bg-slate-800 px-1.5 py-0.5 rounded border border-slate-600 font-mono">G</kbd> (이동) ➔ <kbd class="bg-slate-800 px-1.5 py-0.5 rounded border border-slate-600 font-mono">X</kbd> (X축 고정)를 눌러 나란히 배치해 둡니다.</li>
+                </ol>
+            </div>
+        </div>
+
+        <div class="step-wrapper bg-white rounded-xl shadow-sm border border-slate-200">
+            <button onclick="toggleStep('step1')" class="relative z-10 w-full px-6 py-5 flex items-center justify-between bg-white hover:bg-slate-50 transition-colors text-left group rounded-t-xl rounded-b-xl">
+                <div class="flex items-center gap-4">
+                    <span class="flex items-center justify-center w-10 h-10 rounded-full bg-slate-100 text-slate-500 font-bold text-lg group-hover:bg-orange-100 group-hover:text-orange-600 transition-colors" id="badge-step1">1</span>
+                    <div>
+                        <h2 class="text-xl font-bold text-slate-800 group-hover:text-orange-700 transition-colors">UV 에디팅 환경 세팅과 Color Grid</h2>
+                        <p class="text-xs text-slate-500 mt-1 font-medium">3D 좌표(XYZ)와 2D 전개도(UV)의 이해 및 왜곡 체크 패턴 입히기</p>
+                    </div>
+                </div>
+                <i data-lucide="chevron-down" class="text-slate-400 transition-transform duration-300" id="icon-step1"></i>
+            </button>
+            <div id="step1" class="step-content px-6 py-6 border-t border-slate-100 rounded-b-xl">
+                
+                <!-- 3D vs 2D Concept Visualization -->
+                <div class="mb-8 flex flex-col sm:flex-row gap-4 items-center justify-center bg-slate-900 p-6 rounded-xl border border-slate-800 text-center relative overflow-hidden">
+                    <!-- 3D Cube Viewer Container -->
+                    <div class="flex-1 w-full max-w-[240px] h-[200px] relative flex flex-col items-center justify-center bg-slate-800/50 rounded-xl border border-slate-700 shadow-inner">
+                        <div class="absolute top-2 left-2 bg-black/40 px-2 py-1 rounded text-[10px] text-slate-300 font-mono text-left z-10 pointer-events-none">
+                            <span class="text-red-400 font-bold">X</span> (가로)<br>
+                            <span class="text-green-400 font-bold">Y</span> (세로/높이)<br>
+                            <span class="text-blue-400 font-bold">Z</span> (깊이)
+                        </div>
+                        <div id="step1-3d-container" class="w-full h-full absolute inset-0 cursor-grab active:cursor-grabbing"></div>
+                        <p class="text-xs text-slate-300 mt-auto mb-2 relative z-10 bg-black/40 px-3 py-1 rounded-full pointer-events-none">입체적인 3D 메쉬 (X,Y,Z)</p>
+                    </div>
+                    
+                    <div class="text-slate-500 shrink-0 flex flex-col items-center z-10 relative">
+                        <span class="bg-orange-500/20 text-orange-400 text-xs px-2 py-1 rounded font-bold border border-orange-500/30 mb-2">Unwrap (언랩)</span>
+                        <i data-lucide="arrow-right" class="w-6 h-6 hidden sm:block text-orange-400 animate-pulse"></i>
+                        <i data-lucide="arrow-down" class="w-6 h-6 block sm:hidden text-orange-400 animate-pulse"></i>
+                    </div>
+
+                    <!-- 2D UV Map Representation -->
+                    <div class="flex-1 w-full max-w-[240px] h-[200px] relative flex flex-col justify-center items-center bg-slate-800/50 border border-slate-700 rounded-xl shadow-inner overflow-hidden">
+                        <div class="absolute inset-0 uv-grid-bg opacity-40"></div>
+                        
+                        <!-- U and V Axes Overlay -->
+                        <div class="absolute top-4 left-8 right-6 bottom-10 pointer-events-none z-10">
+                            <svg class="w-full h-full overflow-visible">
+                                <defs>
+                                    <marker id="arrow-u" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
+                                        <path d="M0,0 L6,3 L0,6 Z" fill="#f87171" />
+                                    </marker>
+                                    <marker id="arrow-v" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
+                                        <path d="M0,0 L6,3 L0,6 Z" fill="#4ade80" />
+                                    </marker>
+                                </defs>
+                                <line x1="0" y1="100%" x2="100%" y2="100%" stroke="#f87171" stroke-width="2" marker-end="url(#arrow-u)" />
+                                <line x1="0" y1="100%" x2="0" y2="0" stroke="#4ade80" stroke-width="2" marker-end="url(#arrow-v)" />
+                                <circle cx="0" cy="100%" r="2.5" fill="#fff" />
+                            </svg>
+                            <span class="absolute bottom-2 right-0 text-[#f87171] font-bold text-[11px] leading-none">U</span>
+                            <span class="absolute top-0 left-2 text-[#4ade80] font-bold text-[11px] leading-none">V</span>
+                            <span class="absolute -bottom-4 -left-3 text-white font-mono text-[9px] leading-none">(0,0)</span>
+                            <span class="absolute -bottom-4 -right-2 text-white font-mono text-[9px] leading-none">(1,0)</span>
+                            <span class="absolute top-0 -left-6 text-white font-mono text-[9px] leading-none text-right">(0,1)</span>
+                        </div>
+
+                        <!-- Unfolded Cube T-Shape -->
+                        <div class="relative z-0 flex flex-col items-center justify-center w-32 pb-4">
+                            <div class="flex w-full">
+                                <div class="w-8 h-8"></div>
+                                <div class="w-8 h-8 border border-orange-400 bg-orange-400/20"></div>
+                                <div class="w-8 h-8"></div>
+                                <div class="w-8 h-8"></div>
+                            </div>
+                            <div class="flex w-full">
+                                <div class="w-8 h-8 border border-orange-400 bg-orange-400/20"></div>
+                                <div class="w-8 h-8 border-2 border-orange-400 bg-orange-500/60 flex items-center justify-center font-bold text-[8px] text-white shadow-[0_0_10px_rgba(249,115,22,0.6)]">Top</div>
+                                <div class="w-8 h-8 border border-orange-400 bg-orange-400/20"></div>
+                                <div class="w-8 h-8 border border-orange-400 bg-orange-400/20"></div>
+                            </div>
+                            <div class="flex w-full">
+                                <div class="w-8 h-8"></div>
+                                <div class="w-8 h-8 border border-orange-400 bg-orange-400/20"></div>
+                                <div class="w-8 h-8"></div>
+                                <div class="w-8 h-8"></div>
+                            </div>
+                        </div>
+                        <p class="absolute bottom-2 text-xs text-orange-300 z-10 bg-black/40 px-3 py-1 rounded-full pointer-events-none">2D 전개도 (U,V 좌표)</p>
+                    </div>
+                </div>
+
+                <!-- Hands-on Tasks -->
+                <div class="task-box">
+                    <strong class="text-sm text-slate-800 flex items-center gap-2 mb-2"><i data-lucide="layout-template" class="w-4 h-4 text-orange-500"></i> 작업 화면 분할하기</strong>
+                    <ul class="text-sm text-slate-600 space-y-1.5 list-disc list-inside">
+                        <li>블렌더 최상단 메뉴 탭에서 <strong>[UV Editing]</strong>을 클릭합니다. 화면이 좌측(2D 전개도)과 우측(3D 뷰포트)으로 나뉩니다.</li>
+                        <li>우측 3D 뷰포트에서 기본 큐브를 선택하고 <kbd class="bg-slate-100 px-1 py-0.5 border border-slate-300 rounded text-xs font-mono">Tab</kbd> 키를 눌러 <strong>에디트 모드(Edit Mode)</strong>로 진입합니다.</li>
+                        <li><kbd class="bg-slate-100 px-1 py-0.5 border border-slate-300 rounded text-xs font-mono">A</kbd> 키를 눌러 큐브의 전체 면을 선택해 봅니다. 좌측 2D 화면에 십자가 모양의 전개도가 나타납니다.</li>
+                    </ul>
+                </div>
+
+                <div class="bg-indigo-50 border border-indigo-200 rounded-xl p-5 mt-6 shadow-sm">
+                    <strong class="text-sm text-indigo-900 flex items-center gap-2 mb-3"><i data-lucide="grid" class="w-4 h-4 text-indigo-500"></i> 왜곡 확인을 위한 Color Grid 생성 및 적용</strong>
+                    <p class="text-xs text-indigo-800 leading-relaxed mb-4">
+                        펼쳐진 전개도가 찌그러지지 않았는지 눈으로 쉽게 확인하기 위해 체스판 형태의 테스트 이미지를 입혀보겠습니다. <strong>정사각형 무늬가 직사각형으로 늘어난다면 UV가 왜곡(Distortion)된 것입니다.</strong>
+                    </p>
+                    <ol class="text-xs text-slate-700 space-y-2 list-decimal list-inside bg-white p-4 rounded-lg border border-indigo-100">
+                        <li>좌측 UV 에디터 상단 메뉴에서 <strong>New Image</strong>를 클릭합니다. (단축키 <kbd class="bg-slate-100 px-1 py-0.5 border border-slate-300 rounded font-mono">Alt + N</kbd>)</li>
+                        <li>이름을 'test_grid'로 설정하고, <strong>Generated Type을 'UV Grid'로 변경</strong>한 후 OK를 누릅니다.</li>
+                        <li>우측 속성 패널 하단의 빨간색 지구본 아이콘인 <strong>Material Properties</strong> 탭으로 이동합니다.</li>
+                        <li>Base Color 옆의 <span class="text-yellow-500 font-bold">🟡 노란색 점</span>을 클릭하고 <strong>Image Texture</strong>를 선택합니다.</li>
+                        <li>좌측의 그림 아이콘을 눌러 방금 만든 'test_grid'를 연결해 줍니다.</li>
+                        <li>우측 3D 뷰포트 상단 우측의 동그란 아이콘 중 3번째인 <strong>Material Preview</strong> 모드를 켜서 큐브 표면에 격자가 정상적으로 나오는지 확인합니다.</li>
+                    </ol>
+                </div>
+
+            </div>
+        </div>
+
+        <div class="step-wrapper bg-white rounded-xl shadow-sm border border-slate-200">
+            <button onclick="toggleStep('step2')" class="relative z-10 w-full px-6 py-5 flex items-center justify-between bg-white hover:bg-slate-50 transition-colors text-left group rounded-t-xl rounded-b-xl">
+                <div class="flex items-center gap-4">
+                    <span class="flex items-center justify-center w-10 h-10 rounded-full bg-slate-100 text-slate-500 font-bold text-lg group-hover:bg-orange-100 group-hover:text-orange-600 transition-colors" id="badge-step2">2</span>
+                    <div>
+                        <h2 class="text-xl font-bold text-slate-800 group-hover:text-orange-700 transition-colors">언랩(Unwrap) 방식과 텍셀(Texel) 밀도</h2>
+                        <p class="text-xs text-slate-500 mt-1 font-medium">자동 언랩의 한계, 구체 왜곡, 그리고 UV 아일랜드 스케일 맞추기</p>
+                    </div>
+                </div>
+                <i data-lucide="chevron-down" class="text-slate-400 transition-transform duration-300" id="icon-step2"></i>
+            </button>
+            <div id="step2" class="step-content px-6 py-6 border-t border-slate-100 rounded-b-xl">
+
+                <div class="mb-6">
+                    <p class="text-sm text-slate-600 leading-relaxed">
+                        3D 뷰포트에서 전체 선택(A) 후 <kbd class="bg-slate-100 px-1 py-0.5 border border-slate-300 rounded font-mono font-bold">U</kbd> 키를 누르면 다양한 UV 매핑 방식이 나옵니다.
+                    </p>
+                    <ul class="text-sm text-slate-600 mt-3 space-y-2 ml-2">
+                        <li>✅ <strong>Unwrap (기본):</strong> 우리가 설정한 가위질 선(Seam)을 기준으로 면을 펼칩니다. 가장 많이 쓰입니다.</li>
+                        <li>✅ <strong>Smart UV Project:</strong> 블렌더가 각도를 계산해 자동으로 잘라 펼칩니다. 복잡한 기계나 배경 프랍에 유용하지만 전개도가 지저분해질 수 있습니다.</li>
+                        <li>⚠️ <strong>Cube Projection 등:</strong> 형태에 맞춰 강제로 투영시킵니다. Unity 라이트맵 베이킹 시 면이 겹쳐 오류가 날 수 있어 주의가 필요합니다.</li>
+                    </ul>
+                </div>
+
+                <!-- 3D Interactive UV Simulator -->
+                <div class="bg-slate-900 rounded-xl overflow-hidden border border-slate-800 shadow-xl flex flex-col mb-8">
+                    <div class="bg-slate-800 px-4 py-3 border-b border-slate-700 flex flex-col lg:flex-row gap-3 justify-between items-center z-20 relative">
+                        <h6 class="text-white font-bold text-sm flex items-center gap-2 whitespace-nowrap"><i data-lucide="monitor-play" class="w-4 h-4 text-orange-400"></i> 실시간 UV 왜곡 시뮬레이터</h6>
+                        <div class="flex flex-wrap justify-center gap-2 shrink-0">
+                            <button onclick="setUVShape('cylinder')" id="btn-cylinder" class="bg-orange-500 text-white text-xs px-3 py-2 rounded font-bold hover:bg-orange-600 transition shadow">실린더 (원통)</button>
+                            <button onclick="setUVShape('sphere')" id="btn-sphere" class="bg-slate-700 text-slate-300 text-xs px-3 py-2 rounded font-bold hover:bg-slate-600 transition shadow border border-slate-600">구체 (자동)</button>
+                            <button onclick="setUVShape('cubesphere')" id="btn-cubesphere" class="bg-slate-700 text-slate-300 text-xs px-3 py-2 rounded font-bold hover:bg-slate-600 transition shadow border border-slate-600">구체 (Seam 분할)</button>
+                            <button onclick="setUVShape('texel')" id="btn-texel" class="bg-pink-600 text-white text-xs px-3 py-2 rounded font-bold hover:bg-pink-700 transition shadow border border-pink-700"><i data-lucide="alert-triangle" class="w-3 h-3 inline"></i> 면적 불균형</button>
+                        </div>
+                    </div>
+                    
+                    <div class="flex flex-col md:flex-row w-full bg-[#1a1a1a]">
+                        <!-- Left: 3D View -->
+                        <div id="three-container" class="w-full md:w-1/2 h-[350px] relative cursor-grab active:cursor-grabbing border-b md:border-b-0 md:border-r border-slate-700">
+                            <!-- Overlay instructions -->
+                            <div class="absolute top-4 left-4 text-slate-300 text-[11px] sm:text-xs bg-black/60 px-3 py-2 rounded-lg border border-white/10 pointer-events-none z-10 backdrop-blur-sm max-w-[240px] sm:max-w-[280px]">
+                                <strong class="text-orange-400 block mb-1">관찰 포인트 👀</strong>
+                                <p class="mb-1 leading-relaxed" id="sim-desc-cylinder">원통의 몸통은 완벽한 사각형으로 펴져 왜곡이 없지만, 위아래 원형 뚜껑과 만나는 곳은 어쩔 수 없이 자르는 선(Seam)이 필요함을 우측 전개도에서 확인할 수 있습니다.</p>
+                                <p class="hidden leading-relaxed" id="sim-desc-sphere">블렌더의 기본 구체(Sphere) 언랩입니다. 3D 모델의 극점(Pole) 부분과 우측 2D 전개도를 비교해보면, 이미지가 가로로 극심하게 왜곡되어 모이는 현상을 관찰할 수 있습니다.</p>
+                                <p class="hidden leading-relaxed" id="sim-desc-cubesphere">큐브를 둥글게 깎아 만든 구체입니다. 6개의 면으로 분할하여 펼쳤기 때문에 우측 전개도를 보면 6개의 독립된 조각으로 분리된 것을 확인할 수 있습니다.</p>
+                                <p class="hidden leading-relaxed" id="sim-desc-texel"><strong class="text-pink-400">텍셀 밀도(Texel Density) 불균형:</strong> 동일한 3D 면적임에도 <b>윗면(Top)</b>은 UV 영역이 너무 커 패턴이 비정상적으로 촘촘하게 보입니다. 반면 <b>우측면(Right)</b>은 UV 영역이 너무 작아 텍스처 해상도가 심하게 깨집니다. 마우스로 회전하며 각 면을 비교해 보세요!</p>
+                            </div>
+                            <div class="absolute bottom-4 left-4 text-white/40 text-[10px] flex items-center gap-1 pointer-events-none z-10 bg-black/40 px-2 py-1 rounded">
+                                <i data-lucide="mouse" class="w-3 h-3"></i> 드래그로 3D 회전
+                            </div>
+                        </div>
+                        
+                        <!-- Right: 2D UV Map View -->
+                        <div class="w-full md:w-1/2 h-[350px] relative bg-[#222] flex flex-col items-center justify-center overflow-hidden">
+                            <div class="absolute top-4 right-4 text-orange-400 font-bold text-[10px] sm:text-xs z-10 bg-black/60 px-2 py-1 border border-orange-500/30 rounded shadow-sm flex items-center gap-1.5 pointer-events-none">
+                                <i data-lucide="layout-template" class="w-3.5 h-3.5"></i> 2D 전개도 (UV 맵)
+                            </div>
+                            <canvas id="uv-canvas" class="w-full h-full max-w-[350px] max-h-[350px] object-contain p-4"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="grid md:grid-cols-2 gap-6">
+                    <!-- Seam Rules -->
+                    <div class="bg-amber-50 border border-amber-200 rounded-xl p-5 shadow-sm">
+                        <h5 class="font-bold text-amber-900 text-base mb-3 border-b border-amber-200 pb-2 flex items-center gap-2">
+                            <i data-lucide="scissors" class="w-5 h-5 text-amber-600"></i> 재봉선(Seam)을 긋는 3대 원칙
+                        </h5>
+                        <ul class="space-y-3 text-xs text-amber-800 leading-relaxed">
+                            <li class="flex items-start gap-2">
+                                <i data-lucide="eye-off" class="w-4 h-4 mt-0.5 shrink-0 text-amber-600"></i>
+                                <div>
+                                    <strong class="block mb-0.5 text-amber-900">1. 시선이 닿지 않는 곳에 숨기기</strong>
+                                    전개도가 끊어지면 텍스처도 끊어질 확률이 높습니다. 사물의 바닥면, 뒷면 등 <b>플레이어에게 잘 안 보이는 곳</b>을 우선적으로 자릅니다.
+                                </div>
+                            </li>
+                            <li class="flex items-start gap-2">
+                                <i data-lucide="box-select" class="w-4 h-4 mt-0.5 shrink-0 text-amber-600"></i>
+                                <div>
+                                    <strong class="block mb-0.5 text-amber-900">2. 90도로 심하게 꺾이는 모서리</strong>
+                                    각진 하드 서페이스(기계 등)에서 모서리를 자르지 않고 억지로 펴면, 유니티 라이트맵을 구울 때 그림자가 까맣게 타버립니다.
+                                </div>
+                            </li>
+                            <li class="flex items-start gap-2">
+                                <i data-lucide="shirt" class="w-4 h-4 mt-0.5 shrink-0 text-amber-600"></i>
+                                <div>
+                                    <strong class="block mb-0.5 text-amber-900">3. 실제 사물의 이음매</strong>
+                                    실제 옷의 재봉선, 가죽 소파의 꿰맨 자국 등 <b>원래 물리적으로 끊어져 있는 부위</b>를 Seam으로 만들면 자연스럽습니다.
+                                </div>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <!-- Texel Density Tips & UV Island -->
+                    <div class="space-y-6">
+                        <div class="bg-indigo-50 border border-indigo-200 rounded-xl p-4 shadow-sm flex items-start gap-3">
+                            <div class="bg-indigo-600 p-1.5 rounded-lg text-white shrink-0 mt-0.5"><i data-lucide="component" class="w-4 h-4"></i></div>
+                            <div>
+                                <h4 class="font-bold text-indigo-900 text-sm mb-1">UV 아일랜드 (Island)란?</h4>
+                                <p class="text-xs text-indigo-800 leading-relaxed break-keep">
+                                    가위질(Seam)을 통해 독립적으로 잘려져 나온 <strong>2D 전개도 조각들 하나하나</strong>를 지칭합니다.
+                                </p>
+                            </div>
+                        </div>
+
+                        <div class="bg-pink-50 border border-pink-200 rounded-xl p-5 shadow-sm">
+                            <h5 class="font-bold text-pink-900 text-base mb-3 border-b border-pink-200 pb-2 flex items-center gap-2">
+                                <i data-lucide="scaling" class="w-5 h-5 text-pink-600"></i> 면적이 불균형할 때: 텍셀 밀도 맞추기
+                            </h5>
+                            <p class="text-[11px] text-pink-800 leading-relaxed mb-3">
+                                3D 공간에서는 면적이 비슷한데, UV 전개도에서 조각(아일랜드)의 크기가 서로 다르면 <b>체크무늬 크기(해상도)가 부위마다 달라져 이질감</b>이 발생합니다.
+                            </p>
+                            <div class="bg-white p-3 rounded-lg border border-pink-100 shadow-inner">
+                                <strong class="text-pink-900 text-[11px] block mb-1.5 flex items-center gap-1.5"><i data-lucide="wrench" class="w-3.5 h-3.5 text-pink-500"></i> 1초 해결 팁</strong>
+                                <p class="text-[11px] text-slate-600 leading-relaxed">
+                                    UV 에디터 창에서 전체 선택(A) 후, 상단 메뉴에서 <b>UV > Average Islands Scale</b>을 클릭하세요. 3D 모델의 실제 표면적 비율에 맞춰 UV 조각들의 크기가 자동으로 균일해집니다!
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <div class="step-wrapper bg-white rounded-xl shadow-sm border border-slate-200">
+            <button onclick="toggleStep('step3')" class="relative z-10 w-full px-6 py-5 flex items-center justify-between bg-white hover:bg-slate-50 transition-colors text-left group rounded-t-xl rounded-b-xl">
+                <div class="flex items-center gap-4">
+                    <span class="flex items-center justify-center w-10 h-10 rounded-full bg-slate-100 text-slate-500 font-bold text-lg group-hover:bg-orange-100 group-hover:text-orange-600 transition-colors" id="badge-step3">3</span>
+                    <div>
+                        <h2 class="text-xl font-bold text-slate-800 group-hover:text-orange-700 transition-colors">실전 실습: 책(Book) 전개도 펼치기</h2>
+                        <p class="text-xs text-slate-500 mt-1 font-medium">스케일(Scale) 적용의 중요성과 이음새(Seam) 긋기</p>
+                    </div>
+                </div>
+                <i data-lucide="chevron-down" class="text-slate-400 transition-transform duration-300" id="icon-step3"></i>
+            </button>
+            <div id="step3" class="step-content px-6 py-6 border-t border-slate-100 rounded-b-xl">
+
+                <p class="text-sm text-slate-600 mb-5 leading-relaxed">기본 원리를 배웠으니, 실전 프랍인 '책(Book)'을 만들어 직접 언랩해 보겠습니다.</p>
+
+                <div class="grid md:grid-cols-2 gap-6 mb-6">
+                    <!-- Modeling Steps -->
+                    <div class="task-box !m-0">
+                        <strong class="text-sm text-slate-800 flex items-center gap-2 mb-3"><i data-lucide="hammer" class="w-4 h-4 text-orange-500"></i> 책 뼈대 모델링</strong>
+                        <ol class="text-xs text-slate-600 space-y-2 list-decimal list-inside">
+                            <li>새로운 큐브를 추가하고 <kbd class="bg-slate-100 px-1 py-0.5 border border-slate-300 rounded font-mono">S</kbd> (스케일) 키를 눌러 책처럼 납작하고 넓적하게 만듭니다.</li>
+                            <li><kbd class="bg-slate-100 px-1 py-0.5 border border-slate-300 rounded font-mono">Tab</kbd> 으로 에디트 모드에 들어갑니다.</li>
+                            <li>종이(속지)가 될 세 면(위, 아래, 앞)을 선택합니다.</li>
+                            <li><kbd class="bg-slate-100 px-1 py-0.5 border border-slate-300 rounded font-mono">I</kbd> (인셋) 키를 눌러 면을 약간 안으로 밀어 넣습니다.</li>
+                            <li><kbd class="bg-slate-100 px-1 py-0.5 border border-slate-300 rounded font-mono">E</kbd> (돌출) 키를 눌러 안으로 쑥 파이게 만들어 겉표지와 종이를 구분해 줍니다.</li>
+                        </ol>
+                    </div>
+
+                    <!-- CRITICAL WARNING: Ctrl+A -->
+                    <div class="bg-rose-600 text-white rounded-xl p-5 shadow-md relative overflow-hidden flex flex-col justify-center">
+                        <div class="absolute -right-4 -bottom-4 opacity-20"><i data-lucide="alert-triangle" class="w-32 h-32"></i></div>
+                        <div class="relative z-10">
+                            <h4 class="font-bold text-base mb-2 flex items-center gap-2">
+                                <i data-lucide="siren" class="w-5 h-5 animate-pulse text-yellow-300"></i> 초보자 최다 실수: Scale Apply
+                            </h4>
+                            <p class="text-xs text-rose-100 leading-relaxed mb-3">
+                                Object Mode에서 스케일(S)을 조절하여 책을 만들었다면, 블렌더는 여러분의 책을 <strong>"여전히 정사각형 큐브"</strong>로 착각합니다. 이 상태로 언랩을 하면 UV가 원본 큐브 비율에 맞춰져 심하게 찌그러집니다.
+                            </p>
+                            <div class="bg-black/30 p-2 rounded text-[11px] font-bold text-yellow-200">
+                                해결: Object Mode에서 모델 선택 ➔ <kbd class="bg-white text-rose-700 px-1 rounded">Ctrl + A</kbd> 누르기 ➔ <span class="bg-white/20 px-1 rounded">Scale</span> 클릭!
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Seam Marking -->
+                <div class="bg-slate-50 border border-slate-200 rounded-xl p-5 shadow-sm">
+                    <h5 class="font-bold text-slate-800 text-base mb-3 flex items-center gap-2">
+                        <i data-lucide="scissors-line-dashed" class="w-5 h-5 text-indigo-500"></i> 책의 이음새(Seam) 마킹과 Unwrap
+                    </h5>
+                    <p class="text-xs text-slate-600 mb-4">겉표지와 종이 부분이 분리되도록 가위질 선을 지정합니다.</p>
+                    <div class="grid sm:grid-cols-2 gap-4 text-xs text-slate-700">
+                        <ol class="space-y-2.5 list-decimal list-inside bg-white p-4 rounded-lg border border-slate-100">
+                            <li>에디트 모드에서 숫자 <kbd class="bg-slate-100 px-1 rounded border border-slate-300 font-mono">2</kbd>를 눌러 <strong>선(Edge) 선택 모드</strong>로 바꿉니다.</li>
+                            <li>겉표지와 속지가 만나는 경계선들을 <kbd class="bg-slate-100 px-1 rounded border border-slate-300 font-mono">Shift</kbd>를 누른 채 둘러가며 모두 선택합니다.</li>
+                            <li>우클릭 후 <strong>'Mark Seam (씨임을 마크)'</strong>을 클릭합니다. (선이 빨갛게 변합니다)</li>
+                        </ol>
+                        <ol class="space-y-2.5 list-decimal list-inside bg-white p-4 rounded-lg border border-slate-100" start="4">
+                            <li><kbd class="bg-slate-100 px-1 rounded border border-slate-300 font-mono">A</kbd>를 눌러 모델 전체를 다시 선택합니다.</li>
+                            <li><kbd class="bg-slate-100 px-1 rounded border border-slate-300 font-mono">U</kbd>를 누르고 <strong>'Unwrap'</strong>을 클릭합니다.</li>
+                            <li class="text-indigo-600 font-bold">결과 확인: 좌측 UV 에디터를 보면 표지와 속지가 깔끔하게 분리되어(여러 개의 아일랜드로) 펼쳐진 것을 볼 수 있습니다.</li>
+                        </ol>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <div class="step-wrapper bg-white rounded-xl shadow-sm border border-slate-200 mb-5">
+            <button onclick="toggleStep('step4')" class="relative z-10 w-full px-6 py-5 flex items-center justify-between bg-white hover:bg-slate-50 transition-colors text-left group rounded-t-xl rounded-b-xl">
+                <div class="flex items-center gap-4">
+                    <span class="flex items-center justify-center w-10 h-10 rounded-full bg-slate-100 text-slate-500 font-bold text-lg group-hover:bg-orange-100 group-hover:text-orange-600 transition-colors" id="badge-step4">4</span>
+                    <div>
+                        <h2 class="text-xl font-bold text-slate-800 group-hover:text-orange-700 transition-colors">유니티 최적화를 위한 텍스처 아틀라스</h2>
+                        <p class="text-xs text-slate-500 mt-1 font-medium">다중 오브젝트 UV 동시 편집 및 팔레트 텍스처링 기법</p>
+                    </div>
+                </div>
+                <i data-lucide="chevron-down" class="text-slate-400 transition-transform duration-300" id="icon-step4"></i>
+            </button>
+            <div id="step4" class="step-content px-6 py-6 border-t border-slate-100 rounded-b-xl">
+                
+                <div class="bg-amber-50 border border-amber-200 rounded-xl p-5 mb-6 shadow-sm">
+                    <h5 class="font-bold text-amber-900 text-sm mb-2 flex items-center gap-2"><i data-lucide="layers" class="w-4 h-4"></i> 텍스처 아틀라스(Texture Atlas)란?</h5>
+                    <p class="text-xs text-amber-800 leading-relaxed">
+                        해리포터 마법 도서관처럼 수천 권의 책을 Unity에 배치한다고 가정해 봅시다. 각기 다른 색을 내기 위해 매테리얼을 수천 개 만들면, 화면을 그릴 때마다 엔진 과부하로 <strong>'드로우 콜(Draw Call)'이 치솟아 게임 프레임이 심하게 끊깁니다.</strong> <br><br>
+                        이를 해결하는 실무 마법이 바로 '텍스처 아틀라스'입니다. 여러 색상과 질감을 <strong>큰 이미지 1장에 모아두고(컬러 팔레트), 수많은 오브젝트가 단 1개의 매테리얼만 공유하게 만드는 최적화 기법</strong>입니다.
+                    </p>
+                </div>
+
+                <h4 class="font-bold text-slate-800 text-base mb-4 border-b border-slate-100 pb-2 flex items-center gap-2">
+                    <i data-lucide="check-square-2" class="w-5 h-5 text-emerald-500"></i> 실전: 아틀라스 매핑 클릭-바이-클릭 가이드
+                </h4>
+
+                <div class="grid md:grid-cols-2 gap-5 mb-8">
+                    <div class="bg-white border border-slate-200 p-4 rounded-xl shadow-sm">
+                        <strong class="text-sm text-slate-800 block mb-3 text-emerald-700">1. 세팅 및 다중 편집 진입</strong>
+                        <ol class="text-xs text-slate-600 space-y-2.5 list-decimal list-inside">
+                            <li><strong class="text-slate-800">오브젝트 복제:</strong> Object 모드에서 완성된 책을 선택하고 <kbd class="bg-slate-100 px-1 border border-slate-300 rounded font-mono">Shift + D</kbd>를 눌러 3권으로 복제해 나란히 둡니다.</li>
+                            <li><strong class="text-slate-800">단일 매테리얼 세팅:</strong> 3권의 책에 적용된 기존 매테리얼을 모두 지우고, 'Atlas_Mat'이라는 매테리얼을 딱 1개만 생성하여 모두 동일하게 적용합니다.</li>
+                            <li>'Atlas_Mat'의 베이스 컬러에 미리 준비한 다양한 컬러 칸이 있는 팔레트 이미지를 연결합니다.</li>
+                            <li><strong class="text-slate-800">다중 에디트 진입:</strong> 3권의 책을 한 번에 다중 선택(Shift 클릭)하고 <kbd class="bg-slate-100 px-1 border border-slate-300 rounded font-mono">Tab</kbd> 키로 에디트 모드에 들어갑니다.</li>
+                        </ol>
+                    </div>
+                    
+                    <div class="bg-indigo-50 border border-indigo-200 p-4 rounded-xl shadow-sm">
+                        <div class="flex items-center justify-between mb-3">
+                            <strong class="text-sm text-indigo-900 block text-indigo-700">2. UV Sync 및 컬러 할당</strong>
+                            <span class="bg-indigo-600 text-white text-[10px] font-bold px-2 py-0.5 rounded animate-pulse">중요!</span>
+                        </div>
+                        <ol class="text-xs text-indigo-800 space-y-2.5 list-decimal list-inside">
+                            <li class="font-bold text-indigo-900 bg-white p-2 rounded border border-indigo-100 shadow-sm">
+                                좌측 UV 에디터 상단의 🔁 'UV 동기화(UV Sync Selection)' 버튼을 켭니다. (이를 켜야 우측에서 선택한 면만 좌측에서 볼 수 있습니다.)
+                            </li>
+                            <li>우측 3D 뷰포트에서 첫 번째 책의 '겉표지' 면들만 선택합니다.</li>
+                            <li>좌측 UV 창에 표지 전개도(아일랜드)가 나타나면, <kbd class="bg-white px-1 border border-indigo-200 rounded font-mono">A</kbd>로 선택하고 <kbd class="bg-white px-1 border border-indigo-200 rounded font-mono">S</kbd>를 눌러 점처럼 아주 작게 축소합니다.</li>
+                            <li><kbd class="bg-white px-1 border border-indigo-200 rounded font-mono">G</kbd>를 눌러 팔레트 이미지의 '빨간색' 칸에 쏙 넣습니다.</li>
+                            <li>두 번째, 세 번째 책 표지도 위와 같이 각각 '파란색', '초록색' 칸에 올려줍니다. 종이 부분은 '흰색'에 올려줍니다.</li>
+                        </ol>
+                    </div>
+                </div>
+
+                <!-- Final Summary -->
+                <div class="bg-emerald-50 border border-emerald-200 rounded-xl p-6 text-center shadow-md">
+                    <div class="inline-flex items-center justify-center w-12 h-12 bg-emerald-500 rounded-full text-white mb-3 shadow-lg">
+                        <i data-lucide="check-check" class="w-6 h-6"></i>
+                    </div>
+                    <h4 class="font-bold text-emerald-900 text-lg mb-2">🎉 축하합니다! 완벽하게 렌더링 준비가 끝났습니다.</h4>
+                    <p class="text-sm text-emerald-800 leading-relaxed mb-4 max-w-2xl mx-auto">
+                        겉보기에는 빨간 책, 파란 책 등 화려해 보이지만, 엔진 내부적으로는 '단 1장의 이미지'만 읽고 있는 아주 가볍고 최적화된 상태가 되었습니다. 유니티에서는 이 책들을 한 번에 렌더링하는 '배칭(Batching)'을 통해 프레임 드랍을 막을 수 있습니다.
+                    </p>
+                    <div class="bg-white inline-block text-left p-4 rounded-lg border border-emerald-100 shadow-sm">
+                        <strong class="text-xs text-slate-500 block mb-2 uppercase tracking-wider">💡 3줄 요약 체크리스트</strong>
+                        <ul class="text-xs text-slate-700 space-y-1.5 font-medium">
+                            <li><i data-lucide="check" class="w-3.5 h-3.5 inline text-emerald-500 mr-1"></i> 형태 변형 후엔 반드시 스케일 적용 (Ctrl+A)</li>
+                            <li><i data-lucide="check" class="w-3.5 h-3.5 inline text-emerald-500 mr-1"></i> 안 보이는 곳에 영리하게 Seam (재봉선) 자르기</li>
+                            <li><i data-lucide="check" class="w-3.5 h-3.5 inline text-emerald-500 mr-1"></i> 아틀라스/팔레트를 활용해 매테리얼 개수 최소화</li>
+                        </ul>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+    </main>
+
+    <script>
+        // 1. Initialize Icons
+        lucide.createIcons();
+
+        // 2. Tooltip Logic
+        function initDynamicTooltips() {
+            const triggers = document.querySelectorAll('.tooltip-trigger');
+            triggers.forEach(trigger => {
+                trigger.addEventListener('mouseenter', () => {
+                    const tooltip = trigger.querySelector('.tooltip-content');
+                    if (!tooltip) return;
+                    tooltip.style.setProperty('--shift-x', '0px');
+                    const rect = tooltip.getBoundingClientRect();
+                    const viewportWidth = window.innerWidth;
+                    const safePadding = 16; 
+                    let shiftAmount = 0;
+                    if (rect.right > viewportWidth - safePadding) shiftAmount = (viewportWidth - safePadding) - rect.right;
+                    else if (rect.left < safePadding) shiftAmount = safePadding - rect.left;
+                    tooltip.style.setProperty('--shift-x', `${shiftAmount}px`);
+                });
+            });
+        }
+        document.addEventListener('DOMContentLoaded', initDynamicTooltips);
+
+        // 3. Three.js Interactive UV Simulator Logic
+        let uvScene, uvCamera, uvRenderer, uvMesh, uvControls;
+        let uvInitialized = false;
+        
+        let step1Scene, step1Camera, step1Renderer, step1Cube, step1Controls;
+        let step1Initialized = false;
+
+        // Step 1: 3D Cube Initialization
+        function initStep1Viewer() {
+            const container = document.getElementById('step1-3d-container');
+            if (!container || step1Initialized) return;
+
+            step1Scene = new THREE.Scene();
+
+            step1Camera = new THREE.PerspectiveCamera(45, container.clientWidth / container.clientHeight, 0.1, 100);
+            step1Camera.position.set(2.5, 2.5, 3.5);
+
+            step1Renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+            step1Renderer.setSize(container.clientWidth, container.clientHeight);
+            step1Renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+            container.appendChild(step1Renderer.domElement);
+
+            step1Controls = new THREE.OrbitControls(step1Camera, step1Renderer.domElement);
+            step1Controls.enableDamping = true;
+            step1Controls.dampingFactor = 0.05;
+            step1Controls.enableZoom = false;
+
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+            step1Scene.add(ambientLight);
+            
+            const dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
+            dirLight.position.set(5, 5, 5);
+            step1Scene.add(dirLight);
+
+            const geometry = new THREE.BoxGeometry(1.2, 1.2, 1.2);
+            const material = new THREE.MeshPhongMaterial({ 
+                color: 0x3b82f6,
+                transparent: true,
+                opacity: 0.9,
+                shininess: 60
+            });
+            step1Cube = new THREE.Mesh(geometry, material);
+            
+            const edges = new THREE.EdgesGeometry(geometry);
+            const line = new THREE.LineSegments(edges, new THREE.LineBasicMaterial({ color: 0xffffff, linewidth: 2 }));
+            step1Cube.add(line);
+            
+            step1Scene.add(step1Cube);
+
+            const axesHelper = new THREE.AxesHelper(1.5);
+            step1Scene.add(axesHelper);
+
+            function animateStep1() {
+                requestAnimationFrame(animateStep1);
+                if (step1Cube) {
+                    step1Cube.rotation.y += 0.005;
+                    step1Cube.rotation.x += 0.002;
+                }
+                step1Controls.update();
+                step1Renderer.render(step1Scene, step1Camera);
+            }
+            animateStep1();
+
+            step1Initialized = true;
+        }
+
+        let cachedGridCanvas = null;
+        
+        function createColorGridCanvas() {
+            if (cachedGridCanvas) return cachedGridCanvas;
+            const canvas = document.createElement('canvas');
+            canvas.width = 512;
+            canvas.height = 512;
+            const ctx = canvas.getContext('2d');
+            
+            const colors = ['#fca5a5', '#93c5fd', '#86efac', '#fde047', '#c4b5fd', '#67e8f9', '#fdba74', '#f9a8d4'];
+            let colorIdx = 0;
+            
+            for (let y = 0; y < 512; y += 64) {
+                for (let x = 0; x < 512; x += 64) {
+                    ctx.fillStyle = colors[colorIdx % colors.length];
+                    ctx.fillRect(x, y, 64, 64);
+                    
+                    ctx.strokeStyle = 'rgba(0,0,0,0.15)';
+                    ctx.lineWidth = 1;
+                    ctx.strokeRect(x, y, 64, 64);
+                    
+                    ctx.fillStyle = 'rgba(0,0,0,0.4)';
+                    ctx.beginPath();
+                    ctx.arc(x + 32, y + 32, 2, 0, Math.PI * 2);
+                    ctx.fill();
+                    
+                    colorIdx++;
+                }
+                colorIdx++; 
+            }
+            cachedGridCanvas = canvas;
+            return canvas;
+        }
+
+        function createColorGridTexture() {
+            const texture = new THREE.CanvasTexture(createColorGridCanvas());
+            texture.anisotropy = 16;
+            return texture;
+        }
+            
+        function drawUVMap(geometry, type) {
+            const canvas = document.getElementById('uv-canvas');
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+            canvas.width = 512;
+            canvas.height = 512;
+            
+            ctx.drawImage(createColorGridCanvas(), 0, 0, 512, 512);
+            
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.9)';
+            ctx.lineWidth = 1.5;
+            ctx.lineJoin = 'round';
+            
+            const isIndexed = geometry.index !== null;
+            const indices = isIndexed ? geometry.index.array : null;
+            const uvs = geometry.attributes.uv.array;
+            
+            const getUV = (idx) => {
+                return { x: uvs[idx * 2] * 512, y: (1 - uvs[idx * 2 + 1]) * 512 }; 
+            };
+
+            const numFaces = isIndexed ? indices.length / 3 : uvs.length / 6;
+
+            ctx.beginPath();
+            for (let i = 0; i < numFaces; i++) {
+                const idx0 = isIndexed ? indices[i * 3] : i * 3;
+                const idx1 = isIndexed ? indices[i * 3 + 1] : i * 3 + 1;
+                const idx2 = isIndexed ? indices[i * 3 + 2] : i * 3 + 2;
+
+                const uv0 = getUV(idx0);
+                const uv1 = getUV(idx1);
+                const uv2 = getUV(idx2);
+
+                const dist01 = Math.hypot(uv0.x - uv1.x, uv0.y - uv1.y);
+                const dist12 = Math.hypot(uv1.x - uv2.x, uv1.y - uv2.y);
+                const dist20 = Math.hypot(uv2.x - uv0.x, uv2.y - uv0.y);
+                if (dist01 > 256 || dist12 > 256 || dist20 > 256) continue;
+
+                ctx.moveTo(uv0.x, uv0.y);
+                ctx.lineTo(uv1.x, uv1.y);
+                ctx.lineTo(uv2.x, uv2.y);
+                ctx.lineTo(uv0.x, uv0.y);
+            }
+            ctx.stroke();
+
+            // 면적 불균형(Texel Density) 시뮬레이터일 경우 이해를 돕기 위한 텍스트 라벨 추가
+            if (type === 'texel') {
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.95)';
+                ctx.font = 'bold 12px sans-serif';
+                ctx.textAlign = 'center';
+                
+                // 가독성을 위한 그림자 효과
+                ctx.shadowColor = "rgba(0, 0, 0, 0.8)";
+                ctx.shadowBlur = 4;
+                ctx.shadowOffsetX = 1;
+                ctx.shadowOffsetY = 1;
+                
+                ctx.fillText('TOP (촘촘함)', 0.65 * 512, 0.35 * 512 + 5);
+                ctx.fillText('FRONT (정상)', 0.65 * 512, 0.8 * 512 + 5);
+                
+                // Right 면을 가리키는 지시선
+                ctx.beginPath();
+                ctx.moveTo(0.25 * 512, 0.875 * 512 - 15);
+                ctx.lineTo(0.125 * 512, 0.875 * 512 - 5);
+                ctx.strokeStyle = 'rgba(255, 255, 255, 0.8)';
+                ctx.lineWidth = 1;
+                ctx.stroke();
+                
+                ctx.fillText('RIGHT (해상도 깨짐)', 0.28 * 512, 0.875 * 512 - 20);
+                
+                ctx.shadowBlur = 0; // 설정 초기화
+            }
+        }
+
+        function initUVViewer() {
+            const container = document.getElementById('three-container');
+            if (!container || uvInitialized) return;
+
+            uvScene = new THREE.Scene();
+            uvScene.background = new THREE.Color('#1a1a1a');
+
+            uvCamera = new THREE.PerspectiveCamera(45, container.clientWidth / container.clientHeight, 0.1, 100);
+            uvCamera.position.set(0, 1.5, 4);
+
+            uvRenderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
+            uvRenderer.setSize(container.clientWidth, container.clientHeight);
+            uvRenderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+            container.appendChild(uvRenderer.domElement);
+
+            uvControls = new THREE.OrbitControls(uvCamera, uvRenderer.domElement);
+            uvControls.enableDamping = true;
+            uvControls.dampingFactor = 0.05;
+            uvControls.enablePan = false;
+
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+            uvScene.add(ambientLight);
+            
+            const dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
+            dirLight.position.set(5, 5, 5);
+            uvScene.add(dirLight);
+
+            setUVShape('cylinder'); // Default loading
+
+            function animate() {
+                requestAnimationFrame(animate);
+                if (uvMesh) {
+                    // 면적 불균형 모드에서는 직관적인 관찰을 위해 3D 모델의 자동 회전을 멈춥니다.
+                    if (!uvMesh.userData.isTexel) {
+                        uvMesh.rotation.y += 0.004;
+                        uvMesh.rotation.x = THREE.MathUtils.lerp(uvMesh.rotation.x, 0.2, 0.05);
+                        uvMesh.rotation.z = THREE.MathUtils.lerp(uvMesh.rotation.z, 0, 0.05);
+                    }
+                }
+                uvControls.update();
+                uvRenderer.render(uvScene, uvCamera);
+            }
+            animate();
+
+            window.addEventListener('resize', () => {
+                const step1Container = document.getElementById('step1-3d-container');
+                if (step1Container && step1Initialized) {
+                    step1Camera.aspect = step1Container.clientWidth / step1Container.clientHeight;
+                    step1Camera.updateProjectionMatrix();
+                    step1Renderer.setSize(step1Container.clientWidth, step1Container.clientHeight);
+                }
+
+                if (document.getElementById('step2').classList.contains('active')) {
+                    const container = document.getElementById('three-container');
+                    uvCamera.aspect = container.clientWidth / container.clientHeight;
+                    uvCamera.updateProjectionMatrix();
+                    uvRenderer.setSize(container.clientWidth, container.clientHeight);
+                }
+            });
+
+            uvInitialized = true;
+        }
+
+        function setUVShape(type) {
+            if (uvMesh) uvScene.remove(uvMesh);
+
+            const texture = createColorGridTexture();
+            const material = new THREE.MeshPhongMaterial({ 
+                map: texture, 
+                side: THREE.DoubleSide
+            });
+
+            const btns = ['cylinder', 'sphere', 'cubesphere', 'texel'];
+            btns.forEach(id => {
+                document.getElementById('btn-' + id).className = 'bg-slate-700 text-slate-300 text-xs px-3 py-2 rounded font-bold hover:bg-slate-600 transition shadow border border-slate-600';
+                document.getElementById('sim-desc-' + id).classList.add('hidden');
+            });
+            
+            if(type === 'texel') {
+                document.getElementById('btn-' + type).className = 'bg-pink-600 text-white text-xs px-3 py-2 rounded font-bold hover:bg-pink-700 transition shadow border border-pink-700';
+            } else {
+                document.getElementById('btn-' + type).className = 'bg-orange-500 text-white text-xs px-3 py-2 rounded font-bold hover:bg-orange-600 transition shadow';
+            }
+            document.getElementById('sim-desc-' + type).classList.remove('hidden');
+
+            let geometry;
+            if (type === 'cylinder') {
+                geometry = new THREE.CylinderGeometry(1, 1, 2, 32, 8);
+                uvMesh = new THREE.Mesh(geometry, material);
+                uvMesh.userData.isTexel = false;
+                drawUVMap(geometry, type);
+            } 
+            else if (type === 'sphere') {
+                geometry = new THREE.SphereGeometry(1.2, 48, 32);
+                uvMesh = new THREE.Mesh(geometry, material);
+                uvMesh.userData.isTexel = false;
+                drawUVMap(geometry, type);
+            }
+            else if (type === 'cubesphere') {
+                let boxGeo = new THREE.BoxGeometry(1.2, 1.2, 1.2, 12, 12, 12).toNonIndexed();
+                boxGeo.computeVertexNormals();
+                const pos = boxGeo.attributes.position;
+                const uvs = boxGeo.attributes.uv;
+                const norms = boxGeo.attributes.normal;
+                
+                const faceOffsets = [
+                    { nx: 1, u: 0, v: 0.5 },    // Right
+                    { nx: -1, u: 0.333, v: 0.5 }, // Left
+                    { ny: 1, u: 0.666, v: 0.5 },  // Top
+                    { ny: -1, u: 0, v: 0 },       // Bottom
+                    { nz: 1, u: 0.333, v: 0 },    // Front
+                    { nz: -1, u: 0.666, v: 0 }    // Back
+                ];
+
+                for(let i = 0; i < pos.count; i++) {
+                    let p = new THREE.Vector3(pos.getX(i), pos.getY(i), pos.getZ(i));
+                    p.normalize().multiplyScalar(1.2);
+                    pos.setXYZ(i, p.x, p.y, p.z);
+                    
+                    let nx = Math.round(norms.getX(i));
+                    let ny = Math.round(norms.getY(i));
+                    let nz = Math.round(norms.getZ(i));
+                    
+                    let offset = faceOffsets[0];
+                    if (nx === 1) offset = faceOffsets[0];
+                    else if (nx === -1) offset = faceOffsets[1];
+                    else if (ny === 1) offset = faceOffsets[2];
+                    else if (ny === -1) offset = faceOffsets[3];
+                    else if (nz === 1) offset = faceOffsets[4];
+                    else if (nz === -1) offset = faceOffsets[5];
+                    
+                    const origU = uvs.getX(i);
+                    const origV = uvs.getY(i);
+                    uvs.setXY(i, (origU * 0.9 + 0.05) * 0.333 + offset.u, (origV * 0.9 + 0.05) * 0.5 + offset.v);
+                }
+                boxGeo.computeVertexNormals();
+                
+                uvMesh = new THREE.Mesh(boxGeo, material);
+                uvMesh.userData.isTexel = false;
+                drawUVMap(boxGeo, type);
+            }
+            else if (type === 'texel') {
+                // 면적 불균형(Texel Density)을 보여주기 위한 큐브 셋업
+                let boxGeo = new THREE.BoxGeometry(1.2, 1.2, 1.2).toNonIndexed();
+                boxGeo.computeVertexNormals();
+                const uvs = boxGeo.attributes.uv;
+                const norms = boxGeo.attributes.normal;
+                
+                for(let i = 0; i < uvs.count; i++) {
+                    let nx = Math.round(norms.getX(i));
+                    let ny = Math.round(norms.getY(i));
+                    let nz = Math.round(norms.getZ(i));
+                    let u = uvs.getX(i);
+                    let v = uvs.getY(i);
+                    
+                    if (ny === 1) { 
+                        // Top face: 실제 면적보다 전개도를 비정상적으로 크게 펼침 (0.4~0.9 구간)
+                        uvs.setXY(i, u * 0.5 + 0.4, v * 0.5 + 0.4);
+                    } else if (nx === 1) { 
+                        // Right face: 체크보드 교차점 한가운데로 전개도를 극단적으로 작게 구겨 넣음 (해상도 깨짐 유도)
+                        uvs.setXY(i, u * 0.1 + 0.075, v * 0.1 + 0.075);
+                    } else if (nz === 1) { 
+                        // Front face: 적절한 기준 사이즈
+                        uvs.setXY(i, u * 0.3 + 0.5, v * 0.3 + 0.05);
+                    } else { 
+                        // 보이지 않는 면들은 구석으로 찌그러트려 겹침 방지
+                        uvs.setXY(i, u * 0.1 + 0.05, v * 0.1 + 0.85);
+                    }
+                }
+                
+                uvMesh = new THREE.Mesh(boxGeo, material);
+                uvMesh.userData.isTexel = true;
+                
+                // Top, Front, Right 3개 면이 한눈에 보이는 각도로 회전을 고정시킵니다.
+                uvMesh.rotation.set(0.4, -0.6, 0); 
+                drawUVMap(boxGeo, type);
+            }
+            
+            uvScene.add(uvMesh);
+        }
+
+        // 4. Accordion Toggle Logic
+        function toggleStep(stepId) {
+            const content = document.getElementById(stepId);
+            const icon = document.getElementById('icon-' + stepId);
+            const isActive = content.classList.contains('active');
+            
+            // Close all others
+            document.querySelectorAll('.step-content').forEach(el => {
+                el.classList.remove('active');
+                const btnIcon = document.getElementById('icon-' + el.id);
+                if(btnIcon) btnIcon.style.transform = 'rotate(0deg)';
+                updateHeaderStyle(el.id, false);
+            });
+            
+            // Open clicked one
+            if (!isActive) {
+                content.classList.add('active');
+                if(icon) icon.style.transform = 'rotate(180deg)';
+                updateHeaderStyle(stepId, true);
+                
+                // Initialize UV Viewer when Step 2 is opened
+                if (stepId === 'step2' && !uvInitialized) {
+                    setTimeout(() => {
+                        initUVViewer();
+                    }, 100);
+                }
+            }
+        }
+
+        // Accordion Style Updater
+        function updateHeaderStyle(stepId, isActive) {
+            const button = document.querySelector(`[onclick="toggleStep('${stepId}')"]`);
+            if(!button) return;
+            const badge = document.getElementById('badge-' + stepId);
+            const title = button.querySelector('h2');
+            
+            if (isActive) {
+                button.classList.replace('bg-white', 'bg-orange-50');
+                button.classList.replace('hover:bg-slate-50', 'hover:bg-orange-100');
+                button.classList.remove('rounded-b-xl');
+                if(badge) {
+                    badge.classList.replace('bg-slate-100', 'bg-orange-500');
+                    badge.classList.replace('text-slate-500', 'text-white');
+                    badge.classList.remove('group-hover:bg-orange-100', 'group-hover:text-orange-600');
+                }
+                title.classList.replace('text-slate-800', 'text-orange-900');
+                title.classList.remove('group-hover:text-orange-700');
+                document.getElementById('icon-' + stepId).classList.replace('text-slate-400', 'text-orange-600');
+            } else {
+                button.classList.replace('bg-orange-50', 'bg-white');
+                button.classList.replace('hover:bg-orange-100', 'hover:bg-slate-50');
+                button.classList.add('rounded-b-xl');
+                if(badge) {
+                    badge.classList.replace('bg-orange-500', 'bg-slate-100');
+                    badge.classList.replace('text-white', 'text-slate-500');
+                    badge.classList.add('group-hover:bg-orange-100', 'group-hover:text-orange-600');
+                }
+                title.classList.replace('text-orange-900', 'text-slate-800');
+                title.classList.add('group-hover:text-orange-700');
+                const icon = document.getElementById('icon-' + stepId);
+                if(icon) icon.classList.replace('text-orange-600', 'text-slate-400');
+            }
+        }
+
+        // Initialize first step as open
+        document.getElementById('step1').classList.add('active');
+        document.getElementById('icon-step1').style.transform = 'rotate(180deg)';
+        updateHeaderStyle('step1', true);
+        
+        // Load Step 1 3D Viewer right away since it's open by default
+        setTimeout(() => {
+            initStep1Viewer();
+        }, 100);
+
+    </script>
+</body>
+</html>
